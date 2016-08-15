@@ -10,7 +10,9 @@ import android.graphics.YuvImage;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -22,6 +24,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import io.rpng.recorder.managers.CameraManager;
 import io.rpng.recorder.R;
@@ -150,30 +156,51 @@ public class MainActivity extends AppCompatActivity {
             // Get the next image from the queue
             Image image = ir.acquireNextImage();
 
-            int imageWidth = image.getWidth();
-            int imageHeight = image.getHeight();
+            // Collection of bytes of the image
+            byte[] rez;
 
-            // Get the YUV planes, and combine them into a single data byte array
-            Image.Plane Y = image.getPlanes()[0];
-            Image.Plane U = image.getPlanes()[1];
-            Image.Plane V = image.getPlanes()[2];
-            int Yb = Y.getBuffer().remaining();
-            int Ub = U.getBuffer().remaining();
-            int Vb = V.getBuffer().remaining();
+            // Convert to NV21 format
+            // https://github.com/bytedeco/javacv/issues/298#issuecomment-169100091
+            ByteBuffer buffer0 = image.getPlanes()[0].getBuffer();
+            ByteBuffer buffer2 = image.getPlanes()[2].getBuffer();
+            int buffer0_size = buffer0.remaining();
+            int buffer2_size = buffer2.remaining();
+            rez = new byte[buffer0_size + buffer2_size];
 
+            // Load the final data var with the actual bytes
+            buffer0.get(rez, 0, buffer0_size);
+            buffer2.get(rez, buffer0_size, buffer2_size);
 
-            byte[] data = new byte[Yb + Ub + Vb];
-            Y.getBuffer().get(data, 0, Yb);
-            U.getBuffer().get(data, Yb, Ub);
-            V.getBuffer().get(data, Yb + Ub, Vb);
-
+            // Byte output stream, so we can save the file
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            YuvImage yuvImage = new YuvImage(data, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), 50, out);
+
+            // Create YUV image file
+            YuvImage yuvImage = new YuvImage(rez, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), 90, out);
             byte[] imageBytes = out.toByteArray();
 
+            // Display for the end user
             Bitmap bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
             MainActivity.camera2View.setImageBitmap(bmp);
+
+            // Save the file
+            // http://stackoverflow.com/a/9006098
+            String filename = image.getTimestamp() + ".jpeg";
+            String path = Environment.getExternalStorageDirectory().getPath() + "/dataset_recorder/images/";
+
+            // Create export file
+            new File(path).mkdirs();
+            File dest = new File(path + filename);
+
+            // Export the file to disk
+            try {
+                FileOutputStream output = new FileOutputStream(dest);
+                bmp.compress(Bitmap.CompressFormat.JPEG, 90, output);
+                output.flush();
+                output.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             // Make sure we close the image
             image.close();
