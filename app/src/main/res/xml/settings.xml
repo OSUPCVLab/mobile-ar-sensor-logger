@@ -24,24 +24,11 @@
             android:entries="@array/imageResize"
             android:entryValues="@array/imageResizeValues" />
 
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="preGrayScaled"
-            android:title="Gray Scale"
-            android:summary="If the RGB image should be gray scaled" />
-
         <ListPreference
             android:key="prefFocusLength"
             android:title="Focus Lengths"
             android:summary="Set what focus length should be used (mm)" />
 
-        <ListPreference
-            android:defaultValue="4x5"
-            android:key="prefCalibSize"
-            android:title="Checkerboard Size"
-            android:summary="Set what grid size to look for"
-            android:entries="@array/calibSize"
-            android:entryValues="@array/calibSizeValues" />
 
         <!--<Preference-->
             <!--android:key="filePicker"-->

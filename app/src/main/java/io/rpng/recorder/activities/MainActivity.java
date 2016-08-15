@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import io.rpng.recorder.managers.CameraManager;
 import io.rpng.recorder.R;
@@ -44,11 +46,15 @@ public class MainActivity extends AppCompatActivity {
     private static Intent intentResults;
 
     private static ImageView camera2View;
-    private static TextView camera2Captured;
     private AutoFitTextureView mTextureView;
 
     public static CameraManager mCameraManager;
     private static SharedPreferences sharedPreferences;
+
+
+    // Variables for the current state
+    public static boolean is_recording;
+    public static String folder_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Get our surfaces
         camera2View = (ImageView) findViewById(R.id.camera2_preview);
-        camera2Captured = (TextView) findViewById(R.id.camera2_captures);
         mTextureView = (AutoFitTextureView) findViewById(R.id.camera2_texture);
-
-        // Update the textview with starting values
-        camera2Captured.setText("Capture Success: 0\nCapture Tries: 0");
 
         // Create the camera manager
         mCameraManager = new CameraManager(this, mTextureView, camera2View);
@@ -82,35 +84,47 @@ public class MainActivity extends AppCompatActivity {
         intentSettings = new Intent(this, SettingsActivity.class);
         intentResults = new Intent(this, ResultsActivity.class);
 
+        // Set the state so that we are not recording
+        folder_name = "";
+        is_recording = false;
+
         // Lets by default launch into the settings view
         startActivityForResult(intentSettings, RESULT_SETTINGS);
-
-
 
     }
 
     private void addButtonListeners() {
-
-        // When the done button is pressed, we want to calibrate
-        // This should start the calibration activity, and then start the calibration
-        Button button_done = (Button) findViewById(R.id.button_done);
-        button_done.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(intentResults, RESULT_RESULT);
-            }
-        });
 
         // We we want to "capture" the current grid, we should record the current corners
         Button button_record = (Button) findViewById(R.id.button_record);
         button_record.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Add the corners
-                //mCameraCalibrator.addCorners();
-                // Update the text view
-                //camera2Captured.setText("Capture Success: " + mCameraCalibrator.getCornersBufferSize()
-                //        + "\nCapture Tries: " + mCameraCalibrator.getCaptureTries());
+                // If we are not recording we should start it
+                if(!is_recording) {
+                    // Set our folder name
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+                    folder_name = dateFormat.format(new Date());
+
+                    // Also change the text on the button so that it turns into the stop button
+                    Button button_record = (Button) findViewById(R.id.button_record);
+                    button_record.setText("Stop Recording");
+
+                    // Trigger the recording by changing the recording boolean
+                    is_recording = true;
+                }
+                // Else we can assume we pressed the "stop recording" button
+                else {
+                    // Just reset the recording button
+                    is_recording = false;
+
+                    // Also change the text on the button so that it turns into the start button
+                    Button button_record = (Button) findViewById(R.id.button_record);
+                    button_record.setText("Start Recording");
+
+                    // Start the result activity
+                    startActivityForResult(intentResults, RESULT_RESULT);
+                }
             }
         });
     }
@@ -183,23 +197,28 @@ public class MainActivity extends AppCompatActivity {
             Bitmap bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
             MainActivity.camera2View.setImageBitmap(bmp);
 
-            // Save the file
+            // Save the file (if enabled)
             // http://stackoverflow.com/a/9006098
-            String filename = image.getTimestamp() + ".jpeg";
-            String path = Environment.getExternalStorageDirectory().getPath() + "/dataset_recorder/images/";
+            if(MainActivity.is_recording) {
 
-            // Create export file
-            new File(path).mkdirs();
-            File dest = new File(path + filename);
+                // Create folder name
+                String filename = image.getTimestamp() + ".jpeg";
+                String path = Environment.getExternalStorageDirectory().getPath()
+                        + "/dataset_recorder/" + MainActivity.folder_name + "/images/";
 
-            // Export the file to disk
-            try {
-                FileOutputStream output = new FileOutputStream(dest);
-                bmp.compress(Bitmap.CompressFormat.JPEG, 90, output);
-                output.flush();
-                output.close();
-            } catch (Exception e) {
-                e.printStackTrace();
+                // Create export file
+                new File(path).mkdirs();
+                File dest = new File(path + filename);
+
+                // Export the file to disk
+                try {
+                    FileOutputStream output = new FileOutputStream(dest);
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 90, output);
+                    output.flush();
+                    output.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // Make sure we close the image
@@ -225,6 +244,14 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
 
+            // Disable the current recording session
+            is_recording = false;
+
+            // Also change the text on the button so that it turns into the start button
+            Button button_record = (Button) findViewById(R.id.button_record);
+            button_record.setText("Start Recording");
+
+            // Start the settings activity
             Intent i = new Intent(this, SettingsActivity.class);
             startActivityForResult(i, RESULT_SETTINGS);
 
@@ -247,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                 //mCameraCalibrator.clearCorners();
 
                 // Update the textview with starting values
-                camera2Captured.setText("Capture Success: 0\nCapture Tries: 0");
+                //camera2Captured.setText("Capture Success: 0\nCapture Tries: 0");
 
                 break;
 
@@ -258,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
                 //mCameraCalibrator.clearCorners();
 
                 // Update the textview with starting values
-                camera2Captured.setText("Capture Success: 0\nCapture Tries: 0");
+                //camera2Captured.setText("Capture Success: 0\nCapture Tries: 0");
 
                 break;
 

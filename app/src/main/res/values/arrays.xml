@@ -8,21 +8,4 @@
         <item>0x0</item>
     </string-array>
 
-    <string-array name="calibSize">
-        <item>3x5</item>
-        <item>4x5</item>
-        <item>4x6</item>
-        <item>5x6</item>
-        <item>6x7</item>
-        <item>7x8</item>
-    </string-array>
-    <string-array name="calibSizeValues">
-        <item>3x5</item>
-        <item>4x5</item>
-        <item>4x6</item>
-        <item>5x6</item>
-        <item>6x7</item>
-        <item>7x8</item>
-    </string-array>
-
 </resources>

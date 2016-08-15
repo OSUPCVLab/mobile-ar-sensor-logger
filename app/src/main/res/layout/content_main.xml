@@ -7,11 +7,6 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     android:id="@+id/camera_preview_frame">
 
-    <TextView
-        android:id="@+id/camera2_captures"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
-
     <io.rpng.recorder.views.AutoFitTextureView
         android:id="@+id/camera2_texture"
         android:layout_width="20dp"

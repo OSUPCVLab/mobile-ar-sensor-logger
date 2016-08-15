@@ -37,17 +37,6 @@
             android:layout_width="fill_parent">
 
             <Button
-                android:id="@+id/button_done"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:layout_marginBottom="-5dp"
-                android:layout_marginLeft="-4dp"
-                android:layout_marginRight="-3dp"
-                android:text="Done">
-            </Button>
-
-            <Button
                 android:id="@+id/button_record"
                 android:layout_width="wrap_content"
                 android:layout_height="60dp"
@@ -55,7 +44,7 @@
                 android:layout_marginBottom="-5dp"
                 android:layout_marginLeft="-4dp"
                 android:layout_marginRight="-4dp"
-                android:text="Capture">
+                android:text="Start Recording">
             </Button>
 
         </LinearLayout>
