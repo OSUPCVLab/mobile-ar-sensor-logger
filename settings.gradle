@@ -1,0 +1,19 @@
+// Include our main app
+include ':app'
+
+// Include the "android" version of opencv
+//include ':opencv_310'
+
+// Include jni libraries
+//include ':swapheap'
+//include ':libraries:utils-image'
+//include ':libraries:utils-jni'
+//include ':libraries:yuvimage'
+
+// Include prebuilt libs
+//include ':jpeg'
+
+// Link the libraries to their folders in a subdirectory
+//project(':opencv_310').projectDir = new File(rootProject.projectDir, 'libraries/opencv_310/')
+//project(':swapheap').projectDir = new File(rootProject.projectDir, 'libraries/swapheap/')
+//project(':jpeg').projectDir = new File(rootProject.projectDir, 'libraries/jpeg/')

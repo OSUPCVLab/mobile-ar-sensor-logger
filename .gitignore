@@ -1,0 +1,11 @@
+# Ignore gradle settings
+.gradle
+/local.properties
+.DS_Store
+/build
+/captures
+
+# Ignore idea editor settings
+/.idea/workspace.xml
+/.idea/libraries
+*.iml

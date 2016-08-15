@@ -1,0 +1,3 @@
+# Ignore build folders
+/build
+*.iml
