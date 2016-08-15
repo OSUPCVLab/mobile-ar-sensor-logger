@@ -2,6 +2,7 @@ package io.rpng.recorder.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG = "MainActivity";
     private static final int RESULT_SETTINGS = 1;
     private static final int RESULT_RESULT = 2;
+    private static final int RESULT_INFO = 3;
 
     private static Intent intentSettings;
     private static Intent intentResults;
@@ -261,6 +263,22 @@ public class MainActivity extends AppCompatActivity {
             // Start the settings activity
             Intent i = new Intent(this, SettingsActivity.class);
             startActivityForResult(i, RESULT_SETTINGS);
+
+            return true;
+        }
+
+        if (id == R.id.action_info) {
+
+            // Disable the current recording session
+            is_recording = false;
+
+            // Also change the text on the button so that it turns into the start button
+            Button button_record = (Button) findViewById(R.id.button_record);
+            button_record.setText("Start Recording");
+
+            // Start the settings activity
+            Intent i = new Intent(this, InfoActivity.class);
+            startActivityForResult(i, RESULT_INFO);
 
             return true;
         }

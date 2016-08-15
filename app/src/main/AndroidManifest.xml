@@ -42,6 +42,10 @@
             android:name="io.rpng.recorder.activities.ResultsActivity"
             android:screenOrientation="portrait"/>
 
+        <!-- Our info activity -->
+        <activity android:name="io.rpng.recorder.activities.InfoActivity"
+            android:screenOrientation="portrait" />
+
 
     </application>
 
