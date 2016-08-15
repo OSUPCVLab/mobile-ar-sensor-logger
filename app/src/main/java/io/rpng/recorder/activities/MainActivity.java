@@ -3,6 +3,10 @@ package io.rpng.recorder.activities;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
@@ -16,6 +20,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.io.ByteArrayOutputStream;
 
 import io.rpng.recorder.managers.CameraManager;
 import io.rpng.recorder.R;
@@ -143,6 +149,31 @@ public class MainActivity extends AppCompatActivity {
 
             // Get the next image from the queue
             Image image = ir.acquireNextImage();
+
+            int imageWidth = image.getWidth();
+            int imageHeight = image.getHeight();
+
+            // Get the YUV planes, and combine them into a single data byte array
+            Image.Plane Y = image.getPlanes()[0];
+            Image.Plane U = image.getPlanes()[1];
+            Image.Plane V = image.getPlanes()[2];
+            int Yb = Y.getBuffer().remaining();
+            int Ub = U.getBuffer().remaining();
+            int Vb = V.getBuffer().remaining();
+
+
+            byte[] data = new byte[Yb + Ub + Vb];
+            Y.getBuffer().get(data, 0, Yb);
+            U.getBuffer().get(data, Yb, Ub);
+            V.getBuffer().get(data, Yb + Ub, Vb);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            YuvImage yuvImage = new YuvImage(data, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), 50, out);
+            byte[] imageBytes = out.toByteArray();
+
+            Bitmap bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+            MainActivity.camera2View.setImageBitmap(bmp);
 
             // Make sure we close the image
             image.close();
