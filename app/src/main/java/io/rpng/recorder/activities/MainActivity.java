@@ -33,6 +33,7 @@ import java.util.Date;
 
 import io.rpng.recorder.managers.CameraManager;
 import io.rpng.recorder.R;
+import io.rpng.recorder.managers.IMUManager;
 import io.rpng.recorder.views.AutoFitTextureView;
 
 
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private AutoFitTextureView mTextureView;
 
     public static CameraManager mCameraManager;
+    public static IMUManager mImuManager;
     private static SharedPreferences sharedPreferences;
 
 
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Create the camera manager
         mCameraManager = new CameraManager(this, mTextureView, camera2View);
+        mImuManager = new IMUManager(this);
 
         // Set our shared preferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -123,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                     button_record.setText("Start Recording");
 
                     // Start the result activity
-                    startActivityForResult(intentResults, RESULT_RESULT);
+                    //startActivityForResult(intentResults, RESULT_RESULT);
                 }
             }
         });
@@ -142,6 +145,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mTextureView.setSurfaceTextureListener(mCameraManager.mSurfaceTextureListener);
         }
+        // Register the listeners
+        mImuManager.register();
     }
 
     @Override
@@ -151,6 +156,8 @@ public class MainActivity extends AppCompatActivity {
         // Close our camera, note we will get permission errors if we try to reopen
         // And we have not closed the current active camera
         mCameraManager.closeCamera();
+        // Unregister the listeners
+        mImuManager.unregister();
         // Call the super
         super.onPause();
     }
@@ -203,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Create folder name
                 String filename = image.getTimestamp() + ".jpeg";
-                String path = Environment.getExternalStorageDirectory().getPath()
+                String path = Environment.getExternalStorageDirectory().getAbsolutePath()
                         + "/dataset_recorder/" + MainActivity.folder_name + "/images/";
 
                 // Create export file
