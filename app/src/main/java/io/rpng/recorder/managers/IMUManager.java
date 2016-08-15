@@ -2,11 +2,13 @@ package io.rpng.recorder.managers;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -120,8 +122,12 @@ public class IMUManager implements SensorEventListener {
      * This will register all IMU listeners
      */
     public void register() {
-        mSensorManager.registerListener(this, mAccel, SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_GAME);
+        // Get the freq we should get messages at (default is SensorManager.SENSOR_DELAY_GAME)
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity);
+        String imuFreq = sharedPreferences.getString("perfImuFreq", "1");
+        // Register the IMUs
+        mSensorManager.registerListener(this, mAccel, Integer.parseInt(imuFreq));
+        mSensorManager.registerListener(this, mGyro, Integer.parseInt(imuFreq));
     }
 
     /**

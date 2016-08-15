@@ -8,4 +8,30 @@
         <item>0x0</item>
     </string-array>
 
+    <string-array name="imuFreq">
+        <item>Delay Fastest</item>
+        <item>Delay Game</item>
+        <item>Delay UI</item>
+        <item>Delay Normal</item>
+    </string-array>
+    <string-array name="imuFreqValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array name="gpsFreq">
+        <item>Delay Fastest</item>
+        <item>Delay Game</item>
+        <item>Delay UI</item>
+        <item>Delay Normal</item>
+    </string-array>
+    <string-array name="gpsFreqValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
 </resources>

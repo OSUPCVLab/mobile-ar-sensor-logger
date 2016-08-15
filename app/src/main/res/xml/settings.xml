@@ -37,6 +37,26 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="Additional Sensors" >
+
+        <ListPreference
+            android:key="perfImuFreq"
+            android:title="IMU Frequency"
+            android:summary="Frequency the IMU should collect at"
+            android:entries="@array/imuFreq"
+            android:entryValues="@array/imuFreqValues"
+            android:defaultValue="1" />
+
+        <ListPreference
+            android:key="perfGPSFreq"
+            android:title="GPS Frequency"
+            android:summary="Frequency the GPS should collect at"
+            android:entries="@array/gpsFreq"
+            android:entryValues="@array/gpsFreqValues"
+            android:defaultValue="1" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="Finished" >
 
         <Preference
