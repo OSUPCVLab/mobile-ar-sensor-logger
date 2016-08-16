@@ -62,7 +62,7 @@
         <Preference
             android:key="exitlink"
             android:title="Click Here to Exit"
-            android:summary="Start the calibration" />
+            android:summary="Start the recorder" />
 
     </PreferenceCategory>
 

@@ -20,7 +20,7 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:text="This application was created by Patrick Geneva (@goldbattle) for the easy collection of data on a mobile device. You can visit the repository at\: \n \n http://github.com/rpng/android-dataset-recorder/ \n \nAll data is exported on the SD card in the '/dataset_recorder/' folder. Inside this folder there will be a custom folder for each recording run. In the run folder text files with both IMU and GPS data can be found. \n \nIMU data is exported in the following format: timestamp, a_x, a_y, a_z, w_x, w_y, w_z \n \nGPS data is exported in the following format: timetamp, lat, long, altitude, accuracy\n \n \n \n"
+            android:text="This application was created by Patrick Geneva (@goldbattle) for the easy collection of data on a mobile device. You can visit the repository at\: \n \n http://github.com/rpng/android-dataset-recorder/ \n \nAll data is exported on the SD card in the '/dataset_recorder/' folder. Inside this folder there will be a custom folder for each recording run. In the run folder text files with both IMU and GPS data can be found. \n \nIMU data is exported in the following format: timestamp, a_x, a_y, a_z, w_x, w_y, w_z \n \nGPS data is exported in the following format: timetamp, lat, long, altitude, accuracy, bearing, speed, provider \n \n \n \n"
             android:id="@+id/textView"
             android:layout_gravity="center_horizontal"
             android:layout_margin="10pt"

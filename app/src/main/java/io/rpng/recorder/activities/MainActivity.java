@@ -150,21 +150,33 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mTextureView.setSurfaceTextureListener(mCameraManager.mSurfaceTextureListener);
         }
+
         // Register the listeners
         mImuManager.register();
+
+        // Start background thread
+        mGpsManager.startBackgroundThread();
+        // Register google services
         mGpsManager.register();
     }
 
     @Override
     public void onPause() {
+
         // Stop background thread
         mCameraManager.stopBackgroundThread();
         // Close our camera, note we will get permission errors if we try to reopen
         // And we have not closed the current active camera
         mCameraManager.closeCamera();
+
         // Unregister the listeners
         mImuManager.unregister();
+
+        // Stop background thread
+        mGpsManager.stopBackgroundThread();
+        // Remove gps listener
         mGpsManager.unregister();
+
         // Call the super
         super.onPause();
     }
