@@ -98,8 +98,8 @@ public class IMUManager implements SensorEventListener {
 
                     // Master string of information
                     String data = linear_time
-                            + "," + linear_data[0] + "," + linear_data[1] + "," + linear_data[2] + "," + linear_acc
-                            + "," + angular_data[0] + "," + angular_data[1] + "," + angular_data[2] + "," + angular_acc;
+                            + "," + linear_data[0] + "," + linear_data[1] + "," + linear_data[2]
+                            + "," + angular_data[0] + "," + angular_data[1] + "," + angular_data[2];
 
                     // Appends the string to the file and closes
                     writer.write(data + "\n");

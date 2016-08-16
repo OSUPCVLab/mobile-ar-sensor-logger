@@ -74,7 +74,7 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         double lat = location.getLatitude();
         double lon = location.getLongitude();
 
-        Log.e("GPS MANAGER", location.toString());
+        Log.i("GPS MANAGER", location.toString());
         //System.out.println(location.getTime() + "," + lat + "," + lon + "," + altitude + "," + accuracy);
         //System.err.println(location.getTime() + "," + lat + "," + lon + "," + altitude + "," + accuracy);
 

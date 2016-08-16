@@ -7,7 +7,7 @@ model {
         buildToolsVersion "23.0.2"
 
         defaultConfig {
-            applicationId "io.rpng.calibration"
+            applicationId "io.rpng.recorder"
             minSdkVersion.apiLevel 21
             targetSdkVersion.apiLevel 23
             versionCode 1
