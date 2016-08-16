@@ -12,6 +12,7 @@ model {
             targetSdkVersion.apiLevel 23
             versionCode 1
             versionName "1.0"
+            multiDexEnabled true
         }
         buildTypes {
             release {
@@ -37,6 +38,9 @@ dependencies {
     compile 'com.android.support:design:23.4.0'
     compile 'com.android.support:support-v4:23.3.0'
     compile 'com.android.support:support-v13:23.3.0'
+
+    // Google play which allows us to access the location data
+    compile 'com.google.android.gms:play-services:9.0.2'
 
 }
 
