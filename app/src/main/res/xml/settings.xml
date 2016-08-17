@@ -17,13 +17,13 @@
             android:title="Raw Image Size"
             android:summary="Set the incoming image size" />
 
-        <ListPreference
-            android:key="prefSizeResize"
-            android:title="Re-sized Image"
-            android:summary="Set what the image should be resized to"
-            android:entries="@array/imageResize"
-            android:entryValues="@array/imageResizeValues"
-            android:defaultValue="0x0" />
+        <!--<ListPreference-->
+            <!--android:key="prefSizeResize"-->
+            <!--android:title="Re-sized Image"-->
+            <!--android:summary="Set what the image should be resized to"-->
+            <!--android:entries="@array/imageResize"-->
+            <!--android:entryValues="@array/imageResizeValues"-->
+            <!--android:defaultValue="0x0" />-->
 
         <ListPreference
             android:key="prefFocusLength"
