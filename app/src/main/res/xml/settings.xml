@@ -22,7 +22,8 @@
             android:title="Re-sized Image"
             android:summary="Set what the image should be resized to"
             android:entries="@array/imageResize"
-            android:entryValues="@array/imageResizeValues" />
+            android:entryValues="@array/imageResizeValues"
+            android:defaultValue="0x0" />
 
         <ListPreference
             android:key="prefFocusLength"
@@ -47,13 +48,13 @@
             android:entryValues="@array/imuFreqValues"
             android:defaultValue="1" />
 
-        <!--<ListPreference-->
-            <!--android:key="perfGPSFreq"-->
-            <!--android:title="GPS Frequency"-->
-            <!--android:summary="Frequency the GPS should collect at"-->
-            <!--android:entries="@array/gpsFreq"-->
-            <!--android:entryValues="@array/gpsFreqValues"-->
-            <!--android:defaultValue="1" />-->
+        <ListPreference
+            android:key="perfGPSFreq"
+            android:title="GPS Frequency"
+            android:summary="Frequency the GPS should collect at"
+            android:entries="@array/gpsFreq"
+            android:entryValues="@array/gpsFreqValues"
+            android:defaultValue="1.0" />
 
     </PreferenceCategory>
 

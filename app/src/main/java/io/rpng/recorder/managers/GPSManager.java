@@ -3,12 +3,14 @@ package io.rpng.recorder.managers;
 import android.Manifest;
 import android.app.Activity;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -64,12 +66,6 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-        // Create the location request
-        mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-//                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
-                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-                .setFastestInterval(1 * 1000); // 1 second, in milliseconds
     }
 
 
@@ -131,6 +127,14 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     public void register() {
         // Make sure we have permissions
         permissionManager.handle_permissions();
+        // Get how fast we want to get GPS updates
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity);
+        String gpsFreq = sharedPreferences.getString("perfGPSFreq", "1");
+        // Create the location request
+        mLocationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval((long)(Double.parseDouble(gpsFreq) * 1000))         // seconds, in milliseconds
+                .setFastestInterval((long)(Double.parseDouble(gpsFreq) * 1000)); // seconds, in milliseconds
         // Connect to the google play services
         mGoogleApiClient.connect();
     }
