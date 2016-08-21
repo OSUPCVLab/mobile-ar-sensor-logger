@@ -27,6 +27,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 
 import io.rpng.recorder.activities.MainActivity;
 
@@ -88,7 +89,7 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         if (MainActivity.is_recording) {
 
             // Create folder name
-            String filename = "gps_data.txt";
+            String filename = "data_gps.txt";
             String path = Environment.getExternalStorageDirectory().getAbsolutePath()
                     + "/dataset_recorder/" + MainActivity.folder_name + "/";
 
@@ -105,7 +106,8 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 BufferedWriter writer = new BufferedWriter(new FileWriter(dest, true));
 
                 // Master string of information
-                String data = location.getTime() + "," + lat + "," + lon + "," + altitude + "," + accuracy
+                // TODO: See if we can use location.getTime()
+                String data = new Date().getTime() + "," + lat + "," + lon + "," + altitude + "," + accuracy
                         + "," + location.getBearing() + "," + location.getSpeed() + "," + location.getProvider();
 
                 // Appends the string to the file and closes

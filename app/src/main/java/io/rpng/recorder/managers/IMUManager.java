@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Date;
 
 import io.rpng.recorder.activities.MainActivity;
 
@@ -62,6 +63,15 @@ public class IMUManager implements SensorEventListener {
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
+
+        // Set event timestamp to current time in milliseconds
+        // http://stackoverflow.com/a/9333605
+        event.timestamp = (new Date()).getTime() + (event.timestamp - System.nanoTime()) / 1000000L;
+
+        // TODO: Figure out better way, for now just use the total time
+        // https://code.google.com/p/android/issues/detail?id=56561
+        event.timestamp = new Date().getTime();
+
         // Handle accelerometer reading
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             linear_time = event.timestamp;
@@ -80,7 +90,7 @@ public class IMUManager implements SensorEventListener {
             if(MainActivity.is_recording) {
 
                 // Create folder name
-                String filename = "imu_data.txt";
+                String filename = "data_imu.txt";
                 String path = Environment.getExternalStorageDirectory().getAbsolutePath()
                         + "/dataset_recorder/" + MainActivity.folder_name + "/";
 

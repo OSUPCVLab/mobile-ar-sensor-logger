@@ -24,9 +24,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
@@ -227,14 +230,48 @@ public class MainActivity extends AppCompatActivity {
             // http://stackoverflow.com/a/9006098
             if(MainActivity.is_recording) {
 
+                // Current timestamp of the event
+                // TODO: See if we can use image.getTimestamp()
+                long timestamp = new Date().getTime();
+
                 // Create folder name
-                String filename = image.getTimestamp() + ".jpeg";
+                String filename = "data_image.txt";
                 String path = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/dataset_recorder/" + MainActivity.folder_name + "/images/";
+                        + "/dataset_recorder/" + MainActivity.folder_name + "/";
 
                 // Create export file
                 new File(path).mkdirs();
                 File dest = new File(path + filename);
+
+                try {
+                    // If the file does not exist yet, create it
+                    if(!dest.exists())
+                        dest.createNewFile();
+
+                    // The true will append the new data
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(dest, true));
+
+                    // Master string of information
+                    String data = timestamp + ",images/" + timestamp + ".jpeg";
+
+                    // Appends the string to the file and closes
+                    writer.write(data + "\n");
+                    writer.flush();
+                    writer.close();
+                }
+                // Ran into a problem writing to file
+                catch(IOException ioe) {
+                    System.err.println("IOException: " + ioe.getMessage());
+                }
+
+                // Create folder name
+                filename = timestamp + ".jpeg";
+                path = Environment.getExternalStorageDirectory().getAbsolutePath()
+                        + "/dataset_recorder/" + MainActivity.folder_name + "/images/";
+
+                // Create export file
+                new File(path).mkdirs();
+                dest = new File(path + filename);
 
                 // Export the file to disk
                 try {
