@@ -571,13 +571,15 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         }
         // row major order
         // NSLog(@"fx:%@, fy:%@, cx:%@, cy:%@", array[0], array[5], array[8], array[9]);
+        self.fx = [array[0] floatValue];
     } else {
         // Fallback on earlier versions
+        self.fx = 0.f;
     }
     
     
 	[self calculateFramerateAtTimestamp:timestamp];
-    self.fx = [array[0] floatValue];
+    
 	// We must not use the GPU while running in the background.
 	// setRenderingEnabled: takes the same lock so the caller can guarantee no GPU usage once the setter returns.
 	@synchronized( _renderer )
