@@ -576,8 +576,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         // Fallback on earlier versions
         self.fx = 0.f;
     }
-    
-    
+    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
+    NSLog(@"Current frame timestamp:%.6f", frameTimestamp);
 	[self calculateFramerateAtTimestamp:timestamp];
     
 	// We must not use the GPU while running in the background.
