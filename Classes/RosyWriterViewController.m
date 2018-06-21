@@ -8,12 +8,13 @@
  */
 
 #import "RosyWriterViewController.h"
+#import "RosyWriterViewController+Helper.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import "RosyWriterCapturePipeline.h"
 #import "OpenGLPixelBufferView.h"
 
-@interface RosyWriterViewController () <RosyWriterCapturePipelineDelegate>
+@interface RosyWriterViewController () <RosyWriterCapturePipelineDelegate, UIGestureRecognizerDelegate>
 {
 	BOOL _addedObservers;
 	BOOL _recording;
@@ -25,10 +26,16 @@
 	RosyWriterCapturePipeline *_capturePipeline;
 }
 
+@property (weak, nonatomic) IBOutlet UIView *preview;
+
 @property(nonatomic, strong) IBOutlet UIBarButtonItem *recordButton;
 @property(nonatomic, strong) IBOutlet UILabel *framerateLabel;
 @property(nonatomic, strong) IBOutlet UILabel *dimensionsLabel;
 
+@property (strong, nonatomic) AVCaptureDevice *videoCaptureDevice;
+@property (strong, nonatomic) CALayer *focusBoxLayer;
+@property (strong, nonatomic) CAAnimation *focusBoxAnimation;
+@property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @end
 
 @implementation RosyWriterViewController
@@ -89,8 +96,114 @@
 	// the willEnterForeground and didEnterBackground notifications are subsequently used to update _allowedToUseGPU
 	_allowedToUseGPU = ( [UIApplication sharedApplication].applicationState != UIApplicationStateBackground );
 	_capturePipeline.renderingEnabled = _allowedToUseGPU;
-	
-	[super viewDidLoad];
+    
+    
+    // preview layer
+    CGRect bounds = self.preview.layer.bounds;
+    _captureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc] init];
+    _captureVideoPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    _captureVideoPreviewLayer.bounds = bounds;
+    _captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
+    // [self.preview.layer addSublayer:_captureVideoPreviewLayer];
+    
+    // regardless captureVideoPreviewLayer is addSublayer to preview.layer, it's observed that self.preview.frame.size == captureVideoPreviewLayer.frame.size
+    NSLog(@"previewlayer frame size %.3f %.3f super preview size %.3f %.3f", _captureVideoPreviewLayer.frame.size.width, _captureVideoPreviewLayer.frame.size.height,
+          self.preview.frame.size.width, self.preview.frame.size.height);
+    
+    AVCaptureDevicePosition devicePosition = AVCaptureDevicePositionBack;
+    if(devicePosition == AVCaptureDevicePositionUnspecified) {
+        self.videoCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    } else {
+        self.videoCaptureDevice = [self cameraWithPosition:devicePosition];
+    }
+    
+    // reference: https://stackoverflow.com/questions/11355671/how-do-i-implement-the-uitapgesturerecognizer-into-my-application
+    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapFrom:)];
+    tapGestureRecognizer.numberOfTouchesRequired = 1;
+    tapGestureRecognizer.numberOfTapsRequired = 1;
+    [self.preview addGestureRecognizer:tapGestureRecognizer];
+    tapGestureRecognizer.delegate = self;
+    _tapToFocus = YES;
+    // add focus box to view
+    [self addDefaultFocusBox];
+    
+    [super viewDidLoad];
+}
+
+// Find a camera with the specified AVCaptureDevicePosition, returning nil if one is not found
+- (AVCaptureDevice *)cameraWithPosition:(AVCaptureDevicePosition) position
+{
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    for (AVCaptureDevice *device in devices) {
+        if (device.position == position) return device;
+    }
+    return nil;
+}
+
+
+- (void)showFocusBox:(CGPoint)point
+{
+    if(self.focusBoxLayer) {
+        // clear animations
+        [self.focusBoxLayer removeAllAnimations];
+        
+        // move layer to the touch point
+        [CATransaction begin];
+        [CATransaction setValue: (id) kCFBooleanTrue forKey: kCATransactionDisableActions];
+        self.focusBoxLayer.position = point;
+        [CATransaction commit];
+    }
+    
+    if(self.focusBoxAnimation) {
+        // run the animation
+        [self.focusBoxLayer addAnimation:self.focusBoxAnimation forKey:@"animateOpacity"];
+    }
+}
+
+- (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation
+{
+    self.focusBoxLayer = layer;
+    self.focusBoxAnimation = animation;
+}
+
+
+- (void)addDefaultFocusBox
+{
+    CALayer *focusBox = [[CALayer alloc] init];
+    focusBox.cornerRadius = 5.0f;
+    focusBox.bounds = CGRectMake(0.0f, 0.0f, 70, 60);
+    focusBox.borderWidth = 3.0f;
+    focusBox.borderColor = [[UIColor yellowColor] CGColor];
+    focusBox.opacity = 0.0f;
+    [self.view.layer addSublayer:focusBox];
+    
+    CABasicAnimation *focusBoxAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    focusBoxAnimation.duration = 0.75;
+    focusBoxAnimation.autoreverses = NO;
+    focusBoxAnimation.repeatCount = 0.0;
+    focusBoxAnimation.fromValue = [NSNumber numberWithFloat:1.0];
+    focusBoxAnimation.toValue = [NSNumber numberWithFloat:0.0];
+    
+    [self alterFocusBox:focusBox animation:focusBoxAnimation];
+}
+
+
+- (void) handleTapFrom: (UITapGestureRecognizer *)gestureRecognizer
+{
+    NSLog(@"tap recognizer sending taps");
+    //Code to handle the gesture
+    if(!self.tapToFocus) {
+        return;
+    }
+    
+    if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        CGPoint touchedPoint = [gestureRecognizer locationInView:gestureRecognizer.view];
+        
+        CGPoint pointOfInterest = [self convertToPointOfInterestFromViewCoordinates:touchedPoint                                                                   previewLayer:self.captureVideoPreviewLayer                                                                 ports:_capturePipeline.videoDeviceInput.ports];
+        [_capturePipeline focusAtPoint:pointOfInterest];
+        [self showFocusBox:touchedPoint];
+    }
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated

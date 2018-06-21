@@ -224,6 +224,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	if ( [_captureSession canAddInput:videoIn] ) {
 		[_captureSession addInput:videoIn];
         _videoDevice = videoDevice;
+        _videoDeviceInput = videoIn;
+        
         if ( [_videoDevice isFocusModeSupported:0]) {
             NSLog(@"Lock focus is possible");
             AVCaptureFocusMode fm = _videoDevice.focusMode;
@@ -886,6 +888,23 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
 		const float newRate = (float)( [_previousSecondTimestamps count] - 1 ) / duration;
 		self.videoFrameRate = newRate;
 	}
+}
+
+- (void)focusAtPoint:(CGPoint)point
+{
+    AVCaptureDevice *device = _videoDevice;
+    if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
+        NSError *error;
+        if ([device lockForConfiguration:&error]) {
+            device.focusPointOfInterest = point;
+            device.focusMode = AVCaptureFocusModeAutoFocus;
+            [device unlockForConfiguration];
+            NSLog(@"Camera focused at %.3f, %.3f", point.x, point.y);
+        } else {
+            NSLog(@"Camera error: %@", error);
+            //            [self passError:error];
+        }
+    }
 }
 
 @end

@@ -106,6 +106,7 @@
 		6FF11C9516A877B100E14D71 /* matrix.c in Sources */ = {isa = PBXBuildFile; fileRef = 6FF11C9116A877B100E14D71 /* matrix.c */; };
 		6FF11C9616A877B100E14D71 /* ShaderUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6FF11C9316A877B100E14D71 /* ShaderUtilities.c */; };
 		7214DBCE182AEF8900EA3F99 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7214DBCD182AEF8900EA3F99 /* Images.xcassets */; };
+		F36A3A7D20D7F18600AA1C57 /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -158,6 +159,8 @@
 		6FF11C9316A877B100E14D71 /* ShaderUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; name = ShaderUtilities.c; path = Utilities/GL/ShaderUtilities.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		6FF11C9416A877B100E14D71 /* ShaderUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = ShaderUtilities.h; path = Utilities/GL/ShaderUtilities.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		7214DBCD182AEF8900EA3F99 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Resources/Images.xcassets; sourceTree = SOURCE_ROOT; };
+		F36A3A7B20D7F18600AA1C57 /* RosyWriterViewController+Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RosyWriterViewController+Helper.h"; sourceTree = "<group>"; };
+		F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RosyWriterViewController+Helper.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -304,6 +307,8 @@
 		6F90DDDF1395CAAA00125BDA /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				F36A3A7B20D7F18600AA1C57 /* RosyWriterViewController+Helper.h */,
+				F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */,
 				6F90DDEB1395CAAA00125BDA /* RosyWriterViewController.h */,
 				6F90DDED1395CAAA00125BDA /* RosyWriterViewController.m */,
 				6F90DE0E1395CD9C00125BDA /* RosyWriterCapturePipeline.h */,
@@ -583,6 +588,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F36A3A7D20D7F18600AA1C57 /* RosyWriterViewController+Helper.m in Sources */,
 				6F90DDE61395CAAA00125BDA /* main.m in Sources */,
 				6F90DDEA1395CAAA00125BDA /* RosyWriterAppDelegate.m in Sources */,
 				6F90DDEE1395CAAA00125BDA /* RosyWriterViewController.m in Sources */,
