@@ -11,12 +11,8 @@
 #import <OpenGLES/EAGL.h>
 #import "ShaderUtilities.h"
 #import "matrix.h"
+#import "OpenGLPixelBufferView.h" // customized opengl program and enums
 
-enum {
-	ATTRIB_VERTEX,
-	ATTRIB_TEXTUREPOSITON,
-	NUM_ATTRIBUTES
-};
 
 @interface RosyWriterOpenGLRenderer ()
 {
@@ -283,9 +279,12 @@ bail:
 		"position", "texturecoordinate",
 	};
 	
-	const GLchar *vertSrc = [RosyWriterOpenGLRenderer readFile:@"myFilter.vsh"];
-	const GLchar *fragSrc = [RosyWriterOpenGLRenderer readFile:@"myFilter.fsh"];
+//    const GLchar *vertSrc = [RosyWriterOpenGLRenderer readFile:@"myFilter.vsh"];
+//    const GLchar *fragSrc = [RosyWriterOpenGLRenderer readFile:@"myFilter.fsh"];
 	
+    const GLchar *vertSrc = kPassThruVertex;
+    const GLchar *fragSrc = kPassThruFragment;
+    
 	// shader program
 	glueCreateProgram( vertSrc, fragSrc,  
 					  NUM_ATTRIBUTES, (const GLchar **)&attribName[0], attribLocation,

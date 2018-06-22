@@ -234,7 +234,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
             float lenspos = _videoDevice.lensPosition;
             
             NSLog(@"Focus lens pos %.4f", lenspos);
-            if ( 0 && [_videoDevice lockForConfiguration:NULL] == YES ) {
+            if ( [_videoDevice lockForConfiguration:NULL] == YES ) {
                 
                 [_videoDevice setFocusMode:0];
                 NSLog(@"Focus mode locked");
