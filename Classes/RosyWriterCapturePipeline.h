@@ -35,6 +35,7 @@
 // Stats
 @property(atomic, readonly) float videoFrameRate;
 @property(atomic, readonly) float fx;
+@property(atomic, readonly) BOOL autoLocked;
 @property(atomic, readonly) CMVideoDimensions videoDimensions;
 @property(atomic, readonly) AVCaptureDeviceInput* videoDeviceInput;
 @end

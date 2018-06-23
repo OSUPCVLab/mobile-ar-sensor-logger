@@ -76,13 +76,15 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	
 	__weak id<RosyWriterCapturePipelineDelegate> _delegate;
 	dispatch_queue_t _delegateCallbackQueue;
+    
+    CMTime adjustExpFinishTime;
 }
 
 // Redeclared readwrite
 @property(atomic, readwrite) float videoFrameRate;
 @property(atomic, readwrite) float fx;
 @property(atomic, readwrite) CMVideoDimensions videoDimensions;
-
+@property(atomic, readwrite) BOOL adjustExposureFinished;
 // Because we specify __attribute__((NSObject)) ARC will manage the lifetime of the backing ivars even though they are CF types.
 @property(nonatomic, strong) __attribute__((NSObject)) CVPixelBufferRef currentPreviewPixelBuffer;
 @property(nonatomic, strong) __attribute__((NSObject)) CMFormatDescriptionRef outputVideoFormatDescription;
@@ -141,6 +143,11 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		_pipelineRunningTask = UIBackgroundTaskInvalid;
 		_delegate = delegate;
 		_delegateCallbackQueue = queue;
+        _fx = 0.0;
+        _autoLocked = FALSE;
+
+        _adjustExposureFinished = TRUE;
+        adjustExpFinishTime = CMTimeMakeWithSeconds(0.0, 0);
 	}
 	return self;
 }
@@ -178,6 +185,20 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		
 		[self teardownCaptureSession];
 	} );
+}
+
+- (AVCaptureDevice *)frontCamera {
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    for (AVCaptureDevice *device in devices) {
+        if ([device position] == AVCaptureDevicePositionFront) {
+            return device;
+        }
+    }
+    return nil;
+}
+
+- (AVCaptureDevice *)rearCamera {
+    return [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
 }
 
 - (void)setupCaptureSession
@@ -218,7 +239,9 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 #endif // RECORD_AUDIO
 	
 	/* Video */
-	AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    
+    // if the front-facing camera is desired, replace rearCamera with frontCamera
+	AVCaptureDevice *videoDevice = [self rearCamera];
 	NSError *videoDeviceError = nil;
 	AVCaptureDeviceInput *videoIn = [[AVCaptureDeviceInput alloc] initWithDevice:videoDevice error:&videoDeviceError];
 	if ( [_captureSession canAddInput:videoIn] ) {
@@ -226,24 +249,6 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         _videoDevice = videoDevice;
         _videoDeviceInput = videoIn;
         
-        if ( [_videoDevice isFocusModeSupported:0]) {
-            NSLog(@"Lock focus is possible");
-            AVCaptureFocusMode fm = _videoDevice.focusMode;
-            NSLog(@"Focus mode old %ld", (long)fm);
-            
-            float lenspos = _videoDevice.lensPosition;
-            
-            NSLog(@"Focus lens pos %.4f", lenspos);
-            if ( [_videoDevice lockForConfiguration:NULL] == YES ) {
-                
-                [_videoDevice setFocusMode:0];
-                NSLog(@"Focus mode locked");
-                [_videoDevice unlockForConfiguration];
-                
-            }
-            AVCaptureFocusMode fm2 = _videoDevice.focusMode;
-            NSLog(@"Focus mode now %ld", (long)fm2);
-        }
 	}
 	else {
 		[self handleNonRecoverableCaptureSessionRuntimeError:videoDeviceError];
@@ -538,7 +543,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 			[self setupVideoPipelineWithInputFormatDescription:formatDescription];
 		}
 		else {
-			[self renderVideoSampleBuffer:sampleBuffer];
+            [self renderVideoSampleBuffer:sampleBuffer fromConnection:connection];
 		}
 	}
 	else if ( connection == _audioConnection )
@@ -555,12 +560,13 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 
 
 
-- (void)renderVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer
+- (void)renderVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
 {
 	CVPixelBufferRef renderedPixelBuffer = NULL;
     NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:0];
     
-	CMTime timestamp = CMSampleBufferGetPresentationTimeStamp( sampleBuffer );
+	CMTime timestamp = CMSampleBufferGetPresentationTimeStamp( sampleBuffer ); // synced timestamp to master clock
+ 
     if (@available(iOS 11.0, *)) {
         CFDataRef intrinsicMatEncoded = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, NULL);
         NSData* pns = (__bridge NSData*) intrinsicMatEncoded;
@@ -578,9 +584,24 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         // Fallback on earlier versions
         self.fx = 0.f;
     }
-    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
-    NSLog(@"Current frame timestamp:%.6f", frameTimestamp);
+
 	[self calculateFramerateAtTimestamp:timestamp];
+    
+    // for debug only
+//    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
+//    NSLog(@"Current frame timestamp:%.6f", frameTimestamp);
+//    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", CMTimeGetSeconds(_videoDevice.exposureDuration), _videoDevice.ISO, (long)_videoDevice.exposureMode);
+//    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
+//    CMClockRef originalClock = [port clock];
+//    CMTime originalPTS = CMSyncConvertTime( timestamp, [_captureSession masterClock], originalClock );
+//    bool isDroppedExposureFrame = CMTimeCompare( originalPTS, adjustExpFinishTime ) == 0;
+//    if (isDroppedExposureFrame) {
+//        NSLog(@"Discovered first frame applied customized exposure at %.3f", CMTimeGetSeconds(timestamp));
+//        adjustExpFinishTime = CMTimeMakeWithSeconds(0.0, 0);
+//    }
+    
+    if ( !_adjustExposureFinished )
+        return;
     
 	// We must not use the GPU while running in the background.
 	// setRenderingEnabled: takes the same lock so the caller can guarantee no GPU usage once the setter returns.
@@ -893,6 +914,7 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
 - (void)focusAtPoint:(CGPoint)point
 {
     AVCaptureDevice *device = _videoDevice;
+    BOOL autoFocusLocked = FALSE;
     if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
         NSError *error;
         if ([device lockForConfiguration:&error]) {
@@ -900,9 +922,34 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
             device.focusMode = AVCaptureFocusModeAutoFocus;
             [device unlockForConfiguration];
             NSLog(@"Camera focused at %.3f, %.3f", point.x, point.y);
+            autoFocusLocked = TRUE;
         } else {
-            NSLog(@"Camera error: %@", error);
-            //            [self passError:error];
+            NSLog(@"Camera error in locking autofocus: %@", error);
+        }
+    }
+    
+    if (device.isExposurePointOfInterestSupported && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
+        NSError* error;
+        CMTime presentDuration = device.exposureDuration;
+        float oldBias = device.exposureTargetBias;
+        if ([device lockForConfiguration:&error]) {
+            _adjustExposureFinished = FALSE;
+            [device setExposureTargetBias:device.exposureTargetBias completionHandler:^(CMTime syncTime) {
+                adjustExpFinishTime = syncTime;
+                _adjustExposureFinished = TRUE;
+            }];
+            // method 1: fix both exposureDuration and ISO at current value
+//            [device setExposureModeCustomWithDuration:presentDuration ISO:AVCaptureISOCurrent completionHandler:^(CMTime syncTime) {}];
+            // method 2: fix both exposureDuration and ISO at a value adjusted by the auto exposure algorithm
+            device.exposurePointOfInterest = point;
+            device.exposureMode = AVCaptureExposureModeAutoExpose;
+            [device unlockForConfiguration];
+            NSLog(@"Camera exposure duration locked at %.3f, ISO %.3f target bias %.3f", CMTimeGetSeconds(presentDuration), device.ISO, oldBias);
+            _autoLocked = autoFocusLocked;
+            
+        } else {
+            NSLog(@"Camera error in locking autoexposure: %@", error);
+            _autoLocked = FALSE;
         }
     }
 }

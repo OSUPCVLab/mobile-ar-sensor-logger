@@ -38,6 +38,16 @@
                             <view alpha="0.5" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8IV-j9-wWu">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="623"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ddo-0v-VTw">
+                                        <rect key="frame" x="237" y="79" width="119" height="29"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <color key="backgroundColor" red="1" green="0.98026054488264025" blue="0.25388140680425308" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" fixedFrame="YES" barStyle="black" translucent="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Cl3-hM-2kb">
@@ -61,6 +71,7 @@
                     <connections>
                         <outlet property="dimensionsLabel" destination="eqF-fh-KLd" id="afD-Fh-0ot"/>
                         <outlet property="framerateLabel" destination="HDX-o9-NoD" id="edU-6K-7CE"/>
+                        <outlet property="lockAutoLabel" destination="ddo-0v-VTw" id="zL7-84-GNQ"/>
                         <outlet property="preview" destination="8IV-j9-wWu" id="HrH-S0-ydZ"/>
                         <outlet property="recordButton" destination="E0C-mB-ENL" id="Eh7-BH-UNm"/>
                     </connections>

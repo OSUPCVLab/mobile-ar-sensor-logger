@@ -31,6 +31,7 @@
 @property(nonatomic, strong) IBOutlet UIBarButtonItem *recordButton;
 @property(nonatomic, strong) IBOutlet UILabel *framerateLabel;
 @property(nonatomic, strong) IBOutlet UILabel *dimensionsLabel;
+@property (weak, nonatomic) IBOutlet UILabel *lockAutoLabel;
 
 @property (strong, nonatomic) AVCaptureDevice *videoCaptureDevice;
 @property (strong, nonatomic) CALayer *focusBoxLayer;
@@ -183,7 +184,13 @@
     focusBoxAnimation.repeatCount = 0.0;
     focusBoxAnimation.fromValue = [NSNumber numberWithFloat:1.0];
     focusBoxAnimation.toValue = [NSNumber numberWithFloat:0.0];
-    
+    if (_capturePipeline.autoLocked) {
+        [self.lockAutoLabel setText:@"AE/AF locked"];
+        [self.lockAutoLabel setHidden:FALSE];
+    } else {
+        [self.lockAutoLabel setText:@"AE/AF"];
+        [self.lockAutoLabel setHidden:FALSE];
+    }
     [self alterFocusBox:focusBox animation:focusBoxAnimation];
 }
 
@@ -201,7 +208,16 @@
         
         CGPoint pointOfInterest = [self convertToPointOfInterestFromViewCoordinates:touchedPoint                                                                   previewLayer:self.captureVideoPreviewLayer                                                                 ports:_capturePipeline.videoDeviceInput.ports];
         [_capturePipeline focusAtPoint:pointOfInterest];
+        if (_capturePipeline.autoLocked) {
+            [self.lockAutoLabel setText:@"AE/AF locked"];
+            [self.lockAutoLabel setHidden:FALSE];
+        } else {
+            [self.lockAutoLabel setText:@"AE/AF"];
+            [self.lockAutoLabel setHidden:FALSE];
+        }
+        
         [self showFocusBox:touchedPoint];
+        
     }
     
 }
@@ -303,7 +319,7 @@
 
 - (void)updateLabels
 {	
-	NSString *frameRateString = [NSString stringWithFormat:@"%d FPS %.4f", (int)roundf( _capturePipeline.videoFrameRate ), _capturePipeline.fx];
+	NSString *frameRateString = [NSString stringWithFormat:@"%d FPS %.3f", (int)roundf( _capturePipeline.videoFrameRate ), _capturePipeline.fx];
 	self.framerateLabel.text = frameRateString;
 	
 	NSString *dimensionsString = [NSString stringWithFormat:@"%d x %d", _capturePipeline.videoDimensions.width, _capturePipeline.videoDimensions.height];
