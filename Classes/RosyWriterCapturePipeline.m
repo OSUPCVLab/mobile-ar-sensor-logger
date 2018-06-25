@@ -563,16 +563,16 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 - (void)renderVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
 {
 	CVPixelBufferRef renderedPixelBuffer = NULL;
-    NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:0];
-    
+   
 	CMTime timestamp = CMSampleBufferGetPresentationTimeStamp( sampleBuffer ); // synced timestamp to master clock
- 
+ // It seems the live camera frame is rectified by the look-up-table of lens distortion. see https://forums.developer.apple.com/thread/79806
+    
+    NSMutableArray *array = nil;
     if (@available(iOS 11.0, *)) {
         CFDataRef intrinsicMatEncoded = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, NULL);
         NSData* pns = (__bridge NSData*) intrinsicMatEncoded;
-
         float intrinsicParam;
-        
+        array = [[NSMutableArray alloc] initWithCapacity:0];
         for ( NSUInteger offset = 0; offset < pns.length; offset += sizeof(float)) {
             [pns getBytes:&intrinsicParam range:NSMakeRange(offset, sizeof(float))];
             [array addObject:[NSNumber numberWithFloat:intrinsicParam]];
@@ -623,7 +623,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 			[self outputPreviewPixelBuffer:renderedPixelBuffer];
 			
 			if ( _recordingStatus == RosyWriterRecordingStatusRecording ) {
-				[_recorder appendVideoPixelBuffer:renderedPixelBuffer withPresentationTime:timestamp];
+				[_recorder appendVideoPixelBuffer:renderedPixelBuffer withPresentationTime:timestamp withIntrinsicMat:[array copy]];
 			}
 		}
 		
@@ -741,11 +741,16 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		// We will be stopped once we save to the assets library.
 	}
 	
+    NSMutableArray* savedFrameTimestamps = _recorder.savedFrameTimestamps;
+    NSMutableArray* savedFrameIntrinsics = _recorder.savedFrameIntrinsics;
+    __block NSURL * savedAssetURL = nil;
 	_recorder = nil;
 	
 	ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    
 	[library writeVideoAtPathToSavedPhotosAlbum:_recordingURL completionBlock:^(NSURL *assetURL, NSError *error) {
-		
+        savedAssetURL = assetURL;
+        
 		[[NSFileManager defaultManager] removeItemAtURL:_recordingURL error:NULL];
 		
  		@synchronized( self )
@@ -757,6 +762,59 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 			[self transitionToRecordingStatus:RosyWriterRecordingStatusIdle error:error];
 		}
 	}];
+    
+    NSLog(@"Video finished recording with %lu timestamps and %lu intrinsic mats", [savedFrameTimestamps count], [savedFrameIntrinsics count]);
+    
+    // see also https://stackoverflow.com/questions/27854937/ios8-photos-framework-how-to-get-the-nameor-filename-of-a-phasset
+    // also see https://stackoverflow.com/questions/4545982/getting-video-from-alasset/16367293
+    // also see https://stackoverflow.com/questions/7234445/wait-for-assetforurl-blocks-to-be-completed
+    // unfortunately, asset filename property is often null
+    
+//    [NSThread sleepForTimeInterval:1.5f];
+//    [library assetForURL:savedAssetURL
+//             resultBlock:^(ALAsset *asset) {
+//         if (asset) {
+//             //////////////////////////////////////////////////////
+//             // SUCCESS POINT #1 - asset is what we are looking for
+//             //////////////////////////////////////////////////////
+//             // successBlock();
+//            //  NSLog(@"Video asset saved filename %@", [asset valueForKey:@"filename"]);
+//             NSLog(@"Video asset saved filename %@", [[asset defaultRepresentation] filename]);
+//         }
+//         else {
+//             // On iOS 8.1 [library assetForUrl] Photo Streams always returns nil. Try to obtain it in an alternative way
+//
+//             [library enumerateGroupsWithTypes:ALAssetsGroupPhotoStream
+//                                    usingBlock:^(ALAssetsGroup *group, BOOL *stop)
+//              {
+//                  [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
+//                      if([result.defaultRepresentation.url isEqual:savedAssetURL])
+//                      {
+//                          ///////////////////////////////////////////////////////
+//                          // SUCCESS POINT #2 - result is what we are looking for
+//                          ///////////////////////////////////////////////////////
+//                          //successBlock();
+//                       //   NSLog(@"Video asset saved filename %@", [asset valueForKey:@"filename"]);
+//                          NSLog(@"Video asset saved filename %@", [[asset defaultRepresentation] filename]);
+//                          *stop = YES;
+//                      }
+//                  }];
+//              }
+//              failureBlock:^(NSError *error)
+//              {
+//                  NSLog(@"Error: Cannot load asset from photo stream - %@", [error localizedDescription]);
+//                  // failureBlock();
+//              }];
+//         }
+//
+//     }
+//     failureBlock:^(NSError *error)
+//     {
+//         NSLog(@"Error: Cannot load asset - %@", [error localizedDescription]);
+//         // failureBlock();
+//     }
+//     ];
+    
 }
 
 #pragma mark Recording State Machine

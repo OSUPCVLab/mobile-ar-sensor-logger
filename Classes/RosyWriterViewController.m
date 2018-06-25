@@ -253,6 +253,8 @@
 
 #pragma mark - UI
 
+// to playback a video, see https://stackoverflow.com/questions/48485983/how-to-get-the-timestamp-of-each-video-frame-in-ios-while-decoding-a-video-mp4
+
 - (IBAction)toggleRecording:(id)sender
 {
 	if ( _recording )

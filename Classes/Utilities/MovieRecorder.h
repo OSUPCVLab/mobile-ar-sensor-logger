@@ -17,6 +17,9 @@
 
 @interface MovieRecorder : NSObject
 
+@property(nonatomic, readonly) NSMutableArray* savedFrameTimestamps;
+@property(nonatomic, readonly) NSMutableArray* savedFrameIntrinsics;
+
 - (instancetype)initWithURL:(NSURL *)URL delegate:(id<MovieRecorderDelegate>)delegate callbackQueue:(dispatch_queue_t)queue; // delegate is weak referenced
 
 // Only one audio and video track each are allowed.
@@ -27,8 +30,8 @@
 // When finished the delegate's recorderDidFinishPreparing: or recorder:didFailWithError: method will be called.
 - (void)prepareToRecord;
 
-- (void)appendVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
-- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime;
+// - (void)appendVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
+- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3;
 - (void)appendAudioSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 
 // Asynchronous, might take several hundred milliseconds.
