@@ -32,6 +32,8 @@
 @property(nonatomic, strong) IBOutlet UILabel *framerateLabel;
 @property(nonatomic, strong) IBOutlet UILabel *dimensionsLabel;
 @property (weak, nonatomic) IBOutlet UILabel *lockAutoLabel;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *exportButton;
+
 
 @property (strong, nonatomic) AVCaptureDevice *videoCaptureDevice;
 @property (strong, nonatomic) CALayer *focusBoxLayer;
@@ -278,6 +280,10 @@
 		
 		_recording = YES;
 	}
+}
+
+- (IBAction)exportButtonPressed:(id)sender {
+    NSLog(@"Export button pressed!");
 }
 
 - (void)recordingStopped
