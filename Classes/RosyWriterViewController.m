@@ -10,11 +10,14 @@
 #import "RosyWriterViewController.h"
 #import "RosyWriterViewController+Helper.h"
 
-#import <QuartzCore/QuartzCore.h>
+
 #import "RosyWriterCapturePipeline.h"
 #import "OpenGLPixelBufferView.h"
 
-@interface RosyWriterViewController () <RosyWriterCapturePipelineDelegate, UIGestureRecognizerDelegate>
+#import <QuartzCore/QuartzCore.h>
+#import <MessageUI/MessageUI.h>
+
+@interface RosyWriterViewController () <RosyWriterCapturePipelineDelegate, UIGestureRecognizerDelegate, MFMailComposeViewControllerDelegate>
 {
 	BOOL _addedObservers;
 	BOOL _recording;
@@ -255,8 +258,6 @@
 
 #pragma mark - UI
 
-// to playback a video, see https://stackoverflow.com/questions/48485983/how-to-get-the-timestamp-of-each-video-frame-in-ios-while-decoding-a-video-mp4
-
 - (IBAction)toggleRecording:(id)sender
 {
 	if ( _recording )
@@ -282,8 +283,59 @@
 	}
 }
 
+
+- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
+{
+    switch (result) {
+        case MFMailComposeResultSent:
+            NSLog(@"Email sent");
+            break;
+        case MFMailComposeResultSaved:
+            NSLog(@"Email saved");
+            break;
+        case MFMailComposeResultCancelled:
+            NSLog(@"Email cancelled");
+            break;
+        case MFMailComposeResultFailed:
+            NSLog(@"Email failed");
+            break;
+        default:
+            NSLog(@"Error occured during email creation");
+            break;
+    }
+    
+    [self dismissViewControllerAnimated:YES completion:NULL];
+}
+
 - (IBAction)exportButtonPressed:(id)sender {
-    NSLog(@"Export button pressed!");
+    
+    NSString * videoMetadataFile = _capturePipeline.metadataFilePath;
+    NSString * inertialDataFile = [_capturePipeline getInertialFilePath];
+    
+    if ( videoMetadataFile == nil || inertialDataFile == nil) {
+        NSLog(@"Video metadata file is %@ and inertial data file %@, so no export will be done!", videoMetadataFile, inertialDataFile);
+        return;
+    }
+    
+   
+    if ([MFMailComposeViewController canSendMail])
+    {
+        MFMailComposeViewController *mailVC = [[MFMailComposeViewController alloc] init];
+        mailVC.mailComposeDelegate = self;
+        [mailVC setSubject:@"Look what I found using visual inertial recorder!"];
+        [mailVC setMessageBody:@"Found and sent using visual inertial recorder!" isHTML:NO];
+        
+        [mailVC setToRecipients:@[@"jianzhuhuai0108@gmail.com"]]; // Set a test email recipient here if you want.
+        NSData *metaData = [NSData dataWithContentsOfFile:videoMetadataFile];
+        [mailVC addAttachmentData: metaData mimeType:@"text/csv" fileName:videoMetadataFile]; // This is where you would add the attachment.
+        NSData *inertialData = [NSData dataWithContentsOfFile:inertialDataFile];
+        [mailVC addAttachmentData: inertialData mimeType:@"text/csv" fileName:inertialDataFile];
+        [self presentViewController:mailVC animated:YES completion:NULL];
+    }
+    else
+    {
+        NSLog(@"This device cannot send email");
+    }
 }
 
 - (void)recordingStopped

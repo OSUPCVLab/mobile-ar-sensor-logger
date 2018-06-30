@@ -15,6 +15,7 @@
 #import "RosyWriterOpenCVRenderer.h"
 
 #import "MovieRecorder.h"
+#import "InertialRecorder.h"
 
 #import <CoreMedia/CMBufferQueue.h>
 #import <CoreMedia/CMAudioClock.h>
@@ -79,6 +80,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	dispatch_queue_t _delegateCallbackQueue;
     
     CMTime adjustExpFinishTime;
+    CMTime exposureDuration;
+    InertialRecorder *_inertialRecorder;
 }
 
 // Redeclared readwrite
@@ -149,6 +152,9 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 
         _adjustExposureFinished = TRUE;
         adjustExpFinishTime = CMTimeMakeWithSeconds(0.0, 0);
+        exposureDuration = CMTimeMakeWithSeconds(0.0, 0);
+        _metadataFilePath = nil;
+        _inertialRecorder = [[InertialRecorder alloc] init];
 	}
 	return self;
 }
@@ -678,6 +684,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		[self transitionToRecordingStatus:RosyWriterRecordingStatusStartingRecording error:nil];
 	}
 	
+    [_inertialRecorder switchRecording];
+    
 	dispatch_queue_t callbackQueue = dispatch_queue_create( "com.apple.sample.capturepipeline.recordercallback", DISPATCH_QUEUE_SERIAL ); // guarantee ordering of callbacks with a serial queue
 	MovieRecorder *recorder = [[MovieRecorder alloc] initWithURL:_recordingURL delegate:self callbackQueue:callbackQueue];
 	
@@ -704,6 +712,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		[self transitionToRecordingStatus:RosyWriterRecordingStatusStoppingRecording error:nil];
 	}
 	
+    [_inertialRecorder switchRecording];
+    
 	[_recorder finishRecording]; // asynchronous, will call us back with recorderDidFinishRecording: or recorder:didFailWithError: when done
 }
 
@@ -770,20 +780,32 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
     
     NSString * videoMetadataFilepath = savedAssetURL.absoluteString;
     NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats", videoMetadataFilepath, savedAssetURL, [savedFrameTimestamps count], [savedFrameIntrinsics count]);
-    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@""];
+    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[sec], fx[px], fy[px], cx[px], cy[px], exposure duration[sec]\n"];
     
     for(int i=0;i<[savedFrameTimestamps count];i++ ) {
         NSNumber * nn = [savedFrameTimestamps objectAtIndex:i];
         NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
-        [mainString appendFormat:@"%@, fx %@, fy %@, cx %@, cy %@\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9]];
+        [mainString appendFormat:@"%@, %@, %@, %@, %@, %.4f\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], CMTimeGetSeconds(exposureDuration)];
     }
-    NSLog(@"Here are the list of timestamp, fx, fy, cx, cy\n%@", mainString);
 
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask, YES);
+    NSString *documentsDirectoryPath = [paths objectAtIndex:0];
+    NSString *filename = [NSString stringWithFormat:@"movie_metadata.csv"];
+    _metadataFilePath = [documentsDirectoryPath stringByAppendingPathComponent:filename];
+    NSData* settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
+    
+    if ([settingsData writeToFile:_metadataFilePath atomically:YES]) {
+        NSLog(@"Written video metadata to %@", _metadataFilePath);
+    }
+    else {
+        NSLog(@"Failed to record video metadata to %@", _metadataFilePath);
+    }
+    
     // The below obtains the resource name of the most recent video or image in the Photos gallery
     // Unfortunately, the retrieved one is usually penultimate rather than the above saved one
     // see also https://stackoverflow.com/questions/27854937/ios8-photos-framework-how-to-get-the-nameor-filename-of-a-phasset
     // and https://stackoverflow.com/questions/41007271/make-requestavassetforvideo-synchronous
-#if 1
+#if 0
     PHAssetMediaType mediaType = PHAssetMediaTypeVideo;
     PHAsset *asset = nil;
     PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
@@ -1021,6 +1043,7 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
             _adjustExposureFinished = FALSE;
             [device setExposureTargetBias:device.exposureTargetBias completionHandler:^(CMTime syncTime) {
                 adjustExpFinishTime = syncTime;
+                exposureDuration = device.exposureDuration;
                 _adjustExposureFinished = TRUE;
             }];
             // method 1: fix both exposureDuration and ISO at current value
@@ -1038,5 +1061,10 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
         }
     }
 }
+
+- (NSString *)getInertialFilePath {
+    return _inertialRecorder.filePath;
+}
+
 
 @end

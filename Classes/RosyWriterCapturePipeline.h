@@ -24,7 +24,11 @@
 // These methods are asynchronous, see the recording delegate callbacks
 - (void)startRecording;
 - (void)stopRecording;
+
+// lock focus and exposure at the point of interest
 - (void)focusAtPoint:(CGPoint)point;
+// get the filepath where the inertial data is saved
+- (NSString *)getInertialFilePath;
 
 @property(atomic) BOOL renderingEnabled; // When set to NO the GPU will not be used after the setRenderingEnabled: call returns.
 
@@ -38,6 +42,7 @@
 @property(atomic, readonly) BOOL autoLocked;
 @property(atomic, readonly) CMVideoDimensions videoDimensions;
 @property(atomic, readonly) AVCaptureDeviceInput* videoDeviceInput;
+@property(atomic, readonly) NSString * metadataFilePath;
 @end
 
 @protocol RosyWriterCapturePipelineDelegate <NSObject>

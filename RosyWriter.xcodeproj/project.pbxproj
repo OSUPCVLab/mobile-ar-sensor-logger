@@ -106,6 +106,9 @@
 		6FF11C9616A877B100E14D71 /* ShaderUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6FF11C9316A877B100E14D71 /* ShaderUtilities.c */; };
 		7214DBCE182AEF8900EA3F99 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7214DBCD182AEF8900EA3F99 /* Images.xcassets */; };
 		F318DFE920E738C000260914 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318DFE820E738C000260914 /* Photos.framework */; };
+		F318E01320E78D2800260914 /* InertialRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = F318E01120E78D2700260914 /* InertialRecorder.m */; };
+		F318E01420E79AE300260914 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 269351C0156CB42100512474 /* CoreMotion.framework */; };
+		F318E01620E79B5E00260914 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
 		F36A3A7D20D7F18600AA1C57 /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
 /* End PBXBuildFile section */
 
@@ -160,6 +163,9 @@
 		6FF11C9416A877B100E14D71 /* ShaderUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = ShaderUtilities.h; path = Utilities/GL/ShaderUtilities.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		7214DBCD182AEF8900EA3F99 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Resources/Images.xcassets; sourceTree = SOURCE_ROOT; };
 		F318DFE820E738C000260914 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
+		F318E01120E78D2700260914 /* InertialRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InertialRecorder.m; sourceTree = "<group>"; };
+		F318E01220E78D2800260914 /* InertialRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InertialRecorder.h; sourceTree = "<group>"; };
+		F318E01520E79B5E00260914 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		F36A3A7B20D7F18600AA1C57 /* RosyWriterViewController+Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RosyWriterViewController+Helper.h"; sourceTree = "<group>"; };
 		F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RosyWriterViewController+Helper.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -220,6 +226,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F318E01620E79B5E00260914 /* MessageUI.framework in Frameworks */,
+				F318E01420E79AE300260914 /* CoreMotion.framework in Frameworks */,
 				F318DFE920E738C000260914 /* Photos.framework in Frameworks */,
 				6F096BFA157ED5110075E328 /* ImageIO.framework in Frameworks */,
 				6F90DE0B1395CCF500125BDA /* CoreMedia.framework in Frameworks */,
@@ -289,6 +297,7 @@
 		6F90DDD81395CAAA00125BDA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F318E01520E79B5E00260914 /* MessageUI.framework */,
 				F318DFE820E738C000260914 /* Photos.framework */,
 				171999D919C7695800A719B5 /* CoreImage.framework */,
 				6F90DE001395CCBE00125BDA /* AssetsLibrary.framework */,
@@ -309,6 +318,8 @@
 		6F90DDDF1395CAAA00125BDA /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				F318E01220E78D2800260914 /* InertialRecorder.h */,
+				F318E01120E78D2700260914 /* InertialRecorder.m */,
 				F36A3A7B20D7F18600AA1C57 /* RosyWriterViewController+Helper.h */,
 				F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */,
 				6F90DDEB1395CAAA00125BDA /* RosyWriterViewController.h */,
@@ -597,6 +608,7 @@
 				6F90DDEE1395CAAA00125BDA /* RosyWriterViewController.m in Sources */,
 				6F90DE141395CD9C00125BDA /* RosyWriterCapturePipeline.m in Sources */,
 				6FE5A735160BAC8000F6DB2B /* RosyWriterOpenGLRenderer.m in Sources */,
+				F318E01320E78D2800260914 /* InertialRecorder.m in Sources */,
 				6FF11C8E16A8779D00E14D71 /* MovieRecorder.m in Sources */,
 				6FF11C8F16A8779D00E14D71 /* OpenGLPixelBufferView.m in Sources */,
 				6FF11C9516A877B100E14D71 /* matrix.c in Sources */,
