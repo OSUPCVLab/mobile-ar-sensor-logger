@@ -20,6 +20,7 @@
 #import <CoreMedia/CMAudioClock.h>
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <ImageIO/CGImageProperties.h>
+#import <Photos/Photos.h> // for PHAsset
 
 /*
  RETAINED_BUFFER_COUNT is the number of pixel buffers we expect to hold on to from the renderer. This value informs the renderer how to size its buffer pool and how many pixel buffers to preallocate (done in the prepareWithOutputDimensions: method). Preallocation helps to lessen the chance of frame drops in our recording, in particular during recording startup. If we try to hold on to more buffers than RETAINED_BUFFER_COUNT then the renderer will fail to allocate new buffers from its pool and we will drop frames.
@@ -577,7 +578,9 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
             [pns getBytes:&intrinsicParam range:NSMakeRange(offset, sizeof(float))];
             [array addObject:[NSNumber numberWithFloat:intrinsicParam]];
         }
-        // row major order
+        // fx, 0, 0, 0
+        // 0, fy, 0, 0
+        // cx, cy, 0, 1
         // NSLog(@"fx:%@, fy:%@, cx:%@, cy:%@", array[0], array[5], array[8], array[9]);
         self.fx = [array[0] floatValue];
     } else {
@@ -589,7 +592,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
     
     // for debug only
 //    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
-//    NSLog(@"Current frame timestamp:%.6f", frameTimestamp);
+//    NSLog(@"Current frame timestamp:%.7f", frameTimestamp);
 //    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", CMTimeGetSeconds(_videoDevice.exposureDuration), _videoDevice.ISO, (long)_videoDevice.exposureMode);
 //    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
 //    CMClockRef originalClock = [port clock];
@@ -743,11 +746,13 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	
     NSMutableArray* savedFrameTimestamps = _recorder.savedFrameTimestamps;
     NSMutableArray* savedFrameIntrinsics = _recorder.savedFrameIntrinsics;
-    __block NSURL * savedAssetURL = nil;
+    
+    __block NSURL * savedAssetURL;
 	_recorder = nil;
 	
 	ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     
+    // unfortunately, the assetURL returned from the asynchronous function is often null
 	[library writeVideoAtPathToSavedPhotosAlbum:_recordingURL completionBlock:^(NSURL *assetURL, NSError *error) {
         savedAssetURL = assetURL;
         
@@ -763,58 +768,80 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		}
 	}];
     
-    NSLog(@"Video finished recording with %lu timestamps and %lu intrinsic mats", [savedFrameTimestamps count], [savedFrameIntrinsics count]);
+    NSString * videoMetadataFilepath = savedAssetURL.absoluteString;
+    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats", videoMetadataFilepath, savedAssetURL, [savedFrameTimestamps count], [savedFrameIntrinsics count]);
+    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@""];
     
+    for(int i=0;i<[savedFrameTimestamps count];i++ ) {
+        NSNumber * nn = [savedFrameTimestamps objectAtIndex:i];
+        NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
+        [mainString appendFormat:@"%@, fx %@, fy %@, cx %@, cy %@\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9]];
+    }
+    NSLog(@"Here are the list of timestamp, fx, fy, cx, cy\n%@", mainString);
+
+    // The below obtains the resource name of the most recent video or image in the Photos gallery
+    // Unfortunately, the retrieved one is usually penultimate rather than the above saved one
     // see also https://stackoverflow.com/questions/27854937/ios8-photos-framework-how-to-get-the-nameor-filename-of-a-phasset
-    // also see https://stackoverflow.com/questions/4545982/getting-video-from-alasset/16367293
-    // also see https://stackoverflow.com/questions/7234445/wait-for-assetforurl-blocks-to-be-completed
-    // unfortunately, asset filename property is often null
+    // and https://stackoverflow.com/questions/41007271/make-requestavassetforvideo-synchronous
+#if 1
+    PHAssetMediaType mediaType = PHAssetMediaTypeVideo;
+    PHAsset *asset = nil;
+    PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+    fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
+    PHFetchResult *fetchResult = [PHAsset fetchAssetsWithMediaType:mediaType options:fetchOptions];
+    if (fetchResult != nil && fetchResult.count > 0) {
+        // get last video from Photos
+        asset = [fetchResult lastObject];
+    }
     
-//    [NSThread sleepForTimeInterval:1.5f];
-//    [library assetForURL:savedAssetURL
-//             resultBlock:^(ALAsset *asset) {
-//         if (asset) {
-//             //////////////////////////////////////////////////////
-//             // SUCCESS POINT #1 - asset is what we are looking for
-//             //////////////////////////////////////////////////////
-//             // successBlock();
-//            //  NSLog(@"Video asset saved filename %@", [asset valueForKey:@"filename"]);
-//             NSLog(@"Video asset saved filename %@", [[asset defaultRepresentation] filename]);
-//         }
-//         else {
-//             // On iOS 8.1 [library assetForUrl] Photo Streams always returns nil. Try to obtain it in an alternative way
-//
-//             [library enumerateGroupsWithTypes:ALAssetsGroupPhotoStream
-//                                    usingBlock:^(ALAssetsGroup *group, BOOL *stop)
-//              {
-//                  [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
-//                      if([result.defaultRepresentation.url isEqual:savedAssetURL])
-//                      {
-//                          ///////////////////////////////////////////////////////
-//                          // SUCCESS POINT #2 - result is what we are looking for
-//                          ///////////////////////////////////////////////////////
-//                          //successBlock();
-//                       //   NSLog(@"Video asset saved filename %@", [asset valueForKey:@"filename"]);
-//                          NSLog(@"Video asset saved filename %@", [[asset defaultRepresentation] filename]);
-//                          *stop = YES;
-//                      }
-//                  }];
-//              }
-//              failureBlock:^(NSError *error)
-//              {
-//                  NSLog(@"Error: Cannot load asset from photo stream - %@", [error localizedDescription]);
-//                  // failureBlock();
-//              }];
-//         }
-//
-//     }
-//     failureBlock:^(NSError *error)
-//     {
-//         NSLog(@"Error: Cannot load asset - %@", [error localizedDescription]);
-//         // failureBlock();
-//     }
-//     ];
-    
+    if (asset) {
+        if (mediaType == PHAssetMediaTypeImage) {
+            // get image info from this asset
+            PHImageRequestOptions * imageRequestOptions = [[PHImageRequestOptions alloc] init];
+            imageRequestOptions.synchronous = YES;
+            [[PHImageManager defaultManager]
+             requestImageDataForAsset:asset
+             options:imageRequestOptions
+             resultHandler:^(NSData *imageData, NSString *dataUTI,
+                             UIImageOrientation orientation,
+                             NSDictionary *info)
+             {
+                 NSLog(@"info = %@", info);
+                 if ([info objectForKey:@"PHImageFileURLKey"]) {
+                     // path looks like this -
+                     // file:///var/mobile/Media/DCIM/###APPLE/IMG_####.JPG
+                     NSURL *path = [info objectForKey:@"PHImageFileURLKey"];
+                     NSLog(@"The path to the most recent image is %@", path);
+                 }
+             }];
+        } else if (mediaType == PHAssetMediaTypeVideo) {
+            // get video info for this asset
+            dispatch_semaphore_t    semaphore = dispatch_semaphore_create(0);
+            PHVideoRequestOptions *option = [PHVideoRequestOptions new];
+            __block AVAsset *resultAsset;
+            
+            [[PHImageManager defaultManager] requestAVAssetForVideo:asset
+                                                            options:option
+                                                      resultHandler:^(AVAsset * avasset, AVAudioMix * audioMix, NSDictionary * info)
+             {
+                 resultAsset = avasset;
+                 dispatch_semaphore_signal(semaphore);
+             }];
+            
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+            // We synchronously have the asset: do something with AVAsset
+            //        AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:resultAsset];
+            //        AVPlayer *videoPlayer = [AVPlayer playerWithPlayerItem:playerItem];
+            
+            if (![resultAsset isKindOfClass:AVURLAsset.class]) {
+                NSLog(@"AVAsset is not kind of AVURLAsset");
+            } else {
+                NSURL * resultURL = [(AVURLAsset *)resultAsset URL];
+                NSLog(@"The penultimate video of URL %@ has a path component %@", resultURL, resultURL.lastPathComponent);
+            }
+        }
+    }
+#endif
 }
 
 #pragma mark Recording State Machine
