@@ -105,6 +105,7 @@
 		6FF11C9516A877B100E14D71 /* matrix.c in Sources */ = {isa = PBXBuildFile; fileRef = 6FF11C9116A877B100E14D71 /* matrix.c */; };
 		6FF11C9616A877B100E14D71 /* ShaderUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6FF11C9316A877B100E14D71 /* ShaderUtilities.c */; };
 		7214DBCE182AEF8900EA3F99 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7214DBCD182AEF8900EA3F99 /* Images.xcassets */; };
+		F318DFE920E738C000260914 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318DFE820E738C000260914 /* Photos.framework */; };
 		F36A3A7D20D7F18600AA1C57 /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
 /* End PBXBuildFile section */
 
@@ -158,6 +159,7 @@
 		6FF11C9316A877B100E14D71 /* ShaderUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; name = ShaderUtilities.c; path = Utilities/GL/ShaderUtilities.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		6FF11C9416A877B100E14D71 /* ShaderUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = ShaderUtilities.h; path = Utilities/GL/ShaderUtilities.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		7214DBCD182AEF8900EA3F99 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Resources/Images.xcassets; sourceTree = SOURCE_ROOT; };
+		F318DFE820E738C000260914 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
 		F36A3A7B20D7F18600AA1C57 /* RosyWriterViewController+Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RosyWriterViewController+Helper.h"; sourceTree = "<group>"; };
 		F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RosyWriterViewController+Helper.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -208,7 +210,6 @@
 				696D281819CA539900A23D81 /* CoreVideo.framework in Frameworks */,
 				696D281919CA539900A23D81 /* CoreGraphics.framework in Frameworks */,
 				696D281A19CA539900A23D81 /* OpenGLES.framework in Frameworks */,
-				696D281B19CA539900A23D81 /* AssetsLibrary.framework in Frameworks */,
 				696D281C19CA539900A23D81 /* AVFoundation.framework in Frameworks */,
 				696D281D19CA539900A23D81 /* UIKit.framework in Frameworks */,
 				696D281E19CA539900A23D81 /* Foundation.framework in Frameworks */,
@@ -219,6 +220,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F318DFE920E738C000260914 /* Photos.framework in Frameworks */,
 				6F096BFA157ED5110075E328 /* ImageIO.framework in Frameworks */,
 				6F90DE0B1395CCF500125BDA /* CoreMedia.framework in Frameworks */,
 				6F90DE091395CCEA00125BDA /* QuartzCore.framework in Frameworks */,
@@ -287,6 +289,7 @@
 		6F90DDD81395CAAA00125BDA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F318DFE820E738C000260914 /* Photos.framework */,
 				171999D919C7695800A719B5 /* CoreImage.framework */,
 				6F90DE001395CCBE00125BDA /* AssetsLibrary.framework */,
 				6F90DDFE1395CCB600125BDA /* AVFoundation.framework */,
