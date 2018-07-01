@@ -27,6 +27,10 @@
 
 // lock focus and exposure at the point of interest
 - (void)focusAtPoint:(CGPoint)point;
+
+// unlock auto focus and auto exposure, this invalidates focusAtPoint
+- (void)unlockFocusAndExposure;
+
 // get the filepath where the inertial data is saved
 - (NSString *)getInertialFilePath;
 
@@ -38,8 +42,9 @@
 
 // Stats
 @property(atomic, readonly) float videoFrameRate;
-@property(atomic, readonly) float fx;
-@property(atomic, readonly) BOOL autoLocked;
+@property(atomic, readonly) float fx; // focal length in horizontal x axis in pixels
+@property(atomic, readonly) double exposureDuration;
+@property(atomic, readonly) BOOL autoLocked; // are both auto focus and auto exposure locked?
 @property(atomic, readonly) CMVideoDimensions videoDimensions;
 @property(atomic, readonly) AVCaptureDeviceInput* videoDeviceInput;
 @property(atomic, readonly) NSString * metadataFilePath;

@@ -19,6 +19,7 @@
 
 @property(nonatomic, readonly) NSMutableArray* savedFrameTimestamps;
 @property(nonatomic, readonly) NSMutableArray* savedFrameIntrinsics;
+@property(nonatomic, readonly) NSMutableArray* savedExposureDurations;
 
 - (instancetype)initWithURL:(NSURL *)URL delegate:(id<MovieRecorderDelegate>)delegate callbackQueue:(dispatch_queue_t)queue; // delegate is weak referenced
 
@@ -31,7 +32,7 @@
 - (void)prepareToRecord;
 
 // - (void)appendVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
-- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3;
+- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(double)exposureDuration;
 - (void)appendAudioSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 
 // Asynchronous, might take several hundred milliseconds.

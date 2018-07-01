@@ -34,6 +34,8 @@
 @property(nonatomic, strong) IBOutlet UIBarButtonItem *recordButton;
 @property(nonatomic, strong) IBOutlet UILabel *framerateLabel;
 @property(nonatomic, strong) IBOutlet UILabel *dimensionsLabel;
+@property (weak, nonatomic) IBOutlet UILabel *exposureDurationLabel;
+
 @property (weak, nonatomic) IBOutlet UILabel *lockAutoLabel;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *exportButton;
 
@@ -124,14 +126,20 @@
     }
     
     // reference: https://stackoverflow.com/questions/11355671/how-do-i-implement-the-uitapgesturerecognizer-into-my-application
+    // tap to lock auto focus and auto exposure
+    _tapToFocus = YES;
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapFrom:)];
     tapGestureRecognizer.numberOfTouchesRequired = 1;
     tapGestureRecognizer.numberOfTapsRequired = 1;
     [self.preview addGestureRecognizer:tapGestureRecognizer];
     tapGestureRecognizer.delegate = self;
-    _tapToFocus = YES;
-    // add focus box to view
-    [self addDefaultFocusBox];
+    [self addDefaultFocusBox]; // add focus box to view
+    
+    // long press to unlock auto focus and auto exposure
+    UILongPressGestureRecognizer *longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPressFrom:)];
+    longPressGestureRecognizer.minimumPressDuration = 0.5;
+    [self.preview addGestureRecognizer:longPressGestureRecognizer];
+    longPressGestureRecognizer.delegate = self;
     
     [super viewDidLoad];
 }
@@ -202,8 +210,6 @@
 
 - (void) handleTapFrom: (UITapGestureRecognizer *)gestureRecognizer
 {
-    NSLog(@"tap recognizer sending taps");
-    //Code to handle the gesture
     if(!self.tapToFocus) {
         return;
     }
@@ -216,15 +222,26 @@
         if (_capturePipeline.autoLocked) {
             [self.lockAutoLabel setText:@"AE/AF locked"];
             [self.lockAutoLabel setHidden:FALSE];
+            [self showFocusBox:touchedPoint];
         } else {
             [self.lockAutoLabel setText:@"AE/AF"];
             [self.lockAutoLabel setHidden:FALSE];
         }
-        
-        [self showFocusBox:touchedPoint];
-        
     }
-    
+}
+
+- (void) handleLongPressFrom: (UILongPressGestureRecognizer *)gestureRecognizer
+{
+    if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        [_capturePipeline unlockFocusAndExposure];
+        if (_capturePipeline.autoLocked) {
+            [self.lockAutoLabel setText:@"AE/AF locked"];
+            [self.lockAutoLabel setHidden:FALSE];
+        } else {
+            [self.lockAutoLabel setText:@"AE/AF"];
+            [self.lockAutoLabel setHidden:FALSE];
+        }
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -384,6 +401,9 @@
 	
 	NSString *dimensionsString = [NSString stringWithFormat:@"%d x %d", _capturePipeline.videoDimensions.width, _capturePipeline.videoDimensions.height];
 	self.dimensionsLabel.text = dimensionsString;
+    
+    NSString *exposureDurationString = [NSString stringWithFormat:@"%.4f", _capturePipeline.exposureDuration];
+    self.exposureDurationLabel.text = exposureDurationString;
 }
 
 - (void)showError:(NSError *)error

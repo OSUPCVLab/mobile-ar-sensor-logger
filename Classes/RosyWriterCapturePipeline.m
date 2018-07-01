@@ -80,7 +80,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	dispatch_queue_t _delegateCallbackQueue;
     
     CMTime adjustExpFinishTime;
-    CMTime exposureDuration;
+
     InertialRecorder *_inertialRecorder;
 }
 
@@ -151,8 +151,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         _autoLocked = FALSE;
 
         _adjustExposureFinished = TRUE;
-        adjustExpFinishTime = CMTimeMakeWithSeconds(0.0, 0);
-        exposureDuration = CMTimeMakeWithSeconds(0.0, 0);
+        adjustExpFinishTime = CMTimeMake(0, 1);
+        _exposureDuration = 0.0;
         _metadataFilePath = nil;
         _inertialRecorder = [[InertialRecorder alloc] init];
 	}
@@ -570,9 +570,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 - (void)renderVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
 {
 	CVPixelBufferRef renderedPixelBuffer = NULL;
-   
 	CMTime timestamp = CMSampleBufferGetPresentationTimeStamp( sampleBuffer ); // synced timestamp to master clock
- // It seems the live camera frame is rectified by the look-up-table of lens distortion. see https://forums.developer.apple.com/thread/79806
+ // It was purported that the live camera frame is rectified by the look-up-table of lens distortion. see https://forums.developer.apple.com/thread/79806
     
     NSMutableArray *array = nil;
     if (@available(iOS 11.0, *)) {
@@ -593,20 +592,20 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         // Fallback on earlier versions
         self.fx = 0.f;
     }
-
+    _exposureDuration = CMTimeGetSeconds(_videoDevice.exposureDuration);
 	[self calculateFramerateAtTimestamp:timestamp];
     
     // for debug only
 //    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
 //    NSLog(@"Current frame timestamp:%.7f", frameTimestamp);
-//    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", CMTimeGetSeconds(_videoDevice.exposureDuration), _videoDevice.ISO, (long)_videoDevice.exposureMode);
+//    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", _exposureDuration, _videoDevice.ISO, (long)_videoDevice.exposureMode);
 //    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
 //    CMClockRef originalClock = [port clock];
 //    CMTime originalPTS = CMSyncConvertTime( timestamp, [_captureSession masterClock], originalClock );
 //    bool isDroppedExposureFrame = CMTimeCompare( originalPTS, adjustExpFinishTime ) == 0;
 //    if (isDroppedExposureFrame) {
 //        NSLog(@"Discovered first frame applied customized exposure at %.3f", CMTimeGetSeconds(timestamp));
-//        adjustExpFinishTime = CMTimeMakeWithSeconds(0.0, 0);
+//        adjustExpFinishTime = CMTimeMake(0, 1);
 //    }
     
     if ( !_adjustExposureFinished )
@@ -632,7 +631,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 			[self outputPreviewPixelBuffer:renderedPixelBuffer];
 			
 			if ( _recordingStatus == RosyWriterRecordingStatusRecording ) {
-				[_recorder appendVideoPixelBuffer:renderedPixelBuffer withPresentationTime:timestamp withIntrinsicMat:[array copy]];
+                [_recorder appendVideoPixelBuffer:renderedPixelBuffer withPresentationTime:timestamp withIntrinsicMat:[array copy] withExposureDuration:_exposureDuration];
 			}
 		}
 		
@@ -756,7 +755,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	
     NSMutableArray* savedFrameTimestamps = _recorder.savedFrameTimestamps;
     NSMutableArray* savedFrameIntrinsics = _recorder.savedFrameIntrinsics;
-    
+    NSMutableArray* savedExposureDurations = _recorder.savedExposureDurations;
     __block NSURL * savedAssetURL;
 	_recorder = nil;
 	
@@ -779,13 +778,15 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	}];
     
     NSString * videoMetadataFilepath = savedAssetURL.absoluteString;
-    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats", videoMetadataFilepath, savedAssetURL, [savedFrameTimestamps count], [savedFrameIntrinsics count]);
+    // In older ios, _savedFrameIntrinsics can have 0 count
+    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoMetadataFilepath, savedAssetURL, [savedFrameTimestamps count], [savedFrameIntrinsics count], [savedExposureDurations count]);
     NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[sec], fx[px], fy[px], cx[px], cy[px], exposure duration[sec]\n"];
     
     for(int i=0;i<[savedFrameTimestamps count];i++ ) {
         NSNumber * nn = [savedFrameTimestamps objectAtIndex:i];
         NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
-        [mainString appendFormat:@"%@, %@, %@, %@, %@, %.4f\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], CMTimeGetSeconds(exposureDuration)];
+        NSNumber * ed = [savedExposureDurations objectAtIndex:i];
+        [mainString appendFormat:@"%@, %@, %@, %@, %@, %.4f\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
     }
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask, YES);
@@ -1037,27 +1038,75 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     
     if (device.isExposurePointOfInterestSupported && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
         NSError* error;
-        CMTime presentDuration = device.exposureDuration;
+        AVCaptureDeviceFormat * format = [device activeFormat];
+        NSLog(@"expo duration min %.5f max %.5f ISO min %.5f max %.5f", CMTimeGetSeconds(format.minExposureDuration), CMTimeGetSeconds(format.maxExposureDuration), format.minISO, format.maxISO);
         float oldBias = device.exposureTargetBias;
+        CMTime desiredDuration = CMTimeMake(1, 100);
+        CMTime oldDuration = device.exposureDuration;
+        float ratio = (float)(CMTimeGetSeconds(oldDuration)/CMTimeGetSeconds(desiredDuration));
+        
+        float oldISO = device.ISO;
+        float expectedISO = oldISO * ratio;
+        
         if ([device lockForConfiguration:&error]) {
-            _adjustExposureFinished = FALSE;
-            [device setExposureTargetBias:device.exposureTargetBias completionHandler:^(CMTime syncTime) {
-                adjustExpFinishTime = syncTime;
-                exposureDuration = device.exposureDuration;
-                _adjustExposureFinished = TRUE;
-            }];
-            // method 1: fix both exposureDuration and ISO at current value
-//            [device setExposureModeCustomWithDuration:presentDuration ISO:AVCaptureISOCurrent completionHandler:^(CMTime syncTime) {}];
-            // method 2: fix both exposureDuration and ISO at a value adjusted by the auto exposure algorithm
-            device.exposurePointOfInterest = point;
-            device.exposureMode = AVCaptureExposureModeAutoExpose;
+            // set target bias does not help much empirically
+//            _adjustExposureFinished = FALSE;
+//            [device setExposureTargetBias:device.exposureTargetBias completionHandler:^(CMTime syncTime) {
+//                adjustExpFinishTime = syncTime;
+//                _exposureDuration = CMTimeGetSeconds(device.exposureDuration);
+//                _adjustExposureFinished = TRUE;
+//            }];
+            if (/* DISABLES CODE */ (1)) {
+                // method 1: fix both exposureDuration and ISO at specified values
+                // refer to : https://stackoverflow.com/questions/40604334/correct-iso-value-for-avfoundation-camera
+                _adjustExposureFinished = FALSE;
+                [device setExposureModeCustomWithDuration:desiredDuration ISO:expectedISO completionHandler:^(CMTime syncTime) {
+                    adjustExpFinishTime = syncTime;
+                    _exposureDuration = CMTimeGetSeconds(device.exposureDuration);
+                    _adjustExposureFinished = TRUE;
+                }];
+            } else {
+                // method 2: fix both exposureDuration and ISO at a value adjusted by the auto exposure algorithm
+                device.exposurePointOfInterest = point;
+                device.exposureMode = AVCaptureExposureModeAutoExpose;
+            }
             [device unlockForConfiguration];
-            NSLog(@"Camera exposure duration locked at %.3f, ISO %.3f target bias %.3f", CMTimeGetSeconds(presentDuration), device.ISO, oldBias);
+            NSLog(@"Camera old exposure duration %.5f and ISO %.3f and target bias %.3f, desired exposure duration %.5f and ISO %.3f and ratio %.3f", CMTimeGetSeconds(oldDuration), oldISO, oldBias, CMTimeGetSeconds(desiredDuration), expectedISO, ratio);
             _autoLocked = autoFocusLocked;
             
         } else {
             NSLog(@"Camera error in locking autoexposure: %@", error);
             _autoLocked = FALSE;
+        }
+    }
+}
+
+- (void)unlockFocusAndExposure {
+    AVCaptureDevice *device = _videoDevice;
+    BOOL autoFocusEnabled = FALSE;
+    if ([device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+        NSError *error;
+        if ([device lockForConfiguration:&error]) {
+            device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
+            [device unlockForConfiguration];
+            autoFocusEnabled = TRUE;
+            NSLog(@"Camera auto focus enabled");
+        } else {
+            NSLog(@"Camera error in lockForConfiguration for focus: %@", error);
+        }
+    }
+    
+    if ([device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+        NSError* error;
+        
+        if ([device lockForConfiguration:&error]) {
+            device.exposureMode = AVCaptureExposureModeContinuousAutoExposure;
+            [device unlockForConfiguration];
+            
+            _autoLocked = !autoFocusEnabled;
+            NSLog(@"Camera auto exposure enabled");
+        } else {
+            NSLog(@"Camera error in lockForConfiguration for exposure: %@", error);
         }
     }
 }

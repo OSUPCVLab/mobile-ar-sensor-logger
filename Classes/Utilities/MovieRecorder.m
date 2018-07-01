@@ -75,6 +75,7 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 		_delegateCallbackQueue = queue;
         _savedFrameTimestamps = [[NSMutableArray alloc] init];
         _savedFrameIntrinsics = [[NSMutableArray alloc] init];
+        _savedExposureDurations = [[NSMutableArray alloc] init];
 	}
 	return self;
 }
@@ -140,6 +141,8 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
             [_savedFrameTimestamps removeAllObjects];
         if ([_savedFrameIntrinsics count])
             [_savedFrameIntrinsics removeAllObjects];
+        if ([_savedExposureDurations count])
+            [_savedExposureDurations removeAllObjects];
 		[self transitionToStatus:MovieRecorderStatusPreparingToRecord error:nil];
 	}
 	
@@ -187,7 +190,7 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 //    [self appendSampleBuffer:sampleBuffer ofMediaType:AVMediaTypeVideo];
 //}
 
-- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3
+- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(double)exposureDuration
 {
 	CMSampleBufferRef sampleBuffer = NULL;
 	
@@ -198,7 +201,7 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 	
 	OSStatus err = CMSampleBufferCreateForImageBuffer( kCFAllocatorDefault, pixelBuffer, true, NULL, NULL, _videoTrackSourceFormatDescription, &timingInfo, &sampleBuffer );
 	if ( sampleBuffer ) {
-		[self appendSampleBuffer:sampleBuffer ofMediaType:AVMediaTypeVideo withIntrinsicMat:intrinsic3x3];
+        [self appendSampleBuffer:sampleBuffer ofMediaType:AVMediaTypeVideo withIntrinsicMat:intrinsic3x3 withExposureDuration:exposureDuration];
 		CFRelease( sampleBuffer );
 	}
 	else {
@@ -292,10 +295,10 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 
 - (void)appendSampleBuffer:(CMSampleBufferRef)sampleBuffer ofMediaType:(NSString *)mediaType
 {
-    [self appendSampleBuffer:sampleBuffer ofMediaType:mediaType withIntrinsicMat:nil];
+    [self appendSampleBuffer:sampleBuffer ofMediaType:mediaType withIntrinsicMat:nil withExposureDuration:-1.0];
 }
 
-- (void)appendSampleBuffer:(CMSampleBufferRef)sampleBuffer ofMediaType:(NSString *)mediaType withIntrinsicMat:(NSArray *)intrinsic3x3
+- (void)appendSampleBuffer:(CMSampleBufferRef)sampleBuffer ofMediaType:(NSString *)mediaType withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(double)exposureDuration
 {
 	if ( sampleBuffer == NULL ) {
 		@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"NULL sample buffer" userInfo:nil];
@@ -345,6 +348,8 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
                     [self->_savedFrameTimestamps addObject:[NSNumber numberWithDouble:frameTimestamp]];
                     if (intrinsic3x3 != nil)
                         [self->_savedFrameIntrinsics addObject:intrinsic3x3];
+                    if (exposureDuration != -1.0)
+                        [self->_savedExposureDurations addObject:[NSNumber numberWithDouble:exposureDuration]];
                 }
 			}
 			else
@@ -377,9 +382,6 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 				[self teardownAssetWriterAndInputs];
 				if ( newStatus == MovieRecorderStatusFailed ) {
 					[[NSFileManager defaultManager] removeItemAtURL:_URL error:NULL];
-                } else {
-                    // In older ios, _savedFrameIntrinsics can have 0 count
-                    NSLog(@"Finished recording with %lu timestamps and %lu intrinsic mats", [_savedFrameTimestamps count], [_savedFrameIntrinsics count]);
                 }
 			} );
 

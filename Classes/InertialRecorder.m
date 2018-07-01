@@ -4,7 +4,7 @@
 #import <CoreMotion/CoreMotion.h>
 
 const double GRAVITY = 9.80; // cf. https://developer.apple.com/documentation/coremotion/getting_raw_accelerometer_events
-
+const double RATE = 100; // fps for inertial data
 @interface InertialRecorder ()
 {
     
@@ -176,10 +176,8 @@ const double GRAVITY = 9.80; // cf. https://developer.apple.com/documentation/co
         _rawAccelGyroData = [[NSMutableArray alloc] init];
         // reference: Basic sensors in ios Objective c
         // reference: https://stackoverflow.com/questions/37908854/motion-manager-not-working swift
-        // method 1
-        double rate = 5;
-        _motionManager.gyroUpdateInterval = 1.0/rate;
-        _motionManager.accelerometerUpdateInterval = 1.0/rate;
+        _motionManager.gyroUpdateInterval = 1.0/RATE;
+        _motionManager.accelerometerUpdateInterval = 1.0/RATE;
         
         NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
         [dateFormatter setDateFormat:@"EEE_MM_dd_yyyy_HH_mm_ss"];
