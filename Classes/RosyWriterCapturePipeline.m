@@ -789,12 +789,15 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         [mainString appendFormat:@"%@, %@, %@, %@, %@, %.4f\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
     }
 
+    // ios changes the absolute path every time the app restarts, so it is advised not to stick with the absolute path
+    // ref 1: https://stackoverflow.com/questions/47864143/document-directory-path-change-when-rebuild-application?rq=1
+    // ref 2: https://stackoverflow.com/questions/26988024/document-or-cache-path-changes-on-every-launch-in-ios-8
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask, YES);
     NSString *documentsDirectoryPath = [paths objectAtIndex:0];
     NSString *filename = [NSString stringWithFormat:@"movie_metadata.csv"];
     _metadataFilePath = [documentsDirectoryPath stringByAppendingPathComponent:filename];
     NSData* settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
-    
+    // to show these documents in Files app, edit info.plist as suggested in https://www.bignerdranch.com/blog/working-with-the-files-app-in-ios-11/
     if ([settingsData writeToFile:_metadataFilePath atomically:YES]) {
         NSLog(@"Written video metadata to %@", _metadataFilePath);
     }
@@ -1039,13 +1042,15 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     if (device.isExposurePointOfInterestSupported && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
         NSError* error;
         AVCaptureDeviceFormat * format = [device activeFormat];
-        NSLog(@"expo duration min %.5f max %.5f ISO min %.5f max %.5f", CMTimeGetSeconds(format.minExposureDuration), CMTimeGetSeconds(format.maxExposureDuration), format.minISO, format.maxISO);
+        // for iphone 6s these values are 1e-2 ms 333.3 ms 23 736
+//        NSLog(@"expo duration min %.5f ms max %.5f ms ISO min %.5f max %.5f", CMTimeGetSeconds(format.minExposureDuration)*1000, CMTimeGetSeconds(format.maxExposureDuration)*1000, format.minISO, format.maxISO);
         float oldBias = device.exposureTargetBias;
-        CMTime desiredDuration = CMTimeMake(1, 100);
+        CMTime desiredDuration = CMTimeMake(2, 1000);
         CMTime oldDuration = device.exposureDuration;
         float ratio = (float)(CMTimeGetSeconds(oldDuration)/CMTimeGetSeconds(desiredDuration));
         
         float oldISO = device.ISO;
+//        NSLog(@"Present exposure duration %.5f ms and ISO %.5f", CMTimeGetSeconds(oldDuration)*1000, oldISO);
         float expectedISO = oldISO * ratio;
         if (expectedISO > format.maxISO)
             expectedISO = format.maxISO;
