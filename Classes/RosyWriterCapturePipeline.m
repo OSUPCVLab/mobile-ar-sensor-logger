@@ -599,6 +599,13 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 //    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
 //    NSLog(@"Current frame timestamp:%.7f", frameTimestamp);
 //    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", _exposureDuration, _videoDevice.ISO, (long)_videoDevice.exposureMode);
+    // source: https://stackoverflow.com/questions/34924476/avcapturedevice-comparing-samplebuffer-timestamps
+    
+    // More information about syncing CoreMotion inertial data and AVCaptureInput sampleBuffer can be found at
+    // https://github.com/alokc83/iOS-Example-Collections/blob/8774c5b24e14cb2cdf79a6e3b13ee38739ad0a45/WWDC_2012_SourceCode/OS%20X/520%20-%20What's%20New%20in%20Camera%20Capture/VideoSnake/Classes/MotionSynchronizer.m
+    // and https://github.com/robovm/apple-ios-samples/blob/master/VideoSnake/Classes/Utilities/MotionSynchronizer.m
+    // TODO(jhuai): follow video snake sync approach to timestamp visual and inertial data to the same clock
+    
 //    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
 //    CMClockRef originalClock = [port clock];
 //    CMTime originalPTS = CMSyncConvertTime( timestamp, [_captureSession masterClock], originalClock );
