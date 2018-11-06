@@ -330,7 +330,7 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
             CMTime sampleTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
             Float64 frameTimestamp = CMTimeGetSeconds(sampleTime);
 			if ( ! _haveStartedSession ) {
-				[_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
+				[_assetWriter startSessionAtSourceTime:sampleTime];
 				_haveStartedSession = YES;
 			}
 			

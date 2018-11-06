@@ -15,6 +15,7 @@
 #import "RosyWriterOpenCVRenderer.h"
 
 #import "MovieRecorder.h"
+#import "VideoTimeConverter.h"
 #import "InertialRecorder.h"
 
 #import <CoreMedia/CMBufferQueue.h>
@@ -88,6 +89,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 @property(atomic, readwrite) float videoFrameRate;
 @property(atomic, readwrite) float fx;
 @property(atomic, readwrite) CMVideoDimensions videoDimensions;
+@property (nonatomic, retain) VideoTimeConverter *videoTimeConverter;
+
 @property(atomic, readwrite) BOOL adjustExposureFinished;
 // Because we specify __attribute__((NSObject)) ARC will manage the lifetime of the backing ivars even though they are CF types.
 @property(nonatomic, strong) __attribute__((NSObject)) CVPixelBufferRef currentPreviewPixelBuffer;
@@ -155,6 +158,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         _exposureDuration = 0.0;
         _metadataFilePath = nil;
         _inertialRecorder = [[InertialRecorder alloc] init];
+        _videoTimeConverter = [[VideoTimeConverter alloc] init];
 	}
 	return self;
 }
@@ -453,8 +457,12 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 {
 	NSLog( @"-[%@ %@] called", [self class], NSStringFromSelector(_cmd) );
 	
-	[self videoPipelineWillStartRunning];
+    [self videoPipelineWillStartRunning];
 	
+    [self.videoTimeConverter setSampleBufferClock:_captureSession.masterClock];
+    
+    [self.videoTimeConverter checkStatus];
+    
 	self.videoDimensions = CMVideoFormatDescriptionGetDimensions( inputFormatDescription );
 	[_renderer prepareForInputWithFormatDescription:inputFormatDescription outputRetainedBufferCountHint:RETAINED_BUFFER_COUNT];
 	
@@ -566,11 +574,11 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 }
 
 
-
 - (void)renderVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
 {
 	CVPixelBufferRef renderedPixelBuffer = NULL;
-	CMTime timestamp = CMSampleBufferGetPresentationTimeStamp( sampleBuffer ); // synced timestamp to master clock
+    [_videoTimeConverter convertSampleBufferTimeToMotionClock:sampleBuffer];
+    CMTime timestamp = getAttachmentTime(sampleBuffer); // synced timestamp to inertial sensor clock
  // It was purported that the live camera frame is rectified by the look-up-table of lens distortion. see https://forums.developer.apple.com/thread/79806
     
     NSMutableArray *array = nil;
@@ -600,12 +608,6 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 //    NSLog(@"Current frame timestamp:%.7f", frameTimestamp);
 //    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", _exposureDuration, _videoDevice.ISO, (long)_videoDevice.exposureMode);
     // source: https://stackoverflow.com/questions/34924476/avcapturedevice-comparing-samplebuffer-timestamps
-    
-    // More information about syncing CoreMotion inertial data and AVCaptureInput sampleBuffer can be found at
-    // https://github.com/alokc83/iOS-Example-Collections/blob/8774c5b24e14cb2cdf79a6e3b13ee38739ad0a45/WWDC_2012_SourceCode/OS%20X/520%20-%20What's%20New%20in%20Camera%20Capture/VideoSnake/Classes/MotionSynchronizer.m
-    // and https://github.com/robovm/apple-ios-samples/blob/master/VideoSnake/Classes/Utilities/MotionSynchronizer.m
-    // TODO(jhuai): follow video snake sync approach to timestamp visual and inertial data to the same clock
-    
 //    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
 //    CMClockRef originalClock = [port clock];
 //    CMTime originalPTS = CMSyncConvertTime( timestamp, [_captureSession masterClock], originalClock );
@@ -614,6 +616,12 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 //        NSLog(@"Discovered first frame applied customized exposure at %.3f", CMTimeGetSeconds(timestamp));
 //        adjustExpFinishTime = CMTimeMake(0, 1);
 //    }
+    
+    // More information about syncing CoreMotion inertial data and AVCaptureInput sampleBuffer can be found at the below references.
+    // VideoSnake Implementation References
+    // videosnake 1.0 obj c: https://github.com/alokc83/iOS-Example-Collections/blob/8774c5b24e14cb2cdf79a6e3b13ee38739ad0a45/WWDC_2012_SourceCode/OS%20X/520%20-%20What's%20New%20in%20Camera%20Capture/VideoSnake/Classes/MotionSynchronizer.m
+    // videosnake 2.2 obj c: https://github.com/robovm/apple-ios-samples/blob/master/VideoSnake/Classes/Utilities/MotionSynchronizer.m
+    // videosnake 2.2 swift: https://github.com/ooper-shlab/VideoSnake2.2-Swift
     
     if ( !_adjustExposureFinished )
         return;
