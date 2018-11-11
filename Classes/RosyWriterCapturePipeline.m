@@ -794,7 +794,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
     
     NSString * videoMetadataFilepath = savedAssetURL.absoluteString;
     // In older ios, _savedFrameIntrinsics can have 0 count
-    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoMetadataFilepath, savedAssetURL, [savedFrameTimestamps count], [savedFrameIntrinsics count], [savedExposureDurations count]);
+    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoMetadataFilepath, savedAssetURL, (unsigned long)[savedFrameTimestamps count],
+        (unsigned long)[savedFrameIntrinsics count], (unsigned long)[savedExposureDurations count]);
     NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[sec], fx[px], fy[px], cx[px], cy[px], exposure duration[sec]\n"];
     
     for(int i=0;i<[savedFrameTimestamps count];i++ ) {
