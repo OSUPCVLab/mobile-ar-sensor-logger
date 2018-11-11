@@ -797,12 +797,20 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
     NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoMetadataFilepath, savedAssetURL, (unsigned long)[savedFrameTimestamps count],
         (unsigned long)[savedFrameIntrinsics count], (unsigned long)[savedExposureDurations count]);
     NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[sec], fx[px], fy[px], cx[px], cy[px], exposure duration[sec]\n"];
-    
-    for(int i=0;i<[savedFrameTimestamps count];i++ ) {
+    bool hasIntrinsics = false;
+    if ([savedFrameIntrinsics count] > 0) {
+        hasIntrinsics = true;
+    }
+    for(unsigned long i=0; i<(unsigned long)[savedFrameTimestamps count]; i++) {
         NSNumber * nn = [savedFrameTimestamps objectAtIndex:i];
-        NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
         NSNumber * ed = [savedExposureDurations objectAtIndex:i];
-        [mainString appendFormat:@"%.7f, %@, %@, %@, %@, %.4f\n", [nn floatValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
+        if (hasIntrinsics) {
+            NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
+            [mainString appendFormat:@"%.7f, %@, %@, %@, %@, %.4f\n", [nn floatValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
+        } else {
+            [mainString appendFormat:@"%.7f, %.2f, %.2f, %.2f, %.2f, %.4f\n", [nn floatValue], 1.0, 1.0, 0.5, 0.5, [ed doubleValue]];
+        }
+    
     }
 
     // ios changes the absolute path every time the app restarts, so it is advised not to stick with the absolute path
