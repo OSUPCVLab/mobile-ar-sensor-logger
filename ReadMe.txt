@@ -39,6 +39,7 @@ OpenGLPixelBufferView
 GL
 -- Utilities used by the GL processing pipeline.
 
+This program has been found to be able to record as long as 12 minutes of 1920 x 1080 resolution video at 30Hz in conjuction with the inertial data on an iPhone 6S.
 
 ===============================================================
 Copyright © 2016 Apple Inc. All rights reserved.

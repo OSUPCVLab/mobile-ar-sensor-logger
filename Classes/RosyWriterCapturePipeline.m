@@ -801,7 +801,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         NSNumber * nn = [savedFrameTimestamps objectAtIndex:i];
         NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
         NSNumber * ed = [savedExposureDurations objectAtIndex:i];
-        [mainString appendFormat:@"%@, %@, %@, %@, %@, %.4f\n", [nn stringValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
+        [mainString appendFormat:@"%.7f, %@, %@, %@, %@, %.4f\n", [nn floatValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
     }
 
     // ios changes the absolute path every time the app restarts, so it is advised not to stick with the absolute path

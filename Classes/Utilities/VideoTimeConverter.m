@@ -112,11 +112,11 @@ CMTime getAttachmentTime(CMSampleBufferRef mediaSample)
 {
     CFDictionaryRef mediaTimeDict = CMGetAttachment(mediaSample, VIDEOSNAKE_REMAPPED_PTS, NULL);
     CMTime mediaTime = (mediaTimeDict) ? CMTimeMakeFromDictionary(mediaTimeDict) : CMSampleBufferGetPresentationTimeStamp(mediaSample);
-    Float64 floatTime = CMTimeGetSeconds(mediaTime);
-    if (mediaTimeDict) {
-        NSLog(@"%@ is used to get timestamp %.6f", VIDEOSNAKE_REMAPPED_PTS, floatTime);
-    } else {
-        NSLog(@"%@ is NOT used to get timestamp %.6f", VIDEOSNAKE_REMAPPED_PTS, floatTime);
-    }
+//    Float64 floatTime = CMTimeGetSeconds(mediaTime);
+//    if (mediaTimeDict) {
+//        NSLog(@"%@ is used to get timestamp %.6f", VIDEOSNAKE_REMAPPED_PTS, floatTime);
+//    } else {
+//        NSLog(@"%@ is NOT used to get timestamp %.6f", VIDEOSNAKE_REMAPPED_PTS, floatTime);
+//    }
     return mediaTime;
 }
