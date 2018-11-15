@@ -1,27 +1,26 @@
-apply plugin: 'com.android.model.application'
+apply plugin: 'com.android.application'
 
 
-model {
-    android {
-        compileSdkVersion 23
-        buildToolsVersion "23.0.2"
+android {
+    compileSdkVersion 23
+    buildToolsVersion "26.0.2"
 
-        defaultConfig {
-            applicationId "io.rpng.recorder"
-            minSdkVersion.apiLevel 21
-            targetSdkVersion.apiLevel 23
-            versionCode 1
-            versionName "1.0"
-            multiDexEnabled true
-        }
-        buildTypes {
-            release {
-                minifyEnabled false
-                proguardFiles.add(file('proguard-rules.pro'))
-            }
+    defaultConfig {
+        applicationId "io.rpng.recorder"
+        minSdkVersion 21
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles.add(file('proguard-rules.pro'))
         }
     }
 }
+
 
 dependencies {
     // Include the libs dir (right now we don't have any java libs)
