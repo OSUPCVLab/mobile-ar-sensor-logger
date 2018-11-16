@@ -344,9 +344,12 @@
         
         [mailVC setToRecipients:@[@"jianzhuhuai0108@gmail.com"]]; // Set a test email recipient here if you want.
         NSData *metaData = [NSData dataWithContentsOfFile:videoMetadataFile];
-        [mailVC addAttachmentData: metaData mimeType:@"text/csv" fileName:videoMetadataFile]; // This is where you would add the attachment.
+        NSString *videoAttachName = [videoMetadataFile lastPathComponent];
+        [mailVC addAttachmentData: metaData mimeType:@"text/csv" fileName:videoAttachName];
+        
         NSData *inertialData = [NSData dataWithContentsOfFile:inertialDataFile];
-        [mailVC addAttachmentData: inertialData mimeType:@"text/csv" fileName:inertialDataFile];
+        NSString *inertialAttachName = [inertialDataFile lastPathComponent];
+        [mailVC addAttachmentData: inertialData mimeType:@"text/csv" fileName:inertialAttachName];
         [self presentViewController:mailVC animated:YES completion:NULL];
     }
     else
