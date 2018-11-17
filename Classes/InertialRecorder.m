@@ -5,6 +5,8 @@
 
 const double GRAVITY = 9.80; // cf. https://developer.apple.com/documentation/coremotion/getting_raw_accelerometer_events
 const double RATE = 100; // fps for inertial data
+NSString *IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
+
 @interface InertialRecorder ()
 {
     
@@ -30,7 +32,7 @@ const double RATE = 100; // fps for inertial data
         _motionManager = [[CMMotionManager alloc] init];
         if (!_motionManager.isDeviceMotionAvailable) {
             NSLog(@"Device does not support motion capture."); }
-        _filePath = nil;
+        _fileURL = nil;
         _interpolateAccel = TRUE;
 
     }
@@ -152,21 +154,17 @@ const double RATE = 100; // fps for inertial data
         }
         if ([_rawAccelGyroData count])
             [_rawAccelGyroData removeAllObjects];
-        
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask, YES);
-        NSString *documentsDirectoryPath = [paths objectAtIndex:0];
-        
-        NSString *filename = [NSString stringWithFormat:@"raw_accel_gyro.csv"];
-        _filePath = [documentsDirectoryPath  stringByAppendingPathComponent:filename];
-        //        NSLog(@"Data will be saved to full path %@ of filename %@", _filePath, filename);
+
+        _fileURL = getFileURL(IMU_OUTPUT_FILENAME);
+        //        NSLog(@"Data will be saved to URL %@", _fileURL);
         NSData* settingsData;
         settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
         
-        if ([settingsData writeToFile:_filePath atomically:YES]) {
-            NSLog(@"Written inertial data to %@", _filePath);
+        if ([settingsData writeToURL:_fileURL atomically:YES]) {
+            NSLog(@"Written inertial data to %@", _fileURL);
         }
         else {
-            NSLog(@"Failed to record inertial data at %@", _filePath);
+            NSLog(@"Failed to record inertial data at %@", _fileURL);
         }
         
         NSLog(@"Stopped recording inertial data!");
@@ -223,3 +221,10 @@ const double RATE = 100; // fps for inertial data
     return [@(self.time) compare:@(otherObject.time)]; // @ converts double to NSNumber
 }
 @end
+
+
+NSURL *getFileURL(NSString *filename) {
+    NSArray *paths = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+    NSURL *documentsURL = [paths lastObject];
+    return [documentsURL URLByAppendingPathComponent:filename isDirectory:NO];
+}

@@ -326,8 +326,8 @@
 
 - (IBAction)exportButtonPressed:(id)sender {
     
-    NSString * videoMetadataFile = _capturePipeline.metadataFilePath;
-    NSString * inertialDataFile = [_capturePipeline getInertialFilePath];
+    NSURL * videoMetadataFile = _capturePipeline.metadataFileURL;
+    NSURL * inertialDataFile = [_capturePipeline getInertialFileURL];
     
     if ( videoMetadataFile == nil || inertialDataFile == nil) {
         NSLog(@"Video metadata file is %@ and inertial data file %@, so no export will be done!", videoMetadataFile, inertialDataFile);
@@ -343,11 +343,11 @@
         [mailVC setMessageBody:@"Found and sent using visual inertial recorder!" isHTML:NO];
         
         [mailVC setToRecipients:@[@"jianzhuhuai0108@gmail.com"]]; // Set a test email recipient here if you want.
-        NSData *metaData = [NSData dataWithContentsOfFile:videoMetadataFile];
+        NSData *metaData = [NSData dataWithContentsOfURL:videoMetadataFile];
         NSString *videoAttachName = [videoMetadataFile lastPathComponent];
         [mailVC addAttachmentData: metaData mimeType:@"text/csv" fileName:videoAttachName];
         
-        NSData *inertialData = [NSData dataWithContentsOfFile:inertialDataFile];
+        NSData *inertialData = [NSData dataWithContentsOfURL:inertialDataFile];
         NSString *inertialAttachName = [inertialDataFile lastPathComponent];
         [mailVC addAttachmentData: inertialData mimeType:@"text/csv" fileName:inertialAttachName];
         [self presentViewController:mailVC animated:YES completion:NULL];

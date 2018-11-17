@@ -31,8 +31,8 @@
 // unlock auto focus and auto exposure, this invalidates focusAtPoint
 - (void)unlockFocusAndExposure;
 
-// get the filepath where the inertial data is saved
-- (NSString *)getInertialFilePath;
+// get the file URL where the inertial data is saved
+- (NSURL *)getInertialFileURL;
 
 @property(atomic) BOOL renderingEnabled; // When set to NO the GPU will not be used after the setRenderingEnabled: call returns.
 
@@ -47,7 +47,7 @@
 @property(atomic, readonly) BOOL autoLocked; // are both auto focus and auto exposure locked?
 @property(atomic, readonly) CMVideoDimensions videoDimensions;
 @property(atomic, readonly) AVCaptureDeviceInput* videoDeviceInput;
-@property(atomic, readonly) NSString * metadataFilePath;
+@property(atomic, readonly) NSURL * metadataFileURL;
 @end
 
 @protocol RosyWriterCapturePipelineDelegate <NSObject>

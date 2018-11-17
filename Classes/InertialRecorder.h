@@ -14,7 +14,7 @@
 
 - (void)switchRecording;
 
-@property NSString *filePath;
+@property NSURL *fileURL;
 @property BOOL isRecording;
 
 @end
@@ -30,3 +30,5 @@
 - (NSComparisonResult)compare:(NodeWrapper *)otherObject;
 
 @end
+
+NSURL *getFileURL(const NSString *filename);

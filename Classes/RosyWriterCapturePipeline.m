@@ -50,6 +50,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	RosyWriterRecordingStatusStoppingRecording,
 }; // internal state machine
 
+NSString *VIDEO_META_FILENAME = @"movie_metadata.csv";
+
 @interface RosyWriterCapturePipeline () <AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, MovieRecorderDelegate>
 {
 	NSMutableArray *_previousSecondTimestamps;
@@ -156,7 +158,7 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         _adjustExposureFinished = TRUE;
         adjustExpFinishTime = CMTimeMake(0, 1);
         _exposureDuration = 0.0;
-        _metadataFilePath = nil;
+        _metadataFileURL = nil;
         _inertialRecorder = [[InertialRecorder alloc] init];
         _videoTimeConverter = [[VideoTimeConverter alloc] init];
 	}
@@ -792,9 +794,9 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 		}
 	}];
     
-    NSString * videoMetadataFilepath = savedAssetURL.absoluteString;
+    NSString * videoDataFilepath = savedAssetURL.absoluteString;
     // In older ios, _savedFrameIntrinsics can have 0 count
-    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoMetadataFilepath, savedAssetURL, (unsigned long)[savedFrameTimestamps count],
+    NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoDataFilepath, savedAssetURL, (unsigned long)[savedFrameTimestamps count],
         (unsigned long)[savedFrameIntrinsics count], (unsigned long)[savedExposureDurations count]);
     NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[sec], fx[px], fy[px], cx[px], cy[px], exposure duration[sec]\n"];
     bool hasIntrinsics = false;
@@ -812,21 +814,15 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
         }
     
     }
-
-    // ios changes the absolute path every time the app restarts, so it is advised not to stick with the absolute path
-    // ref 1: https://stackoverflow.com/questions/47864143/document-directory-path-change-when-rebuild-application?rq=1
-    // ref 2: https://stackoverflow.com/questions/26988024/document-or-cache-path-changes-on-every-launch-in-ios-8
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask, YES);
-    NSString *documentsDirectoryPath = [paths objectAtIndex:0];
-    NSString *filename = [NSString stringWithFormat:@"movie_metadata.csv"];
-    _metadataFilePath = [documentsDirectoryPath stringByAppendingPathComponent:filename];
+    
+    _metadataFileURL = getFileURL(VIDEO_META_FILENAME);
     NSData* settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
     // to show these documents in Files app, edit info.plist as suggested in https://www.bignerdranch.com/blog/working-with-the-files-app-in-ios-11/
-    if ([settingsData writeToFile:_metadataFilePath atomically:YES]) {
-        NSLog(@"Written video metadata to %@", _metadataFilePath);
+    if ([settingsData writeToURL:_metadataFileURL atomically:YES]) {
+        NSLog(@"Written video metadata to %@", _metadataFileURL);
     }
     else {
-        NSLog(@"Failed to record video metadata to %@", _metadataFilePath);
+        NSLog(@"Failed to record video metadata to %@", _metadataFileURL);
     }
     
     // The below obtains the resource name of the most recent video or image in the Photos gallery
@@ -1144,8 +1140,8 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     }
 }
 
-- (NSString *)getInertialFilePath {
-    return _inertialRecorder.filePath;
+- (NSURL *)getInertialFileURL {
+    return _inertialRecorder.fileURL;
 }
 
 
