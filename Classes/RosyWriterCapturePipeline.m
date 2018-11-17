@@ -1078,7 +1078,9 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
         float expectedISO = oldISO * ratio;
         if (expectedISO > format.maxISO)
             expectedISO = format.maxISO;
-        
+        else if (expectedISO < format.minISO)
+            expectedISO = format.minISO;
+
         if ([device lockForConfiguration:&error]) {
             // set target bias does not help much empirically
 //            _adjustExposureFinished = FALSE;
