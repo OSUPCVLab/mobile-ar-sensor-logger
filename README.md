@@ -1,2 +1,2 @@
-# mobile-ar-sensor-logger-
+# mobile-ar-sensor-logger
 Jianzhu Huai  and Yujia Zhang
