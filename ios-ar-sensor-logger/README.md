@@ -1,6 +1,3 @@
-# mobile-ar-sensor-logger
-Jianzhu Huai  and Yujia Zhang
-
 **Install and improve RosyWriter**
 
 To install and use RosyWriter, you will need Xcode, iOS.
