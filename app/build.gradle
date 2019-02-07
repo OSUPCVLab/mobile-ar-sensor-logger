@@ -1,0 +1,55 @@
+apply plugin: 'com.android.application'
+
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "26.0.2"
+
+    defaultConfig {
+        applicationId "io.rpng.recorder"
+        minSdkVersion 21
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles.add(file('proguard-rules.pro'))
+        }
+    }
+}
+
+
+dependencies {
+    // Include the libs dir (right now we don't have any java libs)
+    //compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Junit for testing (if we ever need it)
+    //testCompile 'junit:junit:4.12'
+
+    // Include opencv libraries
+    //compile project(':opencv_310')
+
+    // Include android deps
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:design:23.4.0'
+    compile 'com.android.support:support-v4:23.3.0'
+    compile 'com.android.support:support-v13:23.3.0'
+
+    // Google play which allows us to access the location data
+    compile 'com.google.android.gms:play-services:9.0.2'
+
+}
+
+//  Unnecessary dependency management:
+//  Make sure the libs are available when begin compiling application project
+//  This could be ignored because in real scenario, the pre-built libs are
+//  already given to us before creating application.
+tasks.whenTaskAdded { task ->
+    if (task.name.contains('compile')) {
+        //task.dependsOn ':swapheap:distributeLib'
+        //task.dependsOn ':jpeg:distributeLib'
+    }
+}
