@@ -1,3 +1,7 @@
+#####
+# First, .gitignore file for Xcode4 and Xcode5 Source projects
+#####
+
 #########################
 # .gitignore file for Xcode4 and Xcode5 Source projects
 #
@@ -215,6 +219,12 @@ xcuserdata/
 ####
 # UNKNOWN: recommended by others, but I can't discover what these files are
 #
+
+
+#########################
+# Second, .gitignore file for Android Studio Source projects
+#########################
+
 #built application files
 *.apk
 *.ap_
