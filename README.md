@@ -1,6 +1,6 @@
-# MARSEL: Mobile-AR-SEnsor-Logger
+# MARSLogger: Mobile-AR-Sensor-Logger
 
-Android and iOS apps for logging visual inertial data with mobile phones
+Android and iOS apps for logging visual and inertial data with mobile phones
 
 The "AR" in the repo name refers to that visual inertial data are essential to augmented reality on smartphones.
 
@@ -19,6 +19,7 @@ The Android app is developed based off the [android-dataset-recorder](https://gi
 # Contributions
 
 * synchronized data by the back camera and the inertial sensor
+* 25+ Fps of the camera and 100+ Hz of the inerital sensor for off-the-shelf smartphones priced $300+ 
 * record the varying focal length and exposure time
 * tap to lock or unlock auto focus and auto exposure control
 
