@@ -225,7 +225,8 @@ public class CameraManager {
         try {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            // mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
 
             // Set control elements, we want auto exposure and white balance
             mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
@@ -244,6 +245,10 @@ public class CameraManager {
             Surface readerSurface = mImageReader.getSurface();
             surfaces.add(readerSurface);
             mPreviewBuilder.addTarget(readerSurface);
+
+            Surface previewSurface = new Surface(texture);
+            surfaces.add(previewSurface);
+            mPreviewBuilder.addTarget(previewSurface);
 
             mCameraDevice.createCaptureSession(surfaces,
                     new CameraCaptureSession.StateCallback() {

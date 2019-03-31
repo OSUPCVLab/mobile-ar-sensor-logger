@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Display for the end user
             Bitmap bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-            MainActivity.camera2View.setImageBitmap(bmp);
+//            MainActivity.camera2View.setImageBitmap(bmp);
 
             // Save the file (if enabled)
             // http://stackoverflow.com/a/9006098

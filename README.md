@@ -23,5 +23,10 @@ The Android app is developed based off the [android-dataset-recorder](https://gi
 * record the varying focal length and exposure time
 * tap to lock or unlock auto focus and auto exposure control
 
-
+# TODOs
+* profile  MainActivity.camera2View.setImageBitmap() versus surfaces.add(previewSurface) for feeding data to preview
+* adaptively choose default camera frame size referring to camera2video android sample
+* record camera intrinsic parameters for every frame
+* record camera frame timestamps 
+* will it be more efficient if the images are directly saved to a MediaRecorder?
 
