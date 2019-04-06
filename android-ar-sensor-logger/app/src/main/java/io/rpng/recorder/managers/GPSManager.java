@@ -90,11 +90,9 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
             // Create folder name
             String filename = "data_gps.txt";
-            String path = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/dataset_recorder/" + MainActivity.folder_name + "/";
+            String path = MainActivity.mFileHelper.getStorageDir() + "/";
 
             // Create export file
-            new File(path).mkdirs();
             File dest = new File(path + filename);
 
             try {
@@ -106,8 +104,7 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 BufferedWriter writer = new BufferedWriter(new FileWriter(dest, true));
 
                 // Master string of information
-                // TODO: See if we can use location.getTime()
-                String data = new Date().getTime() + "," + lat + "," + lon + "," + altitude + "," + accuracy
+                String data = location.getElapsedRealtimeNanos() + "," + lat + "," + lon + "," + altitude + "," + accuracy
                         + "," + location.getBearing() + "," + location.getSpeed() + "," + location.getProvider();
 
                 // Appends the string to the file and closes

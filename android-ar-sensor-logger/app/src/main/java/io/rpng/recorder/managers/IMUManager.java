@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,12 +32,12 @@ public class IMUManager implements SensorEventListener {
     private Sensor mGyro;
 
     // Data storage (linear)
-    long linear_time;
+    long linear_time; // nanoseconds
     int linear_acc;
     float[] linear_data;
 
     // Data storage (angular)
-    long angular_time;
+    long angular_time; // nanoseconds
     int angular_acc;
     float[] angular_data;
 
@@ -63,15 +64,6 @@ public class IMUManager implements SensorEventListener {
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-
-        // Set event timestamp to current time in milliseconds
-        // http://stackoverflow.com/a/9333605
-        event.timestamp = (new Date()).getTime() + (event.timestamp - System.nanoTime()) / 1000000L;
-
-        // TODO: Figure out better way, for now just use the total time
-        // https://code.google.com/p/android/issues/detail?id=56561
-        event.timestamp = new Date().getTime();
-
         // Handle accelerometer reading
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             linear_time = event.timestamp;
@@ -91,11 +83,9 @@ public class IMUManager implements SensorEventListener {
 
                 // Create folder name
                 String filename = "data_imu.txt";
-                String path = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/dataset_recorder/" + MainActivity.folder_name + "/";
+                String path = MainActivity.mFileHelper.getStorageDir() + "/";
 
                 // Create export file
-                new File(path).mkdirs();
                 File dest = new File(path + filename);
 
                 try {

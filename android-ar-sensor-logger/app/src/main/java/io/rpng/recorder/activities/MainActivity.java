@@ -11,7 +11,8 @@ import android.graphics.YuvImage;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
-import android.os.Environment;
+
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -40,7 +41,7 @@ import io.rpng.recorder.R;
 import io.rpng.recorder.managers.GPSManager;
 import io.rpng.recorder.managers.IMUManager;
 import io.rpng.recorder.views.AutoFitTextureView;
-
+import io.rpng.recorder.utils.FileHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,7 +64,12 @@ public class MainActivity extends AppCompatActivity {
 
     // Variables for the current state
     public static boolean is_recording;
-    public static String folder_name;
+    private static String folder_name;
+
+    private String mTimeBaseAbsPath;
+    private BufferedWriter mCameraTimeWriter;
+    private BufferedWriter mTimeBaseWriter;
+    public static FileHelper mFileHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +105,8 @@ public class MainActivity extends AppCompatActivity {
         folder_name = "";
         is_recording = false;
 
+        mTimeBaseWriter = null;
+
         // Lets by default launch into the settings view
         startActivityForResult(intentSettings, RESULT_SETTINGS);
 
@@ -114,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 // If we are not recording we should start it
                 if(!is_recording) {
                     // Set our folder name
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
                     folder_name = dateFormat.format(new Date());
 
                     // Also change the text on the button so that it turns into the stop button
@@ -123,6 +131,26 @@ public class MainActivity extends AppCompatActivity {
 
                     // Trigger the recording by changing the recording boolean
                     is_recording = true;
+
+                    mFileHelper = new FileHelper(folder_name);
+                    mTimeBaseAbsPath = mFileHelper.getTimeBaseAbsPath();
+                    mTimeBaseWriter = FileHelper.createBufferedWriter(mTimeBaseAbsPath);
+
+                    long sysElapsedNs = SystemClock.elapsedRealtimeNanos();
+                    long sysNs = System.nanoTime();
+                    try {
+                        // mTimeBaseHint is initialized in openCamera
+                        mTimeBaseWriter.write(mCameraManager.mTimeBaseHint + "\n");
+                        mTimeBaseWriter.write("#elapsedRealtimeNanos nanoTime\n");
+                        mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
+//                        String header = "Timestamp[ns],frame No.,exposureTime[ns]," +
+//                                "sensorFrameDuration[ns],frameReadoutTime[ns]," +
+//                                "ISO,focal length,focus dist,AF mode";
+//                        mCameraTimeWriter.write(header + "\n");
+                    } catch(IOException ioe) {
+                        System.err.println("IOException: " + ioe.getMessage());
+                    }
+
                 }
                 // Else we can assume we pressed the "stop recording" button
                 else {
@@ -135,6 +163,17 @@ public class MainActivity extends AppCompatActivity {
 
                     // Start the result activity
                     //startActivityForResult(intentResults, RESULT_RESULT);
+
+                    long sysElapsedNs = SystemClock.elapsedRealtimeNanos();
+                    long sysNs = System.nanoTime();
+                    try {
+                        mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
+                    } catch(IOException ioe) {
+                        System.err.println("IOException: " + ioe.getMessage());
+                    }
+                    FileHelper.closeBufferedWriter(mTimeBaseWriter);
+                    mTimeBaseWriter = null;
+                    mTimeBaseAbsPath = null;
                 }
             }
         });
@@ -229,18 +268,13 @@ public class MainActivity extends AppCompatActivity {
             // Save the file (if enabled)
             // http://stackoverflow.com/a/9006098
             if(MainActivity.is_recording) {
-
-                // Current timestamp of the event
-                // TODO: See if we can use image.getTimestamp()
-                long timestamp = new Date().getTime();
+                long timestamp = image.getTimestamp();
 
                 // Create folder name
                 String filename = "data_image.txt";
-                String path = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/dataset_recorder/" + MainActivity.folder_name + "/";
+                String path = mFileHelper.getStorageDir() + "/";
 
                 // Create export file
-                new File(path).mkdirs();
                 File dest = new File(path + filename);
 
                 try {
@@ -266,8 +300,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Create folder name
                 filename = timestamp + ".jpeg";
-                path = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/dataset_recorder/" + MainActivity.folder_name + "/images/";
+                path = mFileHelper.getStorageDir() + "/images/";
 
                 // Create export file
                 new File(path).mkdirs();

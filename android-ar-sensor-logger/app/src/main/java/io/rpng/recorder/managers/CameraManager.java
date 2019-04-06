@@ -1,6 +1,7 @@
 package io.rpng.recorder.managers;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -26,6 +27,7 @@ import android.view.TextureView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +69,7 @@ public class CameraManager {
     private float[] intrinsic = new float[5];
     private float[] distortion = new float[4];
 
+    public volatile String mTimeBaseHint;
 
     /**
      * Default constructor
@@ -137,6 +140,47 @@ public class CameraManager {
 
     };
 
+
+    @TargetApi(23)
+    private void getLensParams(CameraCharacteristics result) {
+        float[] intrinsic = result.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
+        if (intrinsic != null)
+            Log.d(TAG, "char lens intrinsics fx " + intrinsic[0] +
+                    " fy " + intrinsic[1] +
+                    " cx " + intrinsic[2] +
+                    " cy " + intrinsic[3] +
+                    " s " + intrinsic[4]);
+        float[] distort = result.get(CameraCharacteristics.LENS_RADIAL_DISTORTION);
+        if (distort != null)
+            Log.d(TAG, "char lens distortion k1 " + distort[0] +
+                    " k2 " + distort[1] +
+                    " k3 " + distort[2] +
+                    " k4 " + distort[3] +
+                    " \nk5 " + distort[4] +
+                    " k6 " + distort[5]);
+    }
+
+    private String getTimestampSource(CameraCharacteristics cc) {
+        Integer value = cc.get(CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE);
+        String warn_msg = "The camera timestamp source is unreliable to synchronize with motion sensors";
+        if(value != null) {
+            if(value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_UNKNOWN) {
+                String src_type = "unknown";
+                Log.d(TAG, warn_msg + src_type);
+                return src_type;
+            } else if(value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME) {
+                return "realtime";
+            } else {
+                String src_type = "unknown (" + value.intValue() + ")";
+                Log.d(TAG, warn_msg + src_type);
+                return src_type;
+            }
+        }
+        String src_type = "unknown";
+        Log.d(TAG, warn_msg + src_type);
+        return src_type;
+    }
+
     /**
      * Tries to open a {@link CameraDevice}.
      * The result is listened by `mStateCallback`.
@@ -174,6 +218,24 @@ public class CameraManager {
                 intrinsic = characteristics.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
                 distortion = characteristics.get(CameraCharacteristics.LENS_RADIAL_DISTORTION);
             }
+
+            getLensParams(characteristics);
+            String time_src = getTimestampSource(characteristics);
+            String hint = "#The CameraCharacteristics.SENSOR_INFO_" +
+                    "TIMESTAMP_SOURCE is " + time_src + "\n" +
+                    "#If SENSOR_INFO_TIMESTAMP_SOURCE is not realtime," +
+                    " the camera CaptureResult.SENSOR_TIMESTAMP is " +
+                    "assumed to be on the base of nanoTime() and " +
+                    "SensorEvent.timestamp on the" +
+                    " base of elapsedRealtimeNanos().\n" +
+                    "#For syncing the camera frame timestamps to " +
+                    "the inertial sensors, we record the timestamps" +
+                    " from the two time basis at the start and the end" +
+                    " of a recording session.";
+            mTimeBaseHint = hint;
+            Log.d(TAG, hint);
+
+            // TODO(jhuai): disable the DISTORTION_CORRECTION_MODE_HIGH_QUALITY mode if needed, see https://medium.com/androiddevelopers/getting-the-most-from-the-new-multi-camera-api-5155fb3d77d9
 
             int orientation = activity.getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
