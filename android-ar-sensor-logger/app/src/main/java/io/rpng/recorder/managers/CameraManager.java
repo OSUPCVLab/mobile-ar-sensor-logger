@@ -14,6 +14,8 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
@@ -28,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +38,7 @@ import io.rpng.recorder.R;
 import io.rpng.recorder.activities.MainActivity;
 import io.rpng.recorder.dialogs.ErrorDialog;
 import io.rpng.recorder.utils.CameraUtil;
+import io.rpng.recorder.utils.FileHelper;
 import io.rpng.recorder.views.AutoFitTextureView;
 
 public class CameraManager {
@@ -70,6 +74,8 @@ public class CameraManager {
     private float[] distortion = new float[4];
 
     public volatile String mTimeBaseHint;
+    private BufferedWriter mCameraInfoWriter;
+    private String mCameraInfoAbsPath;
 
     /**
      * Default constructor
@@ -80,6 +86,7 @@ public class CameraManager {
         this.mTextureView = txt;
         this.camera2View = camera2View;
         this.permissionManager = new PermissionManager(activity, VIDEO_PERMISSIONS);
+        this.mCameraInfoWriter = null;
     }
 
     /**
@@ -140,7 +147,24 @@ public class CameraManager {
 
     };
 
-
+    @TargetApi(23)
+    private void getLensParams(TotalCaptureResult result) {
+        float[] intrinsic = result.get(CaptureResult.LENS_INTRINSIC_CALIBRATION);
+        if (intrinsic != null)
+            Log.d(TAG, "lens intrinsics fx " + intrinsic[0] +
+                    " fy " + intrinsic[1] +
+                    " cx " + intrinsic[2] +
+                    " cy " + intrinsic[3] +
+                    " s " + intrinsic[4]);
+        float[] distort = result.get(CaptureResult.LENS_RADIAL_DISTORTION);
+        if (distort != null)
+            Log.d(TAG, "lens distortion k1 " + distort[0] +
+                    " k2 " + distort[1] +
+                    " k3 " + distort[2] +
+                    " k4 " + distort[3] +
+                    " \nk5 " + distort[4] +
+                    " k6 " + distort[5]);
+    }
     @TargetApi(23)
     private void getLensParams(CameraCharacteristics result) {
         float[] intrinsic = result.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
@@ -179,6 +203,25 @@ public class CameraManager {
         String src_type = "unknown";
         Log.d(TAG, warn_msg + src_type);
         return src_type;
+    }
+
+    public void prepareInfoWriter() {
+        mCameraInfoAbsPath = MainActivity.mFileHelper.getCameraInfoAbsPath();
+        mCameraInfoWriter = FileHelper.createBufferedWriter(mCameraInfoAbsPath);
+        String header = "Timestamp[ns],frame No.,exposureTime[ns]," +
+                "sensorFrameDuration[ns],frameReadoutTime[ns]," +
+                "ISO,focal length,focus dist,AF mode";
+        try {
+            mCameraInfoWriter.write(header + "\n");
+        } catch(IOException ioe) {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
+    }
+
+    public void invalidateInfoWriter() {
+        FileHelper.closeBufferedWriter(mCameraInfoWriter);
+        mCameraInfoWriter = null;
+        mCameraInfoAbsPath = null;
     }
 
     /**
@@ -331,6 +374,54 @@ public class CameraManager {
         }
     }
 
+
+    private CameraCaptureSession.CaptureCallback mSessionCaptureCallback =
+            new CameraCaptureSession.CaptureCallback() {
+
+                @Override
+                public void onCaptureCompleted(CameraCaptureSession session,
+                                               CaptureRequest request,
+                                               TotalCaptureResult result) {
+
+                    long timestamp = result.get(CaptureResult.SENSOR_TIMESTAMP);
+                    long number = result.getFrameNumber();
+                    long exposureTimeNs = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+                    long frmDurationNs = result.get(CaptureResult.SENSOR_FRAME_DURATION);
+                    long frmReadoutNs = result.get(CaptureResult.SENSOR_ROLLING_SHUTTER_SKEW);
+                    Integer iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
+
+                    float fl = result.get(CaptureResult.LENS_FOCAL_LENGTH);
+                    float fd = result.get(CaptureResult.LENS_FOCUS_DISTANCE);
+                    Integer afMode = result.get(CaptureResult.CONTROL_AF_MODE);
+                    char delimiter = ',';
+                    String frame_info = String.valueOf(timestamp) + delimiter
+                            + String.valueOf(number) + delimiter
+                            + String.valueOf(exposureTimeNs) + delimiter
+                            + String.valueOf(frmDurationNs) + delimiter
+                            + String.valueOf(frmReadoutNs)  + delimiter
+                            + String.valueOf(iso) + delimiter
+                            + Float.toString(fl) + delimiter
+                            + Float.toString(fd) + delimiter
+                            + String.valueOf(afMode);
+                    if (MainActivity.is_recording) {
+                        try {
+                            mCameraInfoWriter.write(frame_info + "\n");
+                        } catch (IOException ioe) {
+                            System.err.println("IOException: " + ioe.getMessage());
+                        }
+                    }
+                    getLensParams(result);
+                }
+
+                @Override
+                public void onCaptureProgressed(CameraCaptureSession session, CaptureRequest request,
+                                                CaptureResult partialResult) {
+                    Log.d(TAG, "mSessionCaptureCallback,  onCaptureProgressed");
+                }
+
+            };
+
+
     /**
      * Update the camera preview. {@link #startPreview()} needs to be called in advance.
      */
@@ -342,7 +433,10 @@ public class CameraManager {
             mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             HandlerThread thread = new HandlerThread("CameraPreview");
             thread.start();
-            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
+            mPreviewSession.setRepeatingRequest(
+                    mPreviewBuilder.build(),
+                    mSessionCaptureCallback,
+                    mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }

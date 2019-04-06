@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private static String folder_name;
 
     private String mTimeBaseAbsPath;
-    private BufferedWriter mCameraTimeWriter;
+
     private BufferedWriter mTimeBaseWriter;
     public static FileHelper mFileHelper;
 
@@ -129,8 +129,6 @@ public class MainActivity extends AppCompatActivity {
                     Button button_record = (Button) findViewById(R.id.button_record);
                     button_record.setText("Stop Recording");
 
-                    // Trigger the recording by changing the recording boolean
-                    is_recording = true;
 
                     mFileHelper = new FileHelper(folder_name);
                     mTimeBaseAbsPath = mFileHelper.getTimeBaseAbsPath();
@@ -143,13 +141,14 @@ public class MainActivity extends AppCompatActivity {
                         mTimeBaseWriter.write(mCameraManager.mTimeBaseHint + "\n");
                         mTimeBaseWriter.write("#elapsedRealtimeNanos nanoTime\n");
                         mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
-//                        String header = "Timestamp[ns],frame No.,exposureTime[ns]," +
-//                                "sensorFrameDuration[ns],frameReadoutTime[ns]," +
-//                                "ISO,focal length,focus dist,AF mode";
-//                        mCameraTimeWriter.write(header + "\n");
+
                     } catch(IOException ioe) {
                         System.err.println("IOException: " + ioe.getMessage());
                     }
+
+                    mCameraManager.prepareInfoWriter();
+                    // Trigger the recording by changing the recording boolean
+                    is_recording = true;
 
                 }
                 // Else we can assume we pressed the "stop recording" button
@@ -174,6 +173,8 @@ public class MainActivity extends AppCompatActivity {
                     FileHelper.closeBufferedWriter(mTimeBaseWriter);
                     mTimeBaseWriter = null;
                     mTimeBaseAbsPath = null;
+
+                    mCameraManager.invalidateInfoWriter();
                 }
             }
         });

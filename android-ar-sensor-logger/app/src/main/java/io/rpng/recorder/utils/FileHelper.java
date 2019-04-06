@@ -24,6 +24,10 @@ public class FileHelper {
         return mStorageDir + "/" + "edge_epochs.txt";
     }
 
+    public String getCameraInfoAbsPath() {
+        return mStorageDir + "/" + "frame_info.csv";
+    }
+    
     public static BufferedWriter createBufferedWriter(String filename) {
         File dest = new File(filename);
         try {
