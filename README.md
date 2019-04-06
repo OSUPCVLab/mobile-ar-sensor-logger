@@ -29,4 +29,5 @@ The Android app is developed based off the [android-dataset-recorder](https://gi
 * record camera intrinsic parameters for every frame
 * record camera frame timestamps 
 * will it be more efficient if the images are directly saved to a MediaRecorder?
+* correct warnings listed in /mobile-ar-sensor-logger/android-ar-sensor-logger/app/build/reports/lint-results.html which is produced by calling "./gradlew check" from the project dir
 
