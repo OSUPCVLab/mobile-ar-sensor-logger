@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
     private static Intent intentSettings;
     private static Intent intentResults;
 
-    private static ImageView camera2View;
     private AutoFitTextureView mTextureView;
 
     public static CameraManager mCameraManager;
@@ -86,11 +85,10 @@ public class MainActivity extends AppCompatActivity {
         this.addButtonListeners();
 
         // Get our surfaces
-        camera2View = (ImageView) findViewById(R.id.camera2_preview);
         mTextureView = (AutoFitTextureView) findViewById(R.id.camera2_texture);
 
         // Create the camera manager
-        mCameraManager = new CameraManager(this, mTextureView, camera2View);
+        mCameraManager = new CameraManager(this, mTextureView);
         mImuManager = new IMUManager(this);
         mGpsManager = new GPSManager(this);
 
@@ -264,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
 
             // Display for the end user
             Bitmap bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-//            MainActivity.camera2View.setImageBitmap(bmp);
 
             // Save the file (if enabled)
             // http://stackoverflow.com/a/9006098

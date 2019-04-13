@@ -55,7 +55,6 @@ public class CameraManager {
     private Activity activity;
     private PermissionManager permissionManager;
     private AutoFitTextureView mTextureView;
-    private ImageView camera2View;
 
     private ImageReader mImageReader;
     private CameraDevice mCameraDevice;
@@ -81,12 +80,15 @@ public class CameraManager {
      * Default constructor
      * Sets our activity, and texture view we should be updating
      */
-    public CameraManager(Activity act, AutoFitTextureView txt, ImageView camera2View) {
+    public CameraManager(Activity act, AutoFitTextureView txt) {
         this.activity = act;
         this.mTextureView = txt;
-        this.camera2View = camera2View;
         this.permissionManager = new PermissionManager(activity, VIDEO_PERMISSIONS);
         this.mCameraInfoWriter = null;
+        // http://qaru.site/questions/13032870/camera2-api-touch-to-focus
+        // https://github.com/duanhong169/Camera/blob/53afdaa3efdb4c6ad9034641db22865e7db5c733/camera/src/main/java/top/defaults/camera/CameraView.java
+        // https://gist.github.com/royshil/8c760c2485257c85a11cafd958548482
+        this.mTextureView.setOnTouchListener(null);
     }
 
     /**
@@ -299,7 +301,7 @@ public class CameraManager {
 
             // The orientation is a multiple of 90 value that rotates into the native orientation
             // This should fix cameras that are rotated in landscape
-            camera2View.setRotation(mSensorOrientation);
+//            mTextureView.setRotation(mSensorOrientation);
 
             // Finally actually open the camera
             manager.openCamera(cameraId, mStateCallback, null);
