@@ -10,18 +10,18 @@ import io.rpng.recorder.dialogs.ConfirmationDialog;
 public class PermissionManager {
 
     private Activity activity;
-    private static final int REQUEST_VIDEO_PERMISSIONS = 1;
+
     private static final String FRAGMENT_DIALOG = "dialog";
-
-    private String[] VIDEO_PERMISSIONS;
-
+    private int REQUEST_VIDEO_PERMISSIONS;
+    private String[] VIDEO_PERMISSIONS; // the permission group may refer to GPS location permissions
 
     /**
      * Default constructor, sets our position and activity
      */
-    public PermissionManager(Activity activity, String[] VIDEO_PERMISSIONS) {
+    public PermissionManager(Activity activity, String[] VIDEO_PERMISSIONS, int request_code) {
         this.activity = activity;
         this.VIDEO_PERMISSIONS = VIDEO_PERMISSIONS;
+        this.REQUEST_VIDEO_PERMISSIONS = request_code;
     }
 
 
@@ -59,7 +59,9 @@ public class PermissionManager {
      */
     private void requestVideoPermissions() {
         if (shouldShowRequestPermissionRationale(VIDEO_PERMISSIONS)) {
-            new ConfirmationDialog().show(activity.getFragmentManager(), FRAGMENT_DIALOG);
+            new ConfirmationDialog()
+                    .setArguments(activity, VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS)
+                    .show(activity.getFragmentManager(), FRAGMENT_DIALOG);
         } else {
             ActivityCompat.requestPermissions(activity, VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS);
         }

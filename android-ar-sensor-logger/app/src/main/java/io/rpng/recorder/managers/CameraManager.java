@@ -83,7 +83,7 @@ public class CameraManager {
     public CameraManager(Activity act, AutoFitTextureView txt) {
         this.activity = act;
         this.mTextureView = txt;
-        this.permissionManager = new PermissionManager(activity, VIDEO_PERMISSIONS);
+        this.permissionManager = new PermissionManager(activity, VIDEO_PERMISSIONS, 1);
         this.mCameraInfoWriter = null;
         // http://qaru.site/questions/13032870/camera2-api-touch-to-focus
         // https://github.com/duanhong169/Camera/blob/53afdaa3efdb4c6ad9034641db22865e7db5c733/camera/src/main/java/top/defaults/camera/CameraView.java

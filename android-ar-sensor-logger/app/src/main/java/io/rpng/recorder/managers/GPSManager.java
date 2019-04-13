@@ -60,7 +60,7 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         // Set activity
         this.activity = activity;
         // Create permission manager
-        this.permissionManager = new PermissionManager(activity, PERMISSIONS);
+        this.permissionManager = new PermissionManager(activity, PERMISSIONS, 2);
         // Create the google api client
         mGoogleApiClient = new GoogleApiClient.Builder(activity.getBaseContext())
                 .addConnectionCallbacks(this)
