@@ -433,8 +433,8 @@ public class CameraManager {
         }
         try {
             mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            HandlerThread thread = new HandlerThread("CameraPreview");
-            thread.start();
+//            HandlerThread thread = new HandlerThread("CameraPreview");
+//            thread.start();
             mPreviewSession.setRepeatingRequest(
                     mPreviewBuilder.build(),
                     mSessionCaptureCallback,
