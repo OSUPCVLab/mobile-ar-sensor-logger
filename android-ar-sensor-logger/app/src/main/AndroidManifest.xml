@@ -29,9 +29,8 @@
 
         <!-- Main activity that handles everything -->
         <activity
-            android:name="io.rpng.recorder.activities.MainActivity"
+            android:name=".activities.MainActivity"
             android:screenOrientation="portrait"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,16 +40,16 @@
 
         <!-- Our settings activity -->
         <activity
-            android:name="io.rpng.recorder.activities.SettingsActivity"
+            android:name=".activities.SettingsActivity"
             android:screenOrientation="portrait"/>
 
         <!-- Our result activity -->
         <activity
-            android:name="io.rpng.recorder.activities.ResultsActivity"
+            android:name=".activities.ResultsActivity"
             android:screenOrientation="portrait"/>
 
         <!-- Our info activity -->
-        <activity android:name="io.rpng.recorder.activities.InfoActivity"
+        <activity android:name=".activities.InfoActivity"
             android:screenOrientation="portrait" />
 
 

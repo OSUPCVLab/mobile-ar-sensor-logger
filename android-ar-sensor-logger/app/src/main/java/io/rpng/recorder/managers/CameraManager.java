@@ -296,7 +296,7 @@ public class CameraManager {
 
             // Create the image reader which will be called back to, to get image frames
             mImageReader = ImageReader.newInstance(widthRaw, heightRaw, ImageFormat.YUV_420_888, 3);
-            mImageReader.setOnImageAvailableListener(MainActivity.imageAvailableListener, null);
+            mImageReader.setOnImageAvailableListener(((MainActivity)activity).imageAvailableListener, null);
 
 
             // The orientation is a multiple of 90 value that rotates into the native orientation
