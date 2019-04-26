@@ -2,38 +2,38 @@ package io.rpng.recorder.managers;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.IntentSender;
+
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+
 import android.location.Location;
-import android.os.Bundle;
-import android.os.Environment;
+
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.util.Log;
-import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import android.util.Log;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Date;
 
 import io.rpng.recorder.activities.MainActivity;
 
-public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class GPSManager {
 
-
+    private FusedLocationProviderClient fusedLocationClient;
+    private Boolean requestingLocationUpdates;
+    private LocationCallback locationCallback;
     // Our permissions we need to function
     private static final String[] PERMISSIONS = {
             Manifest.permission.INTERNET,
@@ -50,10 +50,7 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
     // Threading for listener
     private HandlerThread mBackgroundThread;
-    private Handler mBackgroundHandler;
 
-    // Sensor listeners
-    private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
 
     public GPSManager(Activity activity) {
@@ -61,18 +58,23 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         this.activity = activity;
         // Create permission manager
         this.permissionManager = new PermissionManager(activity, PERMISSIONS, 2);
-        // Create the google api client
-        mGoogleApiClient = new GoogleApiClient.Builder(activity.getBaseContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
+        requestingLocationUpdates = true;
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    onLocationChanged(location);
+                }
+            };
+        };
     }
 
-
-    @Override
-    public void onLocationChanged(Location location) {
-
+    private void onLocationChanged(Location location) {
         // Get accuracy
         float accuracy = location.getAccuracy();
         // Get altitude
@@ -134,39 +136,37 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval((long)(Double.parseDouble(gpsFreq) * 1000))         // seconds, in milliseconds
                 .setFastestInterval((long)(Double.parseDouble(gpsFreq) * 1000)); // seconds, in milliseconds
-        // Connect to the google play services
-        mGoogleApiClient.connect();
+        if (requestingLocationUpdates) {
+            startLocationUpdates();
+            requestingLocationUpdates = false;
+        }
     }
 
     /**
      * This will unregister all GPS listeners
      */
     public void unregister() {
-        // Remove the listener if connected
-        if (mGoogleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-            mGoogleApiClient.disconnect();
-        }
+        stopLocationUpdates();
+        requestingLocationUpdates = true;
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-        // Make sure we have permissions
-        if (permissionManager.handle_permissions())
-            return;
-
+    private void startLocationUpdates() {
         try {
             // Get the latest location
-            Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            Task<Location> task = fusedLocationClient.getLastLocation();
+            task.addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if(location!=null) {
+                        onLocationChanged(location);
+                        Log.d("AndroidClarified",location.getLatitude()+" "+location.getLongitude());      }
+                }
+            });
 
-            // If we do not have locations, we should request an update
-            if (location != null) {
-                onLocationChanged(location);
-            }
+            fusedLocationClient.requestLocationUpdates(mLocationRequest,
+                    locationCallback,
+                    mBackgroundThread.getLooper());
 
-            // Request a location update
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
         // This right here is just so the IDE will stop giving me errors
         // The permissionManager will handle this permission problem
@@ -175,42 +175,10 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         }
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-
+    private void stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        /*
-         * Google Play services can resolve some errors it detects.
-         * If the error has a resolution, try sending an Intent to
-         * start a Google Play services activity that can resolve
-         * error.
-         */
-        if (connectionResult.hasResolution()) {
-            try {
-                // Start an Activity that tries to resolve the error
-                connectionResult.startResolutionForResult(activity, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-                /*
-                 * Thrown if Google Play services canceled the original
-                 * PendingIntent
-                 */
-            } catch (IntentSender.SendIntentException e) {
-                // Log the error
-                e.printStackTrace();
-            }
-
-            // Debug
-            Log.i("GPS MANGER", "Location services connection failed with code " + connectionResult.getErrorCode());
-        } else {
-            /*
-             * If no resolution is available, display a dialog to the
-             * user with the error.
-             */
-            Log.i("GPS MANGER", "Location services connection failed with code " + connectionResult.getErrorCode());
-        }
-    }
 
     /**
      * Starts a background thread and its {@link Handler}.
@@ -218,7 +186,6 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     public void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("GPSBackground");
         mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
 
     /**
@@ -229,7 +196,6 @@ public class GPSManager implements GoogleApiClient.ConnectionCallbacks, GoogleAp
             mBackgroundThread.quitSafely();
             mBackgroundThread.join();
             mBackgroundThread = null;
-            mBackgroundHandler = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
