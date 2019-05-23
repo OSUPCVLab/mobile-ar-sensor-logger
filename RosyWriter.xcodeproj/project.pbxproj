@@ -122,6 +122,8 @@
 		F3C1A8D822945C1500A59A8E /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 269351C0156CB42100512474 /* CoreMotion.framework */; };
 		F3C1A8D922945CDB00A59A8E /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
 		F3C1A8DD22945F9200A59A8E /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3C1A8DC22945F9200A59A8E /* opencv2.framework */; };
+		F3C1DB562296E1540060170F /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F90DE001395CCBE00125BDA /* AssetsLibrary.framework */; };
+		F3C1DB572296E1B40060170F /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
 		F3C8A226219122600087B5C3 /* VideoTimeConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F3C8A224219122600087B5C3 /* VideoTimeConverter.m */; };
 		F3C8A227219122600087B5C3 /* VideoTimeConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F3C8A224219122600087B5C3 /* VideoTimeConverter.m */; };
 		F3C8A228219122600087B5C3 /* VideoTimeConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F3C8A224219122600087B5C3 /* VideoTimeConverter.m */; };
@@ -234,6 +236,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3C1DB572296E1B40060170F /* MessageUI.framework in Frameworks */,
+				F3C1DB562296E1540060170F /* AssetsLibrary.framework in Frameworks */,
 				F3C1A8DD22945F9200A59A8E /* opencv2.framework in Frameworks */,
 				F3C1A8D622945BF200A59A8E /* CoreMotion.framework in Frameworks */,
 				696D281419CA539900A23D81 /* ImageIO.framework in Frameworks */,
@@ -786,6 +790,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = FH88PJJX89;
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Thirdparty",
@@ -812,6 +817,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = FH88PJJX89;
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Thirdparty",

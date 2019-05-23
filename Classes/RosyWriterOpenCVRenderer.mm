@@ -57,13 +57,13 @@
 	
 	cv::Mat bgraImage = cv::Mat( (int)height, (int)extendedWidth, CV_8UC4, base );
 	
-	for ( uint32_t y = 0; y < height; y++ )
-	{
-		for ( uint32_t x = 0; x < width; x++ )
-		{
-			bgraImage.at<cv::Vec<uint8_t,4> >(y,x)[1] = 0;
-		}
-	}
+//    for ( uint32_t y = 0; y < height; y++ )
+//    {
+//        for ( uint32_t x = 0; x < width; x++ )
+//        {
+//            bgraImage.at<cv::Vec<uint8_t,4> >(y,x)[1] = 0; // De-green
+//        }
+//    }
 	
 	CVPixelBufferUnlockBaseAddress( pixelBuffer, 0 );
 	
