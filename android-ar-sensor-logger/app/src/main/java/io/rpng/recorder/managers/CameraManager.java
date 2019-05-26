@@ -26,7 +26,6 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.BufferedWriter;
@@ -85,9 +84,7 @@ public class CameraManager {
         this.mTextureView = txt;
         this.permissionManager = new PermissionManager(activity, VIDEO_PERMISSIONS, 1);
         this.mCameraInfoWriter = null;
-        // http://qaru.site/questions/13032870/camera2-api-touch-to-focus
-        // https://github.com/duanhong169/Camera/blob/53afdaa3efdb4c6ad9034641db22865e7db5c733/camera/src/main/java/top/defaults/camera/CameraView.java
-        // https://gist.github.com/royshil/8c760c2485257c85a11cafd958548482
+
         this.mTextureView.setOnTouchListener(null);
     }
 
@@ -167,6 +164,7 @@ public class CameraManager {
                     " \nk5 " + distort[4] +
                     " k6 " + distort[5]);
     }
+
     @TargetApi(23)
     private void getLensParams(CameraCharacteristics result) {
         float[] intrinsic = result.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
@@ -189,12 +187,12 @@ public class CameraManager {
     private String getTimestampSource(CameraCharacteristics cc) {
         Integer value = cc.get(CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE);
         String warn_msg = "The camera timestamp source is unreliable to synchronize with motion sensors";
-        if(value != null) {
-            if(value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_UNKNOWN) {
+        if (value != null) {
+            if (value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_UNKNOWN) {
                 String src_type = "unknown";
                 Log.d(TAG, warn_msg + src_type);
                 return src_type;
-            } else if(value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME) {
+            } else if (value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME) {
                 return "realtime";
             } else {
                 String src_type = "unknown (" + value.intValue() + ")";
@@ -215,7 +213,7 @@ public class CameraManager {
                 "ISO,focal length,focus dist,AF mode";
         try {
             mCameraInfoWriter.write(header + "\n");
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             System.err.println("IOException: " + ioe.getMessage());
         }
     }
@@ -234,7 +232,7 @@ public class CameraManager {
     public void openCamera(int width, int height) {
 
         // Make sure we have permissions
-        if(permissionManager.handle_permissions())
+        if (permissionManager.handle_permissions())
             return;
 
         // Note this is bad naming on my part...
@@ -261,7 +259,7 @@ public class CameraManager {
             // If we can get the intrinsics, great!
             // https://developer.android.com/reference/android/hardware/camera2/CaptureResult.html#LENS_INTRINSIC_CALIBRATION
             // https://developer.android.com/reference/android/hardware/camera2/CaptureResult.html#LENS_RADIAL_DISTORTION
-            if(android.os.Build.VERSION.SDK_INT >= 23) {
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
                 intrinsic = characteristics.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
                 distortion = characteristics.get(CameraCharacteristics.LENS_RADIAL_DISTORTION);
             }
@@ -291,17 +289,17 @@ public class CameraManager {
 
             // Get image size from prefs
             String imageSize = sharedPreferences.getString("prefSizeRaw", "640x480");
-            int widthRaw = Integer.parseInt(imageSize.substring(0,imageSize.lastIndexOf("x")));
-            int heightRaw = Integer.parseInt(imageSize.substring(imageSize.lastIndexOf("x")+1));
+            int widthRaw = Integer.parseInt(imageSize.substring(0, imageSize.lastIndexOf("x")));
+            int heightRaw = Integer.parseInt(imageSize.substring(imageSize.lastIndexOf("x") + 1));
 
             // Create the image reader which will be called back to, to get image frames
-            mImageReader = ImageReader.newInstance(widthRaw, heightRaw, ImageFormat.JPEG,3);
+            mImageReader = ImageReader.newInstance(widthRaw, heightRaw, ImageFormat.JPEG, 3);
             // Because saving images is done on the main UI thread, the handler is set null.
             // If the handler is not null say mBackgroundHandler, when onPause() is called,
             // the handler will be torn down, The IllegalStateException:
             // sending message to a Handler on a dead thread, will be thrown out.
             mImageReader.setOnImageAvailableListener(
-                    ((MainActivity)activity).imageAvailableListener, null);
+                    ((MainActivity) activity).imageAvailableListener, null);
             Log.d(TAG, "Video size " + mImageReader.getWidth() + " "
                     + mImageReader.getHeight() + " Preview size " + mPreviewSize.toString());
 
@@ -332,7 +330,7 @@ public class CameraManager {
 
 
     private void startPreview() {
-        if (mCameraDevice == null ||!mTextureView.isAvailable() || mPreviewSize == null || mImageReader == null) {
+        if (mCameraDevice == null || !mTextureView.isAvailable() || mPreviewSize == null || mImageReader == null) {
             return;
         }
         try {
@@ -372,7 +370,7 @@ public class CameraManager {
                         }
 
                         @Override
-                        public void onConfigureFailed(CameraCaptureSession cameraCaptureSession){
+                        public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
                             Log.w(TAG, "Create capture session failed");
                         }
                     }, mBackgroundHandler);
@@ -501,13 +499,13 @@ public class CameraManager {
     }
 
     public float[] getIntrinsic() {
-        if(intrinsic != null)
+        if (intrinsic != null)
             return intrinsic;
         return new float[5];
     }
 
     public float[] getDistortion() {
-        if(distortion != null)
+        if (distortion != null)
             return distortion;
         return new float[4];
     }

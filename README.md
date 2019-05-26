@@ -31,3 +31,4 @@ The Android app is developed based off the [android-dataset-recorder](https://gi
 * will it be more efficient if the images are directly saved to a MediaRecorder?
 * correct warnings listed in /mobile-ar-sensor-logger/android-ar-sensor-logger/app/build/reports/lint-results.html which is produced by calling "./gradlew check" from the project dir
 * associate camera frames and frame metadata for the android app, refer to [here](https://android.googlesource.com/platform/packages/apps/Camera2/+/9c94ab3/src/com/android/camera/one/v2?autodive=0%2F%2F/).
+* add git hooks for the android project. https://github.com/harliedharma/android-git-hooks
