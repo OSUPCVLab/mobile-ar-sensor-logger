@@ -60,7 +60,7 @@ public class CameraManager {
     private CameraDevice mCameraDevice;
 
     private HandlerThread mBackgroundThread;
-    private Handler mBackgroundHandler;
+    public Handler mBackgroundHandler;
 
     private Size mPreviewSize;
     private Size mVideoSize;
@@ -282,8 +282,6 @@ public class CameraManager {
             mTimeBaseHint = hint;
             Log.d(TAG, hint);
 
-            // TODO(jhuai): disable the DISTORTION_CORRECTION_MODE_HIGH_QUALITY mode if needed, see https://medium.com/androiddevelopers/getting-the-most-from-the-new-multi-camera-api-5155fb3d77d9
-
             int orientation = activity.getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
@@ -297,9 +295,13 @@ public class CameraManager {
             int heightRaw = Integer.parseInt(imageSize.substring(imageSize.lastIndexOf("x")+1));
 
             // Create the image reader which will be called back to, to get image frames
-            mImageReader = ImageReader.newInstance(widthRaw, heightRaw, ImageFormat.YUV_420_888, 3);
+            mImageReader = ImageReader.newInstance(widthRaw, heightRaw, ImageFormat.JPEG,3);
+            // Because saving images is done on the main UI thread, the handler is set null.
+            // If the handler is not null say mBackgroundHandler, when onPause() is called,
+            // the handler will be torn down, The IllegalStateException:
+            // sending message to a Handler on a dead thread, will be thrown out.
             mImageReader.setOnImageAvailableListener(
-                    ((MainActivity)activity).imageAvailableListener, mBackgroundHandler);
+                    ((MainActivity)activity).imageAvailableListener, null);
             Log.d(TAG, "Video size " + mImageReader.getWidth() + " "
                     + mImageReader.getHeight() + " Preview size " + mPreviewSize.toString());
 
@@ -310,7 +312,6 @@ public class CameraManager {
 
             // Finally actually open the camera
             manager.openCamera(cameraId, mStateCallback, null);
-
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -350,7 +351,6 @@ public class CameraManager {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity);
             String focus = sharedPreferences.getString("prefFocusLength", "5.0");
             mPreviewBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, Float.parseFloat(focus));
-
 
             // Create the surface we want to render to (this preview surface is required)
             List surfaces = new ArrayList<>();

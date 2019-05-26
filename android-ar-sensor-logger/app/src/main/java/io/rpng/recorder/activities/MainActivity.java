@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import io.rpng.recorder.managers.CameraManager;
+import io.rpng.recorder.utils.ImageSaver;
 import io.rpng.recorder.R;
 import io.rpng.recorder.managers.GPSManager;
 import io.rpng.recorder.managers.IMUManager;
@@ -201,6 +202,36 @@ public class MainActivity extends AppCompatActivity {
         mGpsManager.register();
     }
 
+    static void saveImageTimestamp(Long timestamp, String output_dir) {
+
+        // Create folder name
+        String filename = "data_image.txt";
+
+        // Create export file
+        File dest = new File(output_dir + filename);
+
+        try {
+            // If the file does not exist yet, create it
+            if(!dest.exists())
+                dest.createNewFile();
+
+            // The true will append the new data
+            BufferedWriter writer = new BufferedWriter(new FileWriter(dest, true));
+
+            // Master string of information
+            String data = timestamp + ",images/" + timestamp + ".jpeg";
+
+            // Appends the string to the file and closes
+            writer.write(data + "\n");
+            writer.flush();
+            writer.close();
+        }
+        // Ran into a problem writing to file
+        catch(IOException ioe) {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
+    }
+
     @Override
     public void onPause() {
 
@@ -228,95 +259,33 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onImageAvailable(ImageReader ir) {
-
-            // Contrary to what is written in Aptina presentation acquireLatestImage is not working as described
-            // Google: Also, not working as described in android docs (should work the same as acquireNextImage in
-            // our case, but it is not)
-            // Image im = ir.acquireLatestImage();
-
-            // Get the next image from the queue
             Image image = ir.acquireNextImage();
-
-            // Collection of bytes of the image
-            byte[] rez;
-
-            // Convert to NV21 format
-            // https://github.com/bytedeco/javacv/issues/298#issuecomment-169100091
-            ByteBuffer buffer0 = image.getPlanes()[0].getBuffer();
-            ByteBuffer buffer2 = image.getPlanes()[2].getBuffer();
-            int buffer0_size = buffer0.remaining();
-            int buffer2_size = buffer2.remaining();
-            rez = new byte[buffer0_size + buffer2_size];
-
-            // Load the final data var with the actual bytes
-            buffer0.get(rez, 0, buffer0_size);
-            buffer2.get(rez, buffer0_size, buffer2_size);
-
-            // Byte output stream, so we can save the file
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            // Create YUV image file
-            YuvImage yuvImage = new YuvImage(rez, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), 90, out);
-            byte[] imageBytes = out.toByteArray();
-
-            // Display for the end user
-            Bitmap bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 
             // Save the file (if enabled)
             // http://stackoverflow.com/a/9006098
-            if(MainActivity.is_recording) {
-                long timestamp = image.getTimestamp();
+            if (MainActivity.is_recording) {
+                Long timestamp = image.getTimestamp();
+                String output_dir = mFileHelper.getStorageDir() + "/";
+                saveImageTimestamp(timestamp, output_dir);
 
                 // Create folder name
-                String filename = "data_image.txt";
-                String path = mFileHelper.getStorageDir() + "/";
+                String filename = timestamp + ".jpeg";
+                output_dir = mFileHelper.getStorageDir() + "/images/";
 
                 // Create export file
-                File dest = new File(path + filename);
-
-                try {
-                    // If the file does not exist yet, create it
-                    if(!dest.exists())
-                        dest.createNewFile();
-
-                    // The true will append the new data
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(dest, true));
-
-                    // Master string of information
-                    String data = timestamp + ",images/" + timestamp + ".jpeg";
-
-                    // Appends the string to the file and closes
-                    writer.write(data + "\n");
-                    writer.flush();
-                    writer.close();
-                }
-                // Ran into a problem writing to file
-                catch(IOException ioe) {
-                    System.err.println("IOException: " + ioe.getMessage());
-                }
-
-                // Create folder name
-                filename = timestamp + ".jpeg";
-                path = mFileHelper.getStorageDir() + "/images/";
-
-                // Create export file
-                new File(path).mkdirs();
-                dest = new File(path + filename);
-
-                // Export the file to disk
-                try {
-                    FileOutputStream output = new FileOutputStream(dest);
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 90, output);
-                    output.flush();
-                    output.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                new File(output_dir).mkdirs();
+                File dest = new File(output_dir + filename);
+                // TODO(jhuai): the offline method occasionally suffers from the
+                // exception of the buffer size which is an arg to the
+                // ImageReader constructor
+                mCameraManager.mBackgroundHandler.post(
+                        new ImageSaver(image, dest));
+                // Alternative
+//                new ImageSaver(image, dest).run();
+            } else {
+                image.close();
             }
 
-            // Make sure we close the image
-            image.close();
         }
     };
 
