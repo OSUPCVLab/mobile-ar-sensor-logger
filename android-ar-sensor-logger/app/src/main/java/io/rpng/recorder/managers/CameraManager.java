@@ -246,6 +246,8 @@ public class CameraManager {
             //if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
             //    throw new RuntimeException("Time out waiting to lock camera opening.");
             //}
+            // TODO(jhuai): is the approach given in https://medium.com/androiddevelopers/camera-enumeration-on-android-9a053b910cb5
+            // better than the below one to choose the physical camera? I suspect the below one may choose a logical multicamera
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity);
             String cameraId = sharedPreferences.getString("prefCamera", "0");
 
@@ -387,27 +389,35 @@ public class CameraManager {
                 public void onCaptureCompleted(CameraCaptureSession session,
                                                CaptureRequest request,
                                                TotalCaptureResult result) {
+                    Long timestamp = result.get(CaptureResult.SENSOR_TIMESTAMP);
 
-                    long timestamp = result.get(CaptureResult.SENSOR_TIMESTAMP);
-                    long number = result.getFrameNumber();
-                    long exposureTimeNs = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
-                    long frmDurationNs = result.get(CaptureResult.SENSOR_FRAME_DURATION);
-                    long frmReadoutNs = result.get(CaptureResult.SENSOR_ROLLING_SHUTTER_SKEW);
+                    Long number = result.getFrameNumber();
+
+                    Long exposureTimeNs = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+
+                    Long frmDurationNs = result.get(CaptureResult.SENSOR_FRAME_DURATION);
+                    Long frmReadoutNs = result.get(CaptureResult.SENSOR_ROLLING_SHUTTER_SKEW);
                     Integer iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
 
-                    float fl = result.get(CaptureResult.LENS_FOCAL_LENGTH);
-                    float fd = result.get(CaptureResult.LENS_FOCUS_DISTANCE);
+                    Float fl = result.get(CaptureResult.LENS_FOCAL_LENGTH);
+
+                    Float fd = result.get(CaptureResult.LENS_FOCUS_DISTANCE);
+
                     Integer afMode = result.get(CaptureResult.CONTROL_AF_MODE);
-                    char delimiter = ',';
-                    String frame_info = String.valueOf(timestamp) + delimiter
-                            + String.valueOf(number) + delimiter
-                            + String.valueOf(exposureTimeNs) + delimiter
-                            + String.valueOf(frmDurationNs) + delimiter
-                            + String.valueOf(frmReadoutNs)  + delimiter
-                            + String.valueOf(iso) + delimiter
-                            + Float.toString(fl) + delimiter
-                            + Float.toString(fd) + delimiter
-                            + String.valueOf(afMode);
+                    getLensParams(result);
+
+                    String delimiter = ",";
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(timestamp);
+                    sb.append(delimiter + number);
+                    sb.append(delimiter + exposureTimeNs);
+                    sb.append(delimiter + frmDurationNs);
+                    sb.append(delimiter + frmReadoutNs);
+                    sb.append(delimiter + iso);
+                    sb.append(delimiter + fl);
+                    sb.append(delimiter + fd);
+                    sb.append(delimiter + afMode);
+                    String frame_info = sb.toString();
                     if (MainActivity.is_recording) {
                         try {
                             mCameraInfoWriter.write(frame_info + "\n");
@@ -415,7 +425,6 @@ public class CameraManager {
                             System.err.println("IOException: " + ioe.getMessage());
                         }
                     }
-                    getLensParams(result);
                 }
 
                 @Override
