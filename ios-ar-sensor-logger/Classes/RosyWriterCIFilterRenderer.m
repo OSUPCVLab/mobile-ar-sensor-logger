@@ -72,9 +72,10 @@
 
 	CIImage *sourceImage = [[CIImage alloc] initWithCVPixelBuffer:pixelBuffer options:nil];
 	
-	[_rosyFilter setValue:sourceImage forKey:kCIInputImageKey];
-	CIImage *filteredImage = [_rosyFilter valueForKey:kCIOutputImageKey];
-	
+//    [_rosyFilter setValue:sourceImage forKey:kCIInputImageKey];
+//    CIImage *filteredImage = [_rosyFilter valueForKey:kCIOutputImageKey]; // De-green
+    CIImage *filteredImage = sourceImage;
+    
 	err = CVPixelBufferPoolCreatePixelBuffer( kCFAllocatorDefault, _bufferPool, &renderedOutputPixelBuffer );
 	if ( err ) {
 		NSLog( @"Cannot obtain a pixel buffer from the buffer pool (%d)", (int)err );

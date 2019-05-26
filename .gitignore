@@ -261,3 +261,5 @@ output.json
 #NDK
 obj/
 .externalNativeBuild
+
+Thirdparty/opencv2\.framework/

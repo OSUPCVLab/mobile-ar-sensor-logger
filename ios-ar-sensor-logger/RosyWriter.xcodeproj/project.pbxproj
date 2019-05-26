@@ -110,6 +110,20 @@
 		F318E01420E79AE300260914 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 269351C0156CB42100512474 /* CoreMotion.framework */; };
 		F318E01620E79B5E00260914 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
 		F36A3A7D20D7F18600AA1C57 /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
+		F3C1A8C52294536C00A59A8E /* InertialRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = F318E01120E78D2700260914 /* InertialRecorder.m */; };
+		F3C1A8C62294536D00A59A8E /* InertialRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = F318E01120E78D2700260914 /* InertialRecorder.m */; };
+		F3C1A8C72294537000A59A8E /* InertialRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = F318E01120E78D2700260914 /* InertialRecorder.m */; };
+		F3C1A8C8229453D800A59A8E /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
+		F3C1A8C9229453DB00A59A8E /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
+		F3C1A8CA229453DC00A59A8E /* RosyWriterViewController+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */; };
+		F3C1A8D42294588000A59A8E /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
+		F3C1A8D622945BF200A59A8E /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 269351C0156CB42100512474 /* CoreMotion.framework */; };
+		F3C1A8D722945C0100A59A8E /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 269351C0156CB42100512474 /* CoreMotion.framework */; };
+		F3C1A8D822945C1500A59A8E /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 269351C0156CB42100512474 /* CoreMotion.framework */; };
+		F3C1A8D922945CDB00A59A8E /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
+		F3C1A8DD22945F9200A59A8E /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3C1A8DC22945F9200A59A8E /* opencv2.framework */; };
+		F3C1DB562296E1540060170F /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F90DE001395CCBE00125BDA /* AssetsLibrary.framework */; };
+		F3C1DB572296E1B40060170F /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F318E01520E79B5E00260914 /* MessageUI.framework */; };
 		F3C8A226219122600087B5C3 /* VideoTimeConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F3C8A224219122600087B5C3 /* VideoTimeConverter.m */; };
 		F3C8A227219122600087B5C3 /* VideoTimeConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F3C8A224219122600087B5C3 /* VideoTimeConverter.m */; };
 		F3C8A228219122600087B5C3 /* VideoTimeConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F3C8A224219122600087B5C3 /* VideoTimeConverter.m */; };
@@ -172,6 +186,8 @@
 		F318E01520E79B5E00260914 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		F36A3A7B20D7F18600AA1C57 /* RosyWriterViewController+Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RosyWriterViewController+Helper.h"; sourceTree = "<group>"; };
 		F36A3A7C20D7F18600AA1C57 /* RosyWriterViewController+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RosyWriterViewController+Helper.m"; sourceTree = "<group>"; };
+		F3C1A8DA22945F7A00A59A8E /* Thirdparty */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Thirdparty; sourceTree = "<group>"; };
+		F3C1A8DC22945F9200A59A8E /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = Thirdparty/opencv2.framework; sourceTree = "<group>"; };
 		F3C8A224219122600087B5C3 /* VideoTimeConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoTimeConverter.m; path = Utilities/VideoTimeConverter.m; sourceTree = "<group>"; };
 		F3C8A225219122600087B5C3 /* VideoTimeConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoTimeConverter.h; path = Utilities/VideoTimeConverter.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -181,6 +197,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3C1A8D722945C0100A59A8E /* CoreMotion.framework in Frameworks */,
+				F3C1A8D922945CDB00A59A8E /* MessageUI.framework in Frameworks */,
 				1756C9E219BE5E1F0080DD55 /* ImageIO.framework in Frameworks */,
 				1756C9E419BE5E1F0080DD55 /* CoreMedia.framework in Frameworks */,
 				1756C9E519BE5E1F0080DD55 /* QuartzCore.framework in Frameworks */,
@@ -199,6 +217,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3C1A8D42294588000A59A8E /* MessageUI.framework in Frameworks */,
+				F3C1A8D822945C1500A59A8E /* CoreMotion.framework in Frameworks */,
 				1FCCE65419BA80A5009D7A6B /* ImageIO.framework in Frameworks */,
 				1FCCE65619BA80A5009D7A6B /* CoreMedia.framework in Frameworks */,
 				1FCCE65719BA80A5009D7A6B /* QuartzCore.framework in Frameworks */,
@@ -216,6 +236,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3C1DB572296E1B40060170F /* MessageUI.framework in Frameworks */,
+				F3C1DB562296E1540060170F /* AssetsLibrary.framework in Frameworks */,
+				F3C1A8DD22945F9200A59A8E /* opencv2.framework in Frameworks */,
+				F3C1A8D622945BF200A59A8E /* CoreMotion.framework in Frameworks */,
 				696D281419CA539900A23D81 /* ImageIO.framework in Frameworks */,
 				696D281619CA539900A23D81 /* CoreMedia.framework in Frameworks */,
 				696D281719CA539900A23D81 /* QuartzCore.framework in Frameworks */,
@@ -303,6 +327,8 @@
 		6F90DDD81395CAAA00125BDA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F3C1A8DC22945F9200A59A8E /* opencv2.framework */,
+				F3C1A8DA22945F7A00A59A8E /* Thirdparty */,
 				F318E01520E79B5E00260914 /* MessageUI.framework */,
 				F318DFE820E738C000260914 /* Photos.framework */,
 				171999D919C7695800A719B5 /* CoreImage.framework */,
@@ -470,9 +496,11 @@
 				TargetAttributes = {
 					1756C9D419BE5E1F0080DD55 = {
 						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = FH88PJJX89;
 					};
 					1FCCE64619BA80A5009D7A6B = {
 						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = FH88PJJX89;
 					};
 					696D280919CA539900A23D81 = {
 						CreatedOnToolsVersion = 8.0;
@@ -567,6 +595,7 @@
 			files = (
 				1756C9D619BE5E1F0080DD55 /* main.m in Sources */,
 				1756C9D719BE5E1F0080DD55 /* RosyWriterAppDelegate.m in Sources */,
+				F3C1A8C9229453DB00A59A8E /* RosyWriterViewController+Helper.m in Sources */,
 				1756C9D819BE5E1F0080DD55 /* RosyWriterViewController.m in Sources */,
 				1756C9DA19BE5E1F0080DD55 /* RosyWriterCapturePipeline.m in Sources */,
 				1756C9DC19BE5E1F0080DD55 /* MovieRecorder.m in Sources */,
@@ -574,6 +603,7 @@
 				F3C8A228219122600087B5C3 /* VideoTimeConverter.m in Sources */,
 				1756C9DD19BE5E1F0080DD55 /* OpenGLPixelBufferView.m in Sources */,
 				1756C9FC19BE5EE10080DD55 /* RosyWriterCIFilterRenderer.m in Sources */,
+				F3C1A8C62294536D00A59A8E /* InertialRecorder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -583,6 +613,7 @@
 			files = (
 				1FCCE64819BA80A5009D7A6B /* main.m in Sources */,
 				1FCCE64919BA80A5009D7A6B /* RosyWriterAppDelegate.m in Sources */,
+				F3C1A8C8229453D800A59A8E /* RosyWriterViewController+Helper.m in Sources */,
 				1FCCE64A19BA80A5009D7A6B /* RosyWriterViewController.m in Sources */,
 				696D282C19CA549100A23D81 /* RosyWriterCPURenderer.m in Sources */,
 				1FCCE64C19BA80A5009D7A6B /* RosyWriterCapturePipeline.m in Sources */,
@@ -590,6 +621,7 @@
 				F3C8A227219122600087B5C3 /* VideoTimeConverter.m in Sources */,
 				1FCCE64E19BA80A5009D7A6B /* MovieRecorder.m in Sources */,
 				1FCCE64F19BA80A5009D7A6B /* OpenGLPixelBufferView.m in Sources */,
+				F3C1A8C52294536C00A59A8E /* InertialRecorder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -599,6 +631,7 @@
 			files = (
 				696D280B19CA539900A23D81 /* main.m in Sources */,
 				696D280C19CA539900A23D81 /* RosyWriterAppDelegate.m in Sources */,
+				F3C1A8CA229453DC00A59A8E /* RosyWriterViewController+Helper.m in Sources */,
 				696D280D19CA539900A23D81 /* RosyWriterViewController.m in Sources */,
 				696D280F19CA539900A23D81 /* RosyWriterCapturePipeline.m in Sources */,
 				696D281019CA539900A23D81 /* ShaderUtilities.c in Sources */,
@@ -606,6 +639,7 @@
 				F3C8A229219122600087B5C3 /* VideoTimeConverter.m in Sources */,
 				696D281219CA539900A23D81 /* OpenGLPixelBufferView.m in Sources */,
 				696D282B19CA548500A23D81 /* RosyWriterOpenCVRenderer.mm in Sources */,
+				F3C1A8C72294537000A59A8E /* InertialRecorder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -667,10 +701,12 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = FH88PJJX89;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "RosyWriter-Prefix.pch";
 				INFOPLIST_FILE = "RosyWriter-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CIFILTER_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RosyWriterCIFilter;
@@ -687,10 +723,12 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = FH88PJJX89;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "RosyWriter-Prefix.pch";
 				INFOPLIST_FILE = "RosyWriter-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CIFILTER_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RosyWriterCIFilter;
@@ -707,10 +745,12 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = FH88PJJX89;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "RosyWriter-Prefix.pch";
 				INFOPLIST_FILE = "RosyWriter-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CPU_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RosyWriterCPU;
@@ -727,10 +767,12 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = FH88PJJX89;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "RosyWriter-Prefix.pch";
 				INFOPLIST_FILE = "RosyWriter-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CPU_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RosyWriterCPU;
@@ -748,10 +790,16 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = FH88PJJX89;
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Thirdparty",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "RosyWriter-Prefix.pch";
 				INFOPLIST_FILE = "RosyWriter-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_OPENCV_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RosyWriterOpenCV;
@@ -769,10 +817,16 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = FH88PJJX89;
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Thirdparty",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "RosyWriter-Prefix.pch";
 				INFOPLIST_FILE = "RosyWriter-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_OPENCV_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RosyWriterOpenCV;
