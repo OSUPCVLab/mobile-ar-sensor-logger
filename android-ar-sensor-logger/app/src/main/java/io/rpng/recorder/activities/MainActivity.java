@@ -2,47 +2,35 @@ package io.rpng.recorder.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
+import android.hardware.camera2.CameraMetadata;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
-
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
-import io.rpng.recorder.managers.CameraManager;
-import io.rpng.recorder.utils.ImageSaver;
 import io.rpng.recorder.R;
+import io.rpng.recorder.managers.CameraManager;
 import io.rpng.recorder.managers.GPSManager;
 import io.rpng.recorder.managers.IMUManager;
-import io.rpng.recorder.views.AutoFitTextureView;
 import io.rpng.recorder.utils.FileHelper;
+import io.rpng.recorder.utils.ImageSaver;
+import io.rpng.recorder.views.AutoFitTextureView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
     private static Intent intentResults;
 
     private AutoFitTextureView mTextureView;
+
+    private TextView mFpsFocalLength;
+    private TextView mwxh;
+    private TextView mExposureTime;
+    private TextView mAEAFstate;
 
     public static CameraManager mCameraManager;
     public static IMUManager mImuManager;
@@ -70,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
 
     private BufferedWriter mTimeBaseWriter;
     public static FileHelper mFileHelper;
+
+    private Long mLastFrameTimeNs;
+    private Float mFrameRate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
         // Get our surfaces
         mTextureView = (AutoFitTextureView) findViewById(R.id.camera2_texture);
 
+        mFpsFocalLength = (TextView) findViewById(R.id.fps_focal_length);
+        mwxh = (TextView) findViewById(R.id.wxh);
+        mExposureTime = (TextView) findViewById(R.id.exposure_time);
+        mAEAFstate = (TextView) findViewById(R.id.AE_AF_state);
+
         // Create the camera manager
         mCameraManager = new CameraManager(this, mTextureView);
         mImuManager = new IMUManager(this);
@@ -105,7 +106,8 @@ public class MainActivity extends AppCompatActivity {
         is_recording = false;
 
         mTimeBaseWriter = null;
-
+        mFrameRate = 15.0f;
+        mLastFrameTimeNs = null;
         // Lets by default launch into the settings view
         startActivityForResult(intentSettings, RESULT_SETTINGS);
 
@@ -115,11 +117,11 @@ public class MainActivity extends AppCompatActivity {
 
         // We we want to "capture" the current grid, we should record the current corners
         Button button_record = (Button) findViewById(R.id.button_record);
-        button_record.setOnClickListener( new View.OnClickListener() {
+        button_record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // If we are not recording we should start it
-                if(!is_recording) {
+                if (!is_recording) {
                     // Set our folder name
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
                     folder_name = dateFormat.format(new Date());
@@ -141,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                         mTimeBaseWriter.write("#elapsedRealtimeNanos nanoTime\n");
                         mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
 
-                    } catch(IOException ioe) {
+                    } catch (IOException ioe) {
                         System.err.println("IOException: " + ioe.getMessage());
                     }
 
@@ -166,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
                     long sysNs = System.nanoTime();
                     try {
                         mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
-                    } catch(IOException ioe) {
+                    } catch (IOException ioe) {
                         System.err.println("IOException: " + ioe.getMessage());
                     }
                     FileHelper.closeBufferedWriter(mTimeBaseWriter);
@@ -212,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             // If the file does not exist yet, create it
-            if(!dest.exists())
+            if (!dest.exists())
                 dest.createNewFile();
 
             // The true will append the new data
@@ -227,9 +229,46 @@ public class MainActivity extends AppCompatActivity {
             writer.close();
         }
         // Ran into a problem writing to file
-        catch(IOException ioe) {
+        catch (IOException ioe) {
             System.err.println("IOException: " + ioe.getMessage());
         }
+    }
+
+    public void updateStatsPanel(
+            final Long timestamp, final Float fl,
+            final Long exposureTimeNs, final Integer afMode) {
+        if (mLastFrameTimeNs != null) {
+            Long gapNs = timestamp - mLastFrameTimeNs;
+            mFrameRate = mFrameRate * 0.3f +
+                    (float)(1000000000.0 / gapNs * 0.7);
+        }
+        mLastFrameTimeNs = timestamp;
+        final String sfps = String.format(Locale.getDefault(), "%.1f FPS", mFrameRate);
+        final String sfl = String.format(Locale.getDefault(), "%.3f", fl);
+        final String sexpotime =
+                exposureTimeNs == null ?
+                "null ms" :
+                String.format(Locale.getDefault(), "%.2f ms",
+                exposureTimeNs/1000000.0);
+        String safMode;
+        switch (afMode) {
+            case CameraMetadata.CONTROL_AF_MODE_OFF:
+                safMode = "AF locked";
+                break;
+            default:
+                safMode = "AF unlocked";
+                break;
+        }
+        final String saf = safMode;
+        runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                mFpsFocalLength.setText(sfps + " " + sfl);
+                mExposureTime.setText(sexpotime);
+                mAEAFstate.setText(saf);
+            }
+        });
     }
 
     @Override
@@ -260,7 +299,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onImageAvailable(ImageReader ir) {
             Image image = ir.acquireNextImage();
-
+            Integer w = image.getWidth();
+            Integer h = image.getHeight();
+            mwxh.setText(w + " x " + h);
             // Save the file (if enabled)
             // http://stackoverflow.com/a/9006098
             if (MainActivity.is_recording) {

@@ -8,7 +8,6 @@ import android.graphics.YuvImage;
 import android.media.Image;
 import android.util.Log;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,7 +17,7 @@ import java.nio.ByteBuffer;
 /**
  * Saves a JPEG/YUV_420_888 {@link Image} into the specified {@link File}.
  * Preliminary tests shows that saving YUV_420_888 takes on average 70ms
- *     while saving JPEG takes 2.5ms which is 27 times faster.
+ * while saving JPEG takes 2.5ms which is 27 times faster.
  * Also the compressToJpeg method has been found to subject to a bug, see
  * https://blog.csdn.net/q979713444/article/details/80446404
  */
@@ -123,8 +122,5 @@ public class ImageSaver implements Runnable {
         } else {
             mImage.close();
         }
-
-
-
     }
 }

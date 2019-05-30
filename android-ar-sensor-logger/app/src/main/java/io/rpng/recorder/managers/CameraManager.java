@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -24,6 +25,7 @@ import android.os.HandlerThread;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.Size;
+import android.util.SizeF;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
@@ -38,6 +40,7 @@ import io.rpng.recorder.activities.MainActivity;
 import io.rpng.recorder.dialogs.ErrorDialog;
 import io.rpng.recorder.utils.CameraUtil;
 import io.rpng.recorder.utils.FileHelper;
+import io.rpng.recorder.utils.FocalLengthHelper;
 import io.rpng.recorder.views.AutoFitTextureView;
 
 public class CameraManager {
@@ -70,6 +73,7 @@ public class CameraManager {
 
     private float[] intrinsic = new float[5];
     private float[] distortion = new float[4];
+    private FocalLengthHelper mFocalLengthHelper;
 
     public volatile String mTimeBaseHint;
     private BufferedWriter mCameraInfoWriter;
@@ -84,7 +88,7 @@ public class CameraManager {
         this.mTextureView = txt;
         this.permissionManager = new PermissionManager(activity, VIDEO_PERMISSIONS, 1);
         this.mCameraInfoWriter = null;
-
+        this.mFocalLengthHelper = new FocalLengthHelper();
         this.mTextureView.setOnTouchListener(null);
     }
 
@@ -165,24 +169,6 @@ public class CameraManager {
                     " k6 " + distort[5]);
     }
 
-    @TargetApi(23)
-    private void getLensParams(CameraCharacteristics result) {
-        float[] intrinsic = result.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
-        if (intrinsic != null)
-            Log.d(TAG, "char lens intrinsics fx " + intrinsic[0] +
-                    " fy " + intrinsic[1] +
-                    " cx " + intrinsic[2] +
-                    " cy " + intrinsic[3] +
-                    " s " + intrinsic[4]);
-        float[] distort = result.get(CameraCharacteristics.LENS_RADIAL_DISTORTION);
-        if (distort != null)
-            Log.d(TAG, "char lens distortion k1 " + distort[0] +
-                    " k2 " + distort[1] +
-                    " k3 " + distort[2] +
-                    " k4 " + distort[3] +
-                    " \nk5 " + distort[4] +
-                    " k6 " + distort[5]);
-    }
 
     private String getTimestampSource(CameraCharacteristics cc) {
         Integer value = cc.get(CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE);
@@ -264,7 +250,8 @@ public class CameraManager {
                 distortion = characteristics.get(CameraCharacteristics.LENS_RADIAL_DISTORTION);
             }
 
-            getLensParams(characteristics);
+            mFocalLengthHelper.setLensParams(characteristics);
+
             String time_src = getTimestampSource(characteristics);
             String hint = "#The CameraCharacteristics.SENSOR_INFO_" +
                     "TIMESTAMP_SOURCE is " + time_src + "\n" +
@@ -300,9 +287,12 @@ public class CameraManager {
             // sending message to a Handler on a dead thread, will be thrown out.
             mImageReader.setOnImageAvailableListener(
                     ((MainActivity) activity).imageAvailableListener, null);
-            Log.d(TAG, "Video size " + mImageReader.getWidth() + " "
+            // TODO(jhuai): the imageReader size may not be exactly the saved image size
+            // fix the incompatibility between videoSize, imageReader size and previewSize
+            Log.d(TAG, "Video size " + mVideoSize.toString() + "Image reader size " + mImageReader.getWidth() + " "
                     + mImageReader.getHeight() + " Preview size " + mPreviewSize.toString());
-
+            mFocalLengthHelper.setmImageSize(
+                    new Size(mImageReader.getWidth(), mImageReader.getHeight()));
 
             // The orientation is a multiple of 90 value that rotates into the native orientation
             // This should fix cameras that are rotated in landscape
@@ -388,9 +378,7 @@ public class CameraManager {
                                                CaptureRequest request,
                                                TotalCaptureResult result) {
                     Long timestamp = result.get(CaptureResult.SENSOR_TIMESTAMP);
-
                     Long number = result.getFrameNumber();
-
                     Long exposureTimeNs = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
 
                     Long frmDurationNs = result.get(CaptureResult.SENSOR_FRAME_DURATION);
@@ -398,12 +386,16 @@ public class CameraManager {
                     Integer iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
 
                     Float fl = result.get(CaptureResult.LENS_FOCAL_LENGTH);
-
+                    mFocalLengthHelper.setmFocalLength(fl);
                     Float fd = result.get(CaptureResult.LENS_FOCUS_DISTANCE);
+                    mFocalLengthHelper.setmFocusDistance(fd);
 
                     Integer afMode = result.get(CaptureResult.CONTROL_AF_MODE);
                     getLensParams(result);
+                    Rect rect = result.get(CaptureResult.SCALER_CROP_REGION);
 
+                    mFocalLengthHelper.setmCropRegion(rect);
+                    SizeF sz_focal_length = mFocalLengthHelper.getFocalLengthPixel();
                     String delimiter = ",";
                     StringBuilder sb = new StringBuilder();
                     sb.append(timestamp);
@@ -423,6 +415,9 @@ public class CameraManager {
                             System.err.println("IOException: " + ioe.getMessage());
                         }
                     }
+                    ((MainActivity) activity).updateStatsPanel(
+                            timestamp, sz_focal_length.getWidth(),
+                            exposureTimeNs, afMode);
                 }
 
                 @Override
