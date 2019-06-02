@@ -42,7 +42,6 @@ public class ImageSaver implements Runnable {
         long startTime = System.nanoTime();
 
         if (mImage.getFormat() == ImageFormat.JPEG) {
-
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);

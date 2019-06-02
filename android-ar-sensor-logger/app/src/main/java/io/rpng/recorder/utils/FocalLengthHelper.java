@@ -55,6 +55,8 @@ public class FocalLengthHelper {
     // because focal_length is very small,
     // focus_distance is often comparatively small,
     // i is often very close to the physical focal length
+    // ref: https://source.android.com/devices/camera/camera3_crop_reprocess.html
+    // https://stackoverflow.com/questions/39965408/what-is-the-android-camera2-api-equivalent-of-camera-parameters-gethorizontalvie
     public SizeF getFocalLengthPixel() {
         if (mIntrinsic != null && mIntrinsic[0] > 1.0) {
             Log.d(TAG, "Focal length set as (" + mIntrinsic[0] + ", " + mIntrinsic[1]);
