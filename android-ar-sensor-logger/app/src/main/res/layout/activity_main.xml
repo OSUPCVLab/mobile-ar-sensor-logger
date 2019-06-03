@@ -82,7 +82,7 @@
             android:layout_height="55dp"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="Start Recording"></Button>
+            android:text="@string/start_record"></Button>
     </FrameLayout>
 
 </RelativeLayout>

@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Also change the text on the button so that it turns into the stop button
                     Button button_record = (Button) findViewById(R.id.button_record);
-                    button_record.setText("Stop Recording");
+                    button_record.setText(R.string.stop_record);
 
 
                     mFileHelper = new FileHelper(folder_name);
@@ -151,15 +151,13 @@ public class MainActivity extends AppCompatActivity {
                     // Trigger the recording by changing the recording boolean
                     is_recording = true;
 
-                }
-                // Else we can assume we pressed the "stop recording" button
-                else {
+                } else { // Else we can assume we pressed the "stop recording" button
                     // Just reset the recording button
                     is_recording = false;
 
                     // Also change the text on the button so that it turns into the start button
                     Button button_record = (Button) findViewById(R.id.button_record);
-                    button_record.setText("Start Recording");
+                    button_record.setText(R.string.start_record);
 
                     // Start the result activity
                     //startActivityForResult(intentResults, RESULT_RESULT);
@@ -240,16 +238,16 @@ public class MainActivity extends AppCompatActivity {
         if (mLastFrameTimeNs != null) {
             Long gapNs = timestamp - mLastFrameTimeNs;
             mFrameRate = mFrameRate * 0.3f +
-                    (float)(1000000000.0 / gapNs * 0.7);
+                    (float) (1000000000.0 / gapNs * 0.7);
         }
         mLastFrameTimeNs = timestamp;
         final String sfps = String.format(Locale.getDefault(), "%.1f FPS", mFrameRate);
         final String sfl = String.format(Locale.getDefault(), "%.3f", fl);
         final String sexpotime =
                 exposureTimeNs == null ?
-                "null ms" :
-                String.format(Locale.getDefault(), "%.2f ms",
-                exposureTimeNs/1000000.0);
+                        "null ms" :
+                        String.format(Locale.getDefault(), "%.2f ms",
+                                exposureTimeNs / 1000000.0);
         String safMode;
         switch (afMode) {
             case CameraMetadata.CONTROL_AF_MODE_OFF:
@@ -353,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Also change the text on the button so that it turns into the start button
             Button button_record = (Button) findViewById(R.id.button_record);
-            button_record.setText("Start Recording");
+            button_record.setText(R.string.start_record);
 
             // Start the settings activity
             Intent i = new Intent(this, SettingsActivity.class);
@@ -369,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Also change the text on the button so that it turns into the start button
             Button button_record = (Button) findViewById(R.id.button_record);
-            button_record.setText("Start Recording");
+            button_record.setText(R.string.start_record);
 
             // Start the settings activity
             Intent i = new Intent(this, InfoActivity.class);
