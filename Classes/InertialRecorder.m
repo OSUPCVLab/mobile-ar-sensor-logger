@@ -5,7 +5,6 @@
 
 const double GRAVITY = 9.80; // cf. https://developer.apple.com/documentation/coremotion/getting_raw_accelerometer_events
 const double RATE = 100; // fps for inertial data
-NSString *IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
 
 @interface InertialRecorder ()
 {
@@ -135,7 +134,6 @@ NSString *IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
 }
 
 - (void)switchRecording {
-    
     if (_isRecording) {
         _isRecording = false;
         [_motionManager stopGyroUpdates];
@@ -155,8 +153,6 @@ NSString *IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
         if ([_rawAccelGyroData count])
             [_rawAccelGyroData removeAllObjects];
 
-        _fileURL = getFileURL(IMU_OUTPUT_FILENAME);
-        //        NSLog(@"Data will be saved to URL %@", _fileURL);
         NSData* settingsData;
         settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
         
@@ -227,4 +223,26 @@ NSURL *getFileURL(NSString *filename) {
     NSArray *paths = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
     NSURL *documentsURL = [paths lastObject];
     return [documentsURL URLByAppendingPathComponent:filename isDirectory:NO];
+}
+
+NSURL *createOutputFolderURL(void) {
+    NSDate *now = [NSDate date];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss"];
+    NSString *dateTimeString = [dateFormatter stringFromDate:now];
+    
+    NSArray *paths = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+    NSURL *documentsURL = [paths lastObject];
+    NSURL *outputFolderURL = [documentsURL URLByAppendingPathComponent:dateTimeString isDirectory:YES];
+
+    NSError * error = nil;
+    [[NSFileManager defaultManager] createDirectoryAtURL:outputFolderURL
+                              withIntermediateDirectories:NO
+                                               attributes:nil
+                                                    error:&error];
+    if (error != nil) {
+        NSLog(@"Error creating directory: %@", error);
+        outputFolderURL = nil;
+    }
+    return outputFolderURL;
 }

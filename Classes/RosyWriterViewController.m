@@ -399,13 +399,13 @@
 
 - (void)updateLabels
 {	
-	NSString *frameRateString = [NSString stringWithFormat:@"%d FPS %.3f", (int)roundf( _capturePipeline.videoFrameRate ), _capturePipeline.fx];
+	NSString *frameRateString = [NSString stringWithFormat:@"%.1f FPS %.2f",  _capturePipeline.videoFrameRate, _capturePipeline.fx];
 	self.framerateLabel.text = frameRateString;
 	
 	NSString *dimensionsString = [NSString stringWithFormat:@"%d x %d", _capturePipeline.videoDimensions.width, _capturePipeline.videoDimensions.height];
 	self.dimensionsLabel.text = dimensionsString;
     
-    NSString *exposureDurationString = [NSString stringWithFormat:@"%.4f", _capturePipeline.exposureDuration];
+    NSString *exposureDurationString = [NSString stringWithFormat:@"%.2f ms", _capturePipeline.exposureDuration * 1000];
     self.exposureDurationLabel.text = exposureDurationString;
 }
 

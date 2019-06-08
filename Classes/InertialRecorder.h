@@ -32,3 +32,5 @@
 @end
 
 NSURL *getFileURL(const NSString *filename);
+
+NSURL *createOutputFolderURL(void);
