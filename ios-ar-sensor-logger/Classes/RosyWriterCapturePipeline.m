@@ -50,7 +50,8 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 	RosyWriterRecordingStatusStoppingRecording,
 }; // internal state machine
 
-NSString *VIDEO_META_FILENAME = @"movie_metadata.csv";
+NSString *const VIDEO_META_FILENAME = @"movie_metadata.csv";
+NSString *const IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
 
 @interface RosyWriterCapturePipeline () <AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, MovieRecorderDelegate>
 {
@@ -127,7 +128,7 @@ NSString *VIDEO_META_FILENAME = @"movie_metadata.csv";
 		_previousSecondTimestamps = [[NSMutableArray alloc] init];
 		_recordingOrientation = AVCaptureVideoOrientationPortrait;
 		
-		_recordingURL = [[NSURL alloc] initFileURLWithPath:[NSString pathWithComponents:@[NSTemporaryDirectory(), @"Movie.MOV"]]];
+		_recordingURL = [[NSURL alloc] initFileURLWithPath:[NSString pathWithComponents:@[NSTemporaryDirectory(), @"Movie.MP4"]]];
 		
 		_sessionQueue = dispatch_queue_create( "com.apple.sample.capturepipeline.session", DISPATCH_QUEUE_SERIAL );
 		
@@ -158,8 +159,12 @@ NSString *VIDEO_META_FILENAME = @"movie_metadata.csv";
         _adjustExposureFinished = TRUE;
         adjustExpFinishTime = CMTimeMake(0, 1);
         _exposureDuration = 0.0;
-        _metadataFileURL = nil;
+        
         _inertialRecorder = [[InertialRecorder alloc] init];
+        NSURL * outputFolderURL = createOutputFolderURL();
+        NSURL * inertialFileURL = [outputFolderURL URLByAppendingPathComponent:IMU_OUTPUT_FILENAME isDirectory:NO];
+        [_inertialRecorder setFileURL:inertialFileURL];
+        _metadataFileURL = [outputFolderURL URLByAppendingPathComponent:VIDEO_META_FILENAME isDirectory:NO];
         _videoTimeConverter = [[VideoTimeConverter alloc] init];
 	}
 	return self;
@@ -815,7 +820,6 @@ NSString *VIDEO_META_FILENAME = @"movie_metadata.csv";
     
     }
     
-    _metadataFileURL = getFileURL(VIDEO_META_FILENAME);
     NSData* settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
     // to show these documents in Files app, edit info.plist as suggested in https://www.bignerdranch.com/blog/working-with-the-files-app-in-ios-11/
     if ([settingsData writeToURL:_metadataFileURL atomically:YES]) {

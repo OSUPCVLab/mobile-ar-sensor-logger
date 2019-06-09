@@ -5,10 +5,14 @@ Android and iOS apps for logging visual and inertial data with mobile phones
 The "AR" in the repo name refers to that visual inertial data are essential to augmented reality on smartphones.
 
 **Authors**: Jianzhu Huai, Yujia Zhang
+*Ideally, RosyWriter records camera frames, their timestamps, and intrinsic parameters, and the raw accelerometer and gyroscope readings. Except for the camera frames which are saved into a video, other pieces of data are saved into csv files. To control the quality of the images, you may long press the screen before a recording session to lock auto focus and auto exposure, and/or tap to unlock auto focus and auto exposure if appropriate. *
 
 # Related paper
 
 If you use MARSEL for your research, please consider citing the above paper.
+## Todos
+1. change the video dimensions with the user input.
+    Currently the video frame size is preset with captionSession.sessionPreset = AVCaptureSessionPreset1280x720
 
 # Acknowledgements
 

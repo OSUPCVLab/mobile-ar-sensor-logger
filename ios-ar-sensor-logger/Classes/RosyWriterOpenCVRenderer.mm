@@ -44,7 +44,7 @@
 	CVPixelBufferLockBaseAddress( pixelBuffer, 0 );
 	
 	unsigned char *base = (unsigned char *)CVPixelBufferGetBaseAddress( pixelBuffer );
-	size_t width = CVPixelBufferGetWidth( pixelBuffer );
+//    size_t width = CVPixelBufferGetWidth( pixelBuffer );
 	size_t height = CVPixelBufferGetHeight( pixelBuffer );
 	size_t stride = CVPixelBufferGetBytesPerRow( pixelBuffer );
 	size_t extendedWidth = stride / sizeof( uint32_t ); // each pixel is 4 bytes/32 bits
