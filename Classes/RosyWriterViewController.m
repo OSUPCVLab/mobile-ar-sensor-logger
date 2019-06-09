@@ -339,8 +339,11 @@
     {
         MFMailComposeViewController *mailVC = [[MFMailComposeViewController alloc] init];
         mailVC.mailComposeDelegate = self;
-        [mailVC setSubject:@"Look what I found using visual inertial recorder!"];
-        [mailVC setMessageBody:@"Found and sent using visual inertial recorder!" isHTML:NO];
+        [mailVC setSubject:@"The metadata of camera frames and inertial data captured with the MARS logger!"];
+        [mailVC setMessageBody:@"The attached metadata of camera frames and inertial data "
+                                "were captured by the MARS logger!\n"
+                                "The associated video was the most recent one found with "
+                                "the Photos App at the time of sending this email." isHTML:NO];
         
         [mailVC setToRecipients:@[@"jianzhuhuai0108@gmail.com"]]; // Set a test email recipient here if you want.
         NSData *metaData = [NSData dataWithContentsOfURL:videoMetadataFile];
