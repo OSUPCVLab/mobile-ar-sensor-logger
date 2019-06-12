@@ -159,7 +159,7 @@ public class CameraCaptureActivity extends Activity
         String folderName = dateFormat.format(new Date());
         String dir1 = getFilesDir().getAbsolutePath();
         String dir2 = Environment.getExternalStorageDirectory().
-                getAbsolutePath() + File.separator + "mars_recorder";
+                getAbsolutePath() + File.separator + "mars_logger";
 
         String dir3 = getExternalFilesDir(
                 Environment.getDataDirectory().getAbsolutePath()).getAbsolutePath();
