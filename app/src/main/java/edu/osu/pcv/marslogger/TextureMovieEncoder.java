@@ -96,13 +96,13 @@ public class TextureMovieEncoder implements Runnable {
      *       with reasonable defaults for those and bit rate.
      */
     public static class EncoderConfig {
-        final File mOutputFile;
+        final String mOutputFile;
         final int mWidth;
         final int mHeight;
         final int mBitRate;
         final EGLContext mEglContext;
 
-        public EncoderConfig(File outputFile, int width, int height, int bitRate,
+        public EncoderConfig(String outputFile, int width, int height, int bitRate,
                 EGLContext sharedEglContext) {
             mOutputFile = outputFile;
             mWidth = width;
@@ -114,7 +114,7 @@ public class TextureMovieEncoder implements Runnable {
         @Override
         public String toString() {
             return "EncoderConfig: " + mWidth + "x" + mHeight + " @" + mBitRate +
-                    " to '" + mOutputFile.toString() + "' ctxt=" + mEglContext;
+                    " to '" + mOutputFile + "' ctxt=" + mEglContext;
         }
     }
 
@@ -376,7 +376,7 @@ public class TextureMovieEncoder implements Runnable {
     }
 
     private void prepareEncoder(EGLContext sharedContext, int width, int height, int bitRate,
-            File outputFile) {
+            String outputFile) {
         try {
             mVideoEncoder = new VideoEncoderCore(width, height, bitRate, outputFile);
         } catch (IOException ioe) {

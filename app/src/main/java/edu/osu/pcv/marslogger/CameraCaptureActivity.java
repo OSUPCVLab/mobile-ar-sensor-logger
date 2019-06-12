@@ -24,6 +24,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -44,6 +45,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -149,14 +152,38 @@ public class CameraCaptureActivity extends Activity
     // this is static so it survives activity restarts
     private static TextureMovieEncoder sVideoEncoder = new TextureMovieEncoder();
 
+    private String renewOutputDir() {
+        SimpleDateFormat dateFormat =
+                new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
+        String folderName = dateFormat.format(new Date());
+        String dir1 = getFilesDir().getAbsolutePath();
+        String dir2 = Environment.getExternalStorageDirectory().
+                getAbsolutePath() + File.separator + "mars_recorder";
+
+        String dir3 = getExternalFilesDir(
+                Environment.getDataDirectory().getAbsolutePath()).getAbsolutePath();
+        Log.d(TAG, "dir 1 " + dir1 + "\ndir 2 " + dir2 + "\ndir3 " + dir3);
+        // dir1 and dir3 are always available for the app even the
+        // write external storage permission is not granted.
+        // "Apparently in Marshmallow when you install with Android studio it
+        // never asks you if you should give it permission it just quietly
+        // fails, like you denied it. You must go into Settings, apps, select
+        // your application and flip the permission switch on."
+        // ref: https://stackoverflow.com/questions/40087355/android-mkdirs-not-working
+        String outputDir = dir2 + File.separator + folderName;
+        (new File(outputDir)).mkdirs();
+        return outputDir;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_capture);
 
-        File outputFile = new File(getFilesDir(), "camera-test.mp4");
+        String outputFile = renewOutputDir() + File.separator + "camera-test.mp4";
+
         TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
-        fileText.setText(outputFile.toString());
+        fileText.setText(outputFile);
 
         Spinner spinner = (Spinner) findViewById(R.id.cameraFilter_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -481,7 +508,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
 
     private CameraCaptureActivity.CameraHandler mCameraHandler;
     private TextureMovieEncoder mVideoEncoder;
-    private File mOutputFile;
+    private String mOutputFile;
 
     private FullFrameRect mFullScreen;
 
@@ -511,7 +538,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
      * @param outputFile    output file for encoded video; forwarded to movieEncoder
      */
     public CameraSurfaceRenderer(CameraCaptureActivity.CameraHandler cameraHandler,
-                                 TextureMovieEncoder movieEncoder, File outputFile) {
+                                 TextureMovieEncoder movieEncoder, String outputFile) {
         mCameraHandler = cameraHandler;
         mVideoEncoder = movieEncoder;
         mOutputFile = outputFile;

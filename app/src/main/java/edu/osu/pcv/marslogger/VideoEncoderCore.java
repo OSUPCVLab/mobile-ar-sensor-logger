@@ -57,7 +57,7 @@ public class VideoEncoderCore {
     /**
      * Configures encoder and muxer state, and prepares the input Surface.
      */
-    public VideoEncoderCore(int width, int height, int bitRate, File outputFile)
+    public VideoEncoderCore(int width, int height, int bitRate, String outputFile)
             throws IOException {
         mBufferInfo = new MediaCodec.BufferInfo();
 
@@ -85,7 +85,7 @@ public class VideoEncoderCore {
         //
         // We're not actually interested in multiplexing audio.  We just want to convert
         // the raw H.264 elementary stream we get from MediaCodec into a .mp4 file.
-        mMuxer = new MediaMuxer(outputFile.toString(),
+        mMuxer = new MediaMuxer(outputFile,
                 MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
         mTrackIndex = -1;
