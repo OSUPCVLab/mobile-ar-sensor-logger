@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -443,6 +444,13 @@ public class CameraCaptureActivity extends Activity
         // so it doesn't really matter.
         if (VERBOSE) Log.d(TAG, "ST onFrameAvailable");
         mGLView.requestRender();
+
+        final String sfps = String.format(Locale.getDefault(), "%.1f FPS",
+                sVideoEncoder.mFrameRate);
+        String previewFacts = mCameraPreviewWidth + "x" + mCameraPreviewHeight + "@" + sfps;
+
+        TextView text = (TextView) findViewById(R.id.cameraParams_text);
+        text.setText(previewFacts);
     }
 
     /**

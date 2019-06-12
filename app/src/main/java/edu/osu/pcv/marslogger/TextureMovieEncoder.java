@@ -24,14 +24,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+
 import edu.osu.pcv.marslogger.gles.EglCore;
 import edu.osu.pcv.marslogger.gles.FullFrameRect;
 import edu.osu.pcv.marslogger.gles.Texture2dProgram;
 import edu.osu.pcv.marslogger.gles.WindowSurface;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.ref.WeakReference;
 
 /**
  * Encode a movie from frames rendered from an external texture image.
@@ -53,9 +52,9 @@ import java.lang.ref.WeakReference;
  * <li>call TextureMovieEncoder#startRecording() with the config
  * <li>call TextureMovieEncoder#setTextureId() with the texture object that receives frames
  * <li>for each frame, after latching it with SurfaceTexture#updateTexImage(),
- *     call TextureMovieEncoder#frameAvailable().
+ * call TextureMovieEncoder#frameAvailable().
  * </ul>
- *
+ * <p>
  * TODO: tweak the API (esp. textureId) so it's less awkward for simple use cases.
  */
 public class TextureMovieEncoder implements Runnable {
@@ -83,7 +82,8 @@ public class TextureMovieEncoder implements Runnable {
     private Object mReadyFence = new Object();      // guards ready/running
     private boolean mReady;
     private boolean mRunning;
-
+    private Long mLastFrameTimeNs = null;
+    public Float mFrameRate = 15.f;
 
     /**
      * Encoder configuration.
@@ -93,7 +93,7 @@ public class TextureMovieEncoder implements Runnable {
      * under us).
      * <p>
      * TODO: make frame rate and iframe interval configurable?  Maybe use builder pattern
-     *       with reasonable defaults for those and bit rate.
+     * with reasonable defaults for those and bit rate.
      */
     public static class EncoderConfig {
         final String mOutputFile;
@@ -103,7 +103,7 @@ public class TextureMovieEncoder implements Runnable {
         final EGLContext mEglContext;
 
         public EncoderConfig(String outputFile, int width, int height, int bitRate,
-                EGLContext sharedEglContext) {
+                             EGLContext sharedEglContext) {
             mOutputFile = outputFile;
             mWidth = width;
             mHeight = height;
@@ -234,6 +234,7 @@ public class TextureMovieEncoder implements Runnable {
     /**
      * Encoder thread entry point.  Establishes Looper/Handler and waits for messages.
      * <p>
+     *
      * @see java.lang.Thread#run()
      */
     @Override
@@ -319,7 +320,8 @@ public class TextureMovieEncoder implements Runnable {
      * The texture is rendered onto the encoder's input surface, along with a moving
      * box (just because we can).
      * <p>
-     * @param transform The texture transform, from SurfaceTexture.
+     *
+     * @param transform      The texture transform, from SurfaceTexture.
      * @param timestampNanos The frame's timestamp, from SurfaceTexture.
      */
     private void handleFrameAvailable(float[] transform, long timestampNanos) {
@@ -331,6 +333,13 @@ public class TextureMovieEncoder implements Runnable {
 
         mInputWindowSurface.setPresentationTime(timestampNanos);
         mInputWindowSurface.swapBuffers();
+
+        if (mLastFrameTimeNs != null) {
+            Long gapNs = timestampNanos - mLastFrameTimeNs;
+            mFrameRate = mFrameRate * 0.3f +
+                    (float) (1000000000.0 / gapNs * 0.7);
+        }
+        mLastFrameTimeNs = timestampNanos;
     }
 
     /**
@@ -376,7 +385,7 @@ public class TextureMovieEncoder implements Runnable {
     }
 
     private void prepareEncoder(EGLContext sharedContext, int width, int height, int bitRate,
-            String outputFile) {
+                                String outputFile) {
         try {
             mVideoEncoder = new VideoEncoderCore(width, height, bitRate, outputFile);
         } catch (IOException ioe) {
