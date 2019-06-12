@@ -23,9 +23,11 @@ import android.media.MediaMuxer;
 import android.util.Log;
 import android.view.Surface;
 
-import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 /**
  * This class wraps up the core components used for surface-input video encoding.
@@ -52,12 +54,14 @@ public class VideoEncoderCore {
     private MediaCodec.BufferInfo mBufferInfo;
     private int mTrackIndex;
     private boolean mMuxerStarted;
-
+    private BufferedWriter mFrameMetadataWriter = null;
+    private ArrayList<Long> mTimeArray = null;
 
     /**
      * Configures encoder and muxer state, and prepares the input Surface.
      */
-    public VideoEncoderCore(int width, int height, int bitRate, String outputFile)
+    public VideoEncoderCore(int width, int height, int bitRate,
+                            String outputFile, String metaFile)
             throws IOException {
         mBufferInfo = new MediaCodec.BufferInfo();
 
@@ -90,6 +94,14 @@ public class VideoEncoderCore {
 
         mTrackIndex = -1;
         mMuxerStarted = false;
+
+        try {
+            mFrameMetadataWriter = new BufferedWriter(
+                    new FileWriter(metaFile, false));
+        } catch (IOException err) {
+            System.err.println("IOException in opening frameMetadataWriter: " + err.getMessage());
+        }
+        mTimeArray = new ArrayList<>();
     }
 
     /**
@@ -115,6 +127,18 @@ public class VideoEncoderCore {
             mMuxer.stop();
             mMuxer.release();
             mMuxer = null;
+        }
+        if (mFrameMetadataWriter != null) {
+            try {
+                for (Long value : mTimeArray) {
+                    mFrameMetadataWriter.write(value.toString() + "\n");
+                }
+                mFrameMetadataWriter.flush();
+                mFrameMetadataWriter.close();
+            } catch (IOException err) {
+                System.err.println("IOException in closing frameMetadataWriter: " + err.getMessage());
+            }
+            mFrameMetadataWriter = null;
         }
     }
 
@@ -188,7 +212,7 @@ public class VideoEncoderCore {
                     // adjust the ByteBuffer values to match BufferInfo (not needed?)
                     encodedData.position(mBufferInfo.offset);
                     encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
-
+                    mTimeArray.add(mBufferInfo.presentationTimeUs);
                     mMuxer.writeSampleData(mTrackIndex, encodedData, mBufferInfo);
                     if (VERBOSE) {
                         Log.d(TAG, "sent " + mBufferInfo.size + " bytes to muxer, ts=" +

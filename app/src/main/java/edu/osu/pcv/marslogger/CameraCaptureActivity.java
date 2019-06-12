@@ -180,9 +180,9 @@ public class CameraCaptureActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_capture);
-
-        String outputFile = renewOutputDir() + File.separator + "camera-test.mp4";
-
+        String outputDir = renewOutputDir();
+        String outputFile = outputDir + File.separator + "video.mp4";
+        String metaFile = outputDir + File.separator + "frame_timestamps.txt";
         TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
         fileText.setText(outputFile);
 
@@ -205,10 +205,10 @@ public class CameraCaptureActivity extends Activity
         // appropriate EGL context.
         mGLView = (GLSurfaceView) findViewById(R.id.cameraPreview_surfaceView);
         mGLView.setEGLContextClientVersion(2);     // select GLES 2.0
-        mRenderer = new CameraSurfaceRenderer(mCameraHandler, sVideoEncoder, outputFile);
+        mRenderer = new CameraSurfaceRenderer(
+                mCameraHandler, sVideoEncoder, outputFile, metaFile);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
         Log.d(TAG, "onCreate complete: " + this);
     }
 
@@ -310,7 +310,7 @@ public class CameraCaptureActivity extends Activity
         int numCameras = Camera.getNumberOfCameras();
         for (int i = 0; i < numCameras; i++) {
             Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 mCamera = Camera.open(i);
                 break;
             }
@@ -517,6 +517,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private CameraCaptureActivity.CameraHandler mCameraHandler;
     private TextureMovieEncoder mVideoEncoder;
     private String mOutputFile;
+    private String mMetadataFile;
 
     private FullFrameRect mFullScreen;
 
@@ -546,11 +547,12 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
      * @param outputFile    output file for encoded video; forwarded to movieEncoder
      */
     public CameraSurfaceRenderer(CameraCaptureActivity.CameraHandler cameraHandler,
-                                 TextureMovieEncoder movieEncoder, String outputFile) {
+                                 TextureMovieEncoder movieEncoder, String outputFile,
+                                 String metaFile) {
         mCameraHandler = cameraHandler;
         mVideoEncoder = movieEncoder;
         mOutputFile = outputFile;
-
+        mMetadataFile = metaFile;
         mTextureId = -1;
 
         mRecordingStatus = -1;
@@ -734,8 +736,11 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
                 case RECORDING_OFF:
                     Log.d(TAG, "START recording");
                     // start recording
-                    mVideoEncoder.startRecording(new TextureMovieEncoder.EncoderConfig(
-                            mOutputFile, 640, 480, 1000000, EGL14.eglGetCurrentContext()));
+                    mVideoEncoder.startRecording(
+                            new TextureMovieEncoder.EncoderConfig(
+                                    mOutputFile, 720, 1280,
+                                    1000000, EGL14.eglGetCurrentContext(),
+                                    mMetadataFile));
                     mRecordingStatus = RECORDING_ON;
                     break;
                 case RECORDING_RESUMED:
