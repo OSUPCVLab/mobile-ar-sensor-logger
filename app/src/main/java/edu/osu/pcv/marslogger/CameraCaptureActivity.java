@@ -30,6 +30,7 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.util.Size;
 import android.view.Display;
 import android.view.Surface;
 import android.view.View;
@@ -43,7 +44,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -142,9 +142,13 @@ public class CameraCaptureActivity extends Activity
     static final int FILTER_EDGE_DETECT = 4;
     static final int FILTER_EMBOSS = 5;
 
+    static final int mDesiredFrameWidth = 1280;
+    static final int mDesiredFrameHeight = 720;
+
     private GLSurfaceView mGLView;
     private CameraSurfaceRenderer mRenderer;
     private Camera mCamera;
+    private Camera2Proxy mCamera2Proxy = null;
     private CameraHandler mCameraHandler;
     private boolean mRecordingEnabled;      // controls button state
 
@@ -209,7 +213,24 @@ public class CameraCaptureActivity extends Activity
                 mCameraHandler, sVideoEncoder, outputFile, metaFile);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
         Log.d(TAG, "onCreate complete: " + this);
+    }
+
+    // updates mCameraPreviewWidth/Height
+    private void setLayoutAspectRatio(Size cameraPreviewSize) {
+        AspectFrameLayout layout = findViewById(R.id.cameraPreview_afl);
+        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        mCameraPreviewWidth = cameraPreviewSize.getWidth();
+        mCameraPreviewHeight = cameraPreviewSize.getHeight();
+        if (display.getRotation() == Surface.ROTATION_0) {
+            layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
+        } else if (display.getRotation() == Surface.ROTATION_270) {
+            layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
+        } else {
+            // Set the preview aspect ratio.
+            layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
+        }
     }
 
     @Override
@@ -219,10 +240,12 @@ public class CameraCaptureActivity extends Activity
         updateControls();
 
         if (PermissionHelper.hasCameraPermission(this)) {
-            if (mCamera == null) {
-                openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
+            if (mCamera2Proxy == null) {
+                mCamera2Proxy = new Camera2Proxy(this);
+                Size previewSize =
+                        mCamera2Proxy.configureCamera(mDesiredFrameWidth, mDesiredFrameHeight);
+                setLayoutAspectRatio(previewSize);  // updates mCameraPreviewWidth/Height
             }
-
         } else {
             PermissionHelper.requestCameraPermission(this, false);
         }
@@ -241,7 +264,9 @@ public class CameraCaptureActivity extends Activity
     protected void onPause() {
         Log.d(TAG, "onPause -- releasing camera");
         super.onPause();
-        releaseCamera();
+        mCamera2Proxy.releaseCamera();
+        mCamera2Proxy = null;
+
         mGLView.queueEvent(new Runnable() {
             @Override
             public void run() {
@@ -269,8 +294,10 @@ public class CameraCaptureActivity extends Activity
             PermissionHelper.launchPermissionSettings(this);
             finish();
         } else {
-            openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
-
+            mCamera2Proxy = new Camera2Proxy(this);
+            Size previewSize =
+                    mCamera2Proxy.configureCamera(mDesiredFrameWidth, mDesiredFrameHeight);
+            setLayoutAspectRatio(previewSize);
         }
     }
 
@@ -420,12 +447,14 @@ public class CameraCaptureActivity extends Activity
      */
     private void handleSetSurfaceTexture(SurfaceTexture st) {
         st.setOnFrameAvailableListener(this);
-        try {
-            mCamera.setPreviewTexture(st);
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
+
+        if (mCamera2Proxy != null) {
+            mCamera2Proxy.setPreviewSurfaceTexture(st);
+            mCamera2Proxy.openCamera(0, 0);
+        } else {
+            throw new RuntimeException(
+                    "Try to set surface texture while camera2proxy is null");
         }
-        mCamera.startPreview();
     }
 
     @Override
@@ -735,10 +764,11 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
             switch (mRecordingStatus) {
                 case RECORDING_OFF:
                     Log.d(TAG, "START recording");
-                    // start recording
+                    // TODO(jhuai): why does the height and width have to be swapped here?
                     mVideoEncoder.startRecording(
                             new TextureMovieEncoder.EncoderConfig(
-                                    mOutputFile, 720, 1280,
+                                    mOutputFile, CameraCaptureActivity.mDesiredFrameHeight,
+                                    CameraCaptureActivity.mDesiredFrameWidth,
                                     1000000, EGL14.eglGetCurrentContext(),
                                     mMetadataFile));
                     mRecordingStatus = RECORDING_ON;
