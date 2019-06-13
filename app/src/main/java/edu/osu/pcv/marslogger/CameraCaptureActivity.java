@@ -147,7 +147,7 @@ public class CameraCaptureActivity extends Activity
 
     private GLSurfaceView mGLView;
     private CameraSurfaceRenderer mRenderer;
-    private Camera mCamera;
+
     private Camera2Proxy mCamera2Proxy = null;
     private CameraHandler mCameraHandler;
     private boolean mRecordingEnabled;      // controls button state
@@ -184,11 +184,6 @@ public class CameraCaptureActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_capture);
-        String outputDir = renewOutputDir();
-        String outputFile = outputDir + File.separator + "video.mp4";
-        String metaFile = outputDir + File.separator + "frame_timestamps.txt";
-        TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
-        fileText.setText(outputFile);
 
         Spinner spinner = (Spinner) findViewById(R.id.cameraFilter_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -210,7 +205,7 @@ public class CameraCaptureActivity extends Activity
         mGLView = (GLSurfaceView) findViewById(R.id.cameraPreview_surfaceView);
         mGLView.setEGLContextClientVersion(2);     // select GLES 2.0
         mRenderer = new CameraSurfaceRenderer(
-                mCameraHandler, sVideoEncoder, outputFile, metaFile);
+                mCameraHandler, sVideoEncoder);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -322,95 +317,18 @@ public class CameraCaptureActivity extends Activity
     }
 
     /**
-     * Opens a camera, and attempts to establish preview mode at the specified width and height.
-     * <p>
-     * Sets mCameraPreviewWidth and mCameraPreviewHeight to the actual width/height of the preview.
-     */
-    private void openCamera(int desiredWidth, int desiredHeight) {
-        if (mCamera != null) {
-            throw new RuntimeException("camera already initialized");
-        }
-
-        Camera.CameraInfo info = new Camera.CameraInfo();
-
-        // Try to find a front-facing camera (e.g. for videoconferencing).
-        int numCameras = Camera.getNumberOfCameras();
-        for (int i = 0; i < numCameras; i++) {
-            Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                mCamera = Camera.open(i);
-                break;
-            }
-        }
-        if (mCamera == null) {
-            Log.d(TAG, "No front-facing camera found; opening default");
-            mCamera = Camera.open();    // opens first back-facing camera
-        }
-        if (mCamera == null) {
-            throw new RuntimeException("Unable to open camera");
-        }
-
-        Camera.Parameters parms = mCamera.getParameters();
-
-        CameraUtils.choosePreviewSize(parms, desiredWidth, desiredHeight);
-
-        // Give the camera a hint that we're recording video.  This can have a big
-        // impact on frame rate.
-        parms.setRecordingHint(true);
-
-        // leave the frame rate set to default
-        mCamera.setParameters(parms);
-
-        int[] fpsRange = new int[2];
-        Camera.Size mCameraPreviewSize = parms.getPreviewSize();
-        parms.getPreviewFpsRange(fpsRange);
-        String previewFacts = mCameraPreviewSize.width + "x" + mCameraPreviewSize.height;
-        if (fpsRange[0] == fpsRange[1]) {
-            previewFacts += " @" + (fpsRange[0] / 1000.0) + "fps";
-        } else {
-            previewFacts += " @[" + (fpsRange[0] / 1000.0) +
-                    " - " + (fpsRange[1] / 1000.0) + "] fps";
-        }
-        TextView text = (TextView) findViewById(R.id.cameraParams_text);
-        text.setText(previewFacts);
-
-        mCameraPreviewWidth = mCameraPreviewSize.width;
-        mCameraPreviewHeight = mCameraPreviewSize.height;
-
-
-        AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.cameraPreview_afl);
-
-        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
-
-        if (display.getRotation() == Surface.ROTATION_0) {
-            mCamera.setDisplayOrientation(90);
-            layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
-        } else if (display.getRotation() == Surface.ROTATION_270) {
-            layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
-            mCamera.setDisplayOrientation(180);
-        } else {
-            // Set the preview aspect ratio.
-            layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
-        }
-    }
-
-    /**
-     * Stops camera preview, and releases the camera to the system.
-     */
-    private void releaseCamera() {
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            mCamera.release();
-            mCamera = null;
-            Log.d(TAG, "releaseCamera -- done");
-        }
-    }
-
-    /**
      * onClick handler for "record" button.
      */
     public void clickToggleRecording(@SuppressWarnings("unused") View unused) {
         mRecordingEnabled = !mRecordingEnabled;
+        if (mRecordingEnabled) {
+            String outputDir = renewOutputDir();
+            String outputFile = outputDir + File.separator + "video.mp4";
+            String metaFile = outputDir + File.separator + "frame_timestamps.txt";
+            TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
+            fileText.setText(outputFile);
+            mRenderer.resetOutputFiles(outputFile, metaFile); // this will not cause sync issues
+        }
         mGLView.queueEvent(new Runnable() {
             @Override
             public void run() {
@@ -576,12 +494,9 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
      * @param outputFile    output file for encoded video; forwarded to movieEncoder
      */
     public CameraSurfaceRenderer(CameraCaptureActivity.CameraHandler cameraHandler,
-                                 TextureMovieEncoder movieEncoder, String outputFile,
-                                 String metaFile) {
+                                 TextureMovieEncoder movieEncoder) {
         mCameraHandler = cameraHandler;
         mVideoEncoder = movieEncoder;
-        mOutputFile = outputFile;
-        mMetadataFile = metaFile;
         mTextureId = -1;
 
         mRecordingStatus = -1;
@@ -594,6 +509,11 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         // We could preserve the old filter mode, but currently not bothering.
         mCurrentFilter = -1;
         mNewFilter = CameraCaptureActivity.FILTER_NONE;
+    }
+
+    public void resetOutputFiles(String outputFile, String metaFile) {
+        mOutputFile = outputFile;
+        mMetadataFile = metaFile;
     }
 
     /**

@@ -84,6 +84,7 @@ public class TextureMovieEncoder implements Runnable {
     private boolean mRunning;
     private Long mLastFrameTimeNs = null;
     public Float mFrameRate = 15.f;
+    private float[] STMatrix = new float[16];
 
     /**
      * Encoder configuration.
@@ -201,8 +202,7 @@ public class TextureMovieEncoder implements Runnable {
             }
         }
 
-        float[] transform = new float[16];      // TODO - avoid alloc every frame
-        st.getTransformMatrix(transform);
+        st.getTransformMatrix(STMatrix);
         long timestamp = st.getTimestamp();
         if (timestamp == 0) {
             // Seeing this after device is toggled off/on with power button.  The
@@ -215,7 +215,7 @@ public class TextureMovieEncoder implements Runnable {
         }
 
         mHandler.sendMessage(mHandler.obtainMessage(MSG_FRAME_AVAILABLE,
-                (int) (timestamp >> 32), (int) timestamp, transform));
+                (int) (timestamp >> 32), (int) timestamp, STMatrix));
     }
 
     /**

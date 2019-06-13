@@ -167,7 +167,23 @@ public class Camera2Proxy {
 
     private void initPreviewRequest() {
         try {
-            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+
+            // Set control elements, we want auto exposure and white balance
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+
+            float[] focal_lengths = mCameraCharacteristics.get(
+                    CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+            float focal_length = 5.0f;
+            if (focal_lengths.length > 0) {
+                focal_length = focal_lengths[0];
+            }
+            mPreviewRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, focal_length);
+            Log.d(TAG, "Focal length set to " + String.valueOf(focal_length));
+
             if (mPreviewSurfaceTexture != null && mPreviewSurface == null) { // use texture view
                 mPreviewSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
                 mPreviewSurface = new Surface(mPreviewSurfaceTexture);
@@ -179,12 +195,12 @@ public class Camera2Proxy {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
                             mCaptureSession = session;
-                            // 设置连续自动对焦
-                            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest
-                                    .CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                            // 设置自动曝光
-                            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest
-                                    .CONTROL_AE_MODE_ON_AUTO_FLASH);
+//                            // 设置连续自动对焦
+//                            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest
+//                                    .CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+//                            // 设置自动曝光
+//                            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest
+//                                    .CONTROL_AE_MODE_ON_AUTO_FLASH);
                             // 设置完后自动开始预览
                             mPreviewRequest = mPreviewRequestBuilder.build();
                             startPreview();
@@ -236,7 +252,7 @@ public class Camera2Proxy {
                     sb.append(delimiter + fd);
                     sb.append(delimiter + afMode);
                     String frame_info = sb.toString();
-                    Log.d(TAG, frame_info);
+//                    Log.d(TAG, frame_info);
                 }
 
                 @Override
