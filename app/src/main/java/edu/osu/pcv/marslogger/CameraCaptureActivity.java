@@ -18,7 +18,6 @@ package edu.osu.pcv.marslogger;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -159,7 +158,7 @@ public class CameraCaptureActivity extends Activity
 
     private String renewOutputDir() {
         SimpleDateFormat dateFormat =
-                new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
+                new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         String folderName = dateFormat.format(new Date());
         String dir1 = getFilesDir().getAbsolutePath();
         String dir2 = Environment.getExternalStorageDirectory().
@@ -167,7 +166,7 @@ public class CameraCaptureActivity extends Activity
 
         String dir3 = getExternalFilesDir(
                 Environment.getDataDirectory().getAbsolutePath()).getAbsolutePath();
-        Log.d(TAG, "dir 1 " + dir1 + "\ndir 2 " + dir2 + "\ndir3 " + dir3);
+        Log.d(TAG, "dir 1 " + dir1 + "\ndir 2 " + dir2 + "\ndir 3 " + dir3);
         // dir1 and dir3 are always available for the app even the
         // write external storage permission is not granted.
         // "Apparently in Marshmallow when you install with Android studio it
@@ -175,7 +174,7 @@ public class CameraCaptureActivity extends Activity
         // fails, like you denied it. You must go into Settings, apps, select
         // your application and flip the permission switch on."
         // ref: https://stackoverflow.com/questions/40087355/android-mkdirs-not-working
-        String outputDir = dir2 + File.separator + folderName;
+        String outputDir = dir3 + File.separator + folderName;
         (new File(outputDir)).mkdirs();
         return outputDir;
     }
@@ -259,8 +258,10 @@ public class CameraCaptureActivity extends Activity
     protected void onPause() {
         Log.d(TAG, "onPause -- releasing camera");
         super.onPause();
-        mCamera2Proxy.releaseCamera();
-        mCamera2Proxy = null;
+        if (mCamera2Proxy != null) {
+            mCamera2Proxy.releaseCamera();
+            mCamera2Proxy = null;
+        }
 
         mGLView.queueEvent(new Runnable() {
             @Override
