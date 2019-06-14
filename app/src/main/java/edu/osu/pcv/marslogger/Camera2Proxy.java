@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.view.OrientationEventListener;
 import android.view.Surface;
@@ -169,12 +170,28 @@ public class Camera2Proxy {
         try {
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
 
-            // Set control elements, we want auto exposure and white balance
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+            // Set control elements, we want auto white balance
+            mPreviewRequestBuilder.set(
+                    CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            mPreviewRequestBuilder.set(
+                    CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
 
+            // fix exposure
+            mPreviewRequestBuilder.set(
+                    CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+            Range<Long> exposureTimeRange = mCameraCharacteristics.get(
+                    CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+            if (exposureTimeRange != null) {
+                Log.d(TAG, "exposure time range " + exposureTimeRange.toString());
+            }
+            final Long desiredExposureTime = 10000000L; // nanoseconds
+            mPreviewRequestBuilder.set(
+                    CaptureRequest.SENSOR_EXPOSURE_TIME, desiredExposureTime);
+            Log.d(TAG, "Exposure time set to " + desiredExposureTime);
+
+            // fix focal length
+            mPreviewRequestBuilder.set(
+                    CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
             float[] focal_lengths = mCameraCharacteristics.get(
                     CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
             float focal_length = 5.0f;
@@ -260,7 +277,6 @@ public class Camera2Proxy {
                                                 CaptureResult partialResult) {
 //                    Log.d(TAG, "mSessionCaptureCallback,  onCaptureProgressed");
                 }
-
             };
 
 

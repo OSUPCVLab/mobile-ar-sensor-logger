@@ -687,9 +687,13 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
                     // TODO(jhuai): why does the height and width have to be swapped here?
                     mVideoEncoder.startRecording(
                             new TextureMovieEncoder.EncoderConfig(
-                                    mOutputFile, CameraCaptureActivity.mDesiredFrameHeight,
+                                    mOutputFile,
+                                    CameraCaptureActivity.mDesiredFrameHeight,
                                     CameraCaptureActivity.mDesiredFrameWidth,
-                                    1000000, EGL14.eglGetCurrentContext(),
+                                    CameraUtils.calcBitRate(CameraCaptureActivity.mDesiredFrameWidth,
+                                            CameraCaptureActivity.mDesiredFrameHeight,
+                                            VideoEncoderCore.FRAME_RATE),
+                                    EGL14.eglGetCurrentContext(),
                                     mMetadataFile));
                     mRecordingStatus = RECORDING_ON;
                     break;

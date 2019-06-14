@@ -34,6 +34,7 @@ import java.util.List;
  */
 public class CameraUtils {
     private static final String TAG = CameraCaptureActivity.TAG;
+    private static final float BPP = 0.25f;
 
     /**
      * Attempts to find a preview size that matches the provided width and height (which
@@ -206,5 +207,11 @@ public class CameraUtils {
             e.printStackTrace();
         }
         return rearCameraId;
+    }
+
+    public static int calcBitRate(int width, int height, int frame_rate) {
+        final int bitrate = (int) (BPP * frame_rate * width * height);
+        Log.i(TAG, "bitrate=" + bitrate);
+        return bitrate;
     }
 }
