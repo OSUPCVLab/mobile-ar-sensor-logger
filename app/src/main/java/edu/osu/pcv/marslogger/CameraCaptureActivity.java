@@ -143,6 +143,7 @@ public class CameraCaptureActivity extends Activity
 
     static final int mDesiredFrameWidth = 1280;
     static final int mDesiredFrameHeight = 720;
+    static final Long mDesiredExposureTime = 5000000L; // nanoseconds
 
     private GLSurfaceView mGLView;
     private CameraSurfaceRenderer mRenderer;
@@ -257,6 +258,7 @@ public class CameraCaptureActivity extends Activity
     protected void onPause() {
         Log.d(TAG, "onPause -- releasing camera");
         super.onPause();
+        // no more frame metadata will be saved during pause
         if (mCamera2Proxy != null) {
             mCamera2Proxy.releaseCamera();
             mCamera2Proxy = null;
@@ -323,11 +325,21 @@ public class CameraCaptureActivity extends Activity
         mRecordingEnabled = !mRecordingEnabled;
         if (mRecordingEnabled) {
             String outputDir = renewOutputDir();
-            String outputFile = outputDir + File.separator + "video.mp4";
+            String outputFile = outputDir + File.separator + "movie.mp4";
             String metaFile = outputDir + File.separator + "frame_timestamps.txt";
             TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
             fileText.setText(outputFile);
             mRenderer.resetOutputFiles(outputFile, metaFile); // this will not cause sync issues
+            if (mCamera2Proxy != null) {
+                mCamera2Proxy.startRecordingCaptureResult(
+                        outputDir + File.separator + "movie_metadata.csv");
+            } else {
+                throw new RuntimeException("mCamera2Proxy should not be null upon toggling record button");
+            }
+        } else {
+            if (mCamera2Proxy != null) {
+                mCamera2Proxy.stopRecordingCaptureResult();
+            }
         }
         mGLView.queueEvent(new Runnable() {
             @Override

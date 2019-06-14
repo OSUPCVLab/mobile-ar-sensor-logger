@@ -30,6 +30,9 @@ import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -60,6 +63,10 @@ public class Camera2Proxy {
     private int mDeviceOrientation = 0; // 设备方向，由相机传感器获取
     private int mZoom = 1; // 缩放
 
+    private BufferedWriter mFrameMetadataWriter = null;
+    // https://stackoverflow.com/questions/3786825/volatile-boolean-vs-atomicboolean
+    private volatile boolean mRecordingMetadata = false;
+
     /**
      * 打开摄像头的回调
      */
@@ -83,6 +90,35 @@ public class Camera2Proxy {
             releaseCamera();
         }
     };
+
+    public void startRecordingCaptureResult(String captureResultFile) {
+        try {
+            mFrameMetadataWriter = new BufferedWriter(
+                    new FileWriter(captureResultFile, false));
+            String header = "Timestamp[ns],frame No.,exposureTime[ns]," +
+                    "sensorFrameDuration[ns],frameReadoutTime[ns]," +
+                    "ISO,focal length,focus dist,AF mode";
+
+            mFrameMetadataWriter.write(header + "\n");
+            mRecordingMetadata = true;
+        } catch (IOException err) {
+            System.err.println("IOException in opening frameMetadataWriter at "
+                    + captureResultFile + ":" + err.getMessage());
+        }
+    }
+
+    public void stopRecordingCaptureResult() {
+        if (mRecordingMetadata) {
+            mRecordingMetadata = false;
+            try {
+                mFrameMetadataWriter.flush();
+                mFrameMetadataWriter.close();
+            } catch (IOException err) {
+                System.err.println("IOException in closing frameMetadataWriter: " + err.getMessage());
+            }
+            mFrameMetadataWriter = null;
+        }
+    }
 
     @TargetApi(Build.VERSION_CODES.M)
     public Camera2Proxy(Activity activity) {
@@ -147,6 +183,17 @@ public class Camera2Proxy {
         mOrientationEventListener.disable();
         mPreviewSurfaceTexture = null;
         mCameraIdStr = "";
+
+        if (mRecordingMetadata) {
+            mRecordingMetadata = false;
+            try {
+                mFrameMetadataWriter.flush();
+                mFrameMetadataWriter.close();
+            } catch (IOException err) {
+                System.err.println("IOException in closing frameMetadataWriter: " + err.getMessage());
+            }
+            mFrameMetadataWriter = null;
+        }
         stopBackgroundThread(); // 对应 openCamera() 方法中的 startBackgroundThread()
     }
 
@@ -184,10 +231,24 @@ public class Camera2Proxy {
             if (exposureTimeRange != null) {
                 Log.d(TAG, "exposure time range " + exposureTimeRange.toString());
             }
-            final Long desiredExposureTime = 10000000L; // nanoseconds
             mPreviewRequestBuilder.set(
-                    CaptureRequest.SENSOR_EXPOSURE_TIME, desiredExposureTime);
-            Log.d(TAG, "Exposure time set to " + desiredExposureTime);
+                    CaptureRequest.SENSOR_EXPOSURE_TIME,
+                    CameraCaptureActivity.mDesiredExposureTime);
+            Log.d(TAG, "Exposure time set to " +
+                    CameraCaptureActivity.mDesiredExposureTime);
+
+            // fix ISO
+            Range<Integer> isoRange = mCameraCharacteristics.get(
+                    CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+            if (isoRange != null) {
+                Log.d(TAG, "ISO range " + isoRange.toString());
+            }
+            // TODO(jhuai): determine ISO more elegantly using current captureResult
+            Long desiredIsoL = 300 * 30000000L /
+                    CameraCaptureActivity.mDesiredExposureTime;
+            final Integer desiredIso = desiredIsoL.intValue();
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, desiredIso);
+            Log.d(TAG, "ISO set to " + desiredIso);
 
             // fix focal length
             mPreviewRequestBuilder.set(
@@ -269,7 +330,13 @@ public class Camera2Proxy {
                     sb.append(delimiter + fd);
                     sb.append(delimiter + afMode);
                     String frame_info = sb.toString();
-//                    Log.d(TAG, frame_info);
+                    if (mRecordingMetadata) {
+                        try {
+                            mFrameMetadataWriter.write(frame_info + "\n");
+                        } catch (IOException err) {
+                            System.err.println("Error writing captureResult: " + err.getMessage());
+                        }
+                    }
                 }
 
                 @Override
