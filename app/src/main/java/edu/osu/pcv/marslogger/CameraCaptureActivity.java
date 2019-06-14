@@ -219,10 +219,9 @@ public class CameraCaptureActivity extends Activity
         mCameraPreviewHeight = cameraPreviewSize.getHeight();
         if (display.getRotation() == Surface.ROTATION_0) {
             layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
-        } else if (display.getRotation() == Surface.ROTATION_270) {
+        } else if (display.getRotation() == Surface.ROTATION_180) {
             layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
         } else {
-            // Set the preview aspect ratio.
             layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
         }
     }
