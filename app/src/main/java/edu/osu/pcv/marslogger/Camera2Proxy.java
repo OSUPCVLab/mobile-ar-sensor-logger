@@ -183,17 +183,7 @@ public class Camera2Proxy {
         mOrientationEventListener.disable();
         mPreviewSurfaceTexture = null;
         mCameraIdStr = "";
-
-        if (mRecordingMetadata) {
-            mRecordingMetadata = false;
-            try {
-                mFrameMetadataWriter.flush();
-                mFrameMetadataWriter.close();
-            } catch (IOException err) {
-                System.err.println("IOException in closing frameMetadataWriter: " + err.getMessage());
-            }
-            mFrameMetadataWriter = null;
-        }
+        stopRecordingCaptureResult();
         stopBackgroundThread(); // 对应 openCamera() 方法中的 startBackgroundThread()
     }
 

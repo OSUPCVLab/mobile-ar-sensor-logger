@@ -19,7 +19,6 @@ package edu.osu.pcv.marslogger;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
 import android.widget.FrameLayout;
 
 /**
@@ -54,9 +53,9 @@ public class AspectFrameLayout extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        Log.d(TAG, "onMeasure target=" + mTargetAspect +
-                " width=[" + MeasureSpec.toString(widthMeasureSpec) +
-                "] height=[" + View.MeasureSpec.toString(heightMeasureSpec) + "]");
+//        Log.d(TAG, "onMeasure target=" + mTargetAspect +
+//                " width=[" + MeasureSpec.toString(widthMeasureSpec) +
+//                "] height=[" + View.MeasureSpec.toString(heightMeasureSpec) + "]");
 
         // Target aspect ratio will be < 0 if it hasn't been set yet.  In that case,
         // we just use whatever we've been handed.

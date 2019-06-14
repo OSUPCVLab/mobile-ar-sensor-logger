@@ -156,6 +156,7 @@ public class CameraCaptureActivity extends Activity
 
     // this is static so it survives activity restarts
     private static TextureMovieEncoder sVideoEncoder = new TextureMovieEncoder();
+    private static IMUManager mImuManager;
 
     private String renewOutputDir() {
         SimpleDateFormat dateFormat =
@@ -208,7 +209,7 @@ public class CameraCaptureActivity extends Activity
                 mCameraHandler, sVideoEncoder);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
+        mImuManager = new IMUManager(this);
         Log.d(TAG, "onCreate complete: " + this);
     }
 
@@ -251,6 +252,7 @@ public class CameraCaptureActivity extends Activity
                 mRenderer.setCameraPreviewSize(mCameraPreviewWidth, mCameraPreviewHeight);
             }
         });
+        mImuManager.register();
         Log.d(TAG, "onResume complete: " + this);
     }
 
@@ -272,6 +274,7 @@ public class CameraCaptureActivity extends Activity
             }
         });
         mGLView.onPause();
+        mImuManager.unregister();
         Log.d(TAG, "onPause complete");
     }
 
@@ -330,16 +333,20 @@ public class CameraCaptureActivity extends Activity
             TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
             fileText.setText(outputFile);
             mRenderer.resetOutputFiles(outputFile, metaFile); // this will not cause sync issues
+            String inertialFile = outputDir + File.separator + "gyro_accel.csv";
+            mImuManager.startRecording(inertialFile);
             if (mCamera2Proxy != null) {
                 mCamera2Proxy.startRecordingCaptureResult(
                         outputDir + File.separator + "movie_metadata.csv");
             } else {
                 throw new RuntimeException("mCamera2Proxy should not be null upon toggling record button");
             }
+
         } else {
             if (mCamera2Proxy != null) {
                 mCamera2Proxy.stopRecordingCaptureResult();
             }
+            mImuManager.stopRecording();
         }
         mGLView.queueEvent(new Runnable() {
             @Override
