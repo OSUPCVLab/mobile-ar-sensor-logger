@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Range;
 import android.util.Size;
+import android.util.SizeF;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -67,6 +68,7 @@ public class Camera2Proxy {
     // https://stackoverflow.com/questions/3786825/volatile-boolean-vs-atomicboolean
     private volatile boolean mRecordingMetadata = false;
 
+    private FocalLengthHelper mFocalLengthHelper = new FocalLengthHelper();
     /**
      * 打开摄像头的回调
      */
@@ -95,7 +97,7 @@ public class Camera2Proxy {
         try {
             mFrameMetadataWriter = new BufferedWriter(
                     new FileWriter(captureResultFile, false));
-            String header = "Timestamp[nanosec],Frame No.,Exposure time[nanosec]," +
+            String header = "Timestamp[nanosec],fx[px],fy[px],Frame No.,Exposure time[nanosec]," +
                     "Sensor frame duration[nanosec],Frame readout time[nanosec]," +
                     "ISO,Focal length,Focus distance,AF mode";
 
@@ -138,9 +140,12 @@ public class Camera2Proxy {
             mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraIdStr);
             StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics
                     .SCALER_STREAM_CONFIGURATION_MAP);
-
             mVideoSize = CameraUtils.chooseVideoSize(
                     map.getOutputSizes(MediaRecorder.class), width, height, width);
+
+            mFocalLengthHelper.setLensParams(mCameraCharacteristics);
+            mFocalLengthHelper.setmImageSize(mVideoSize);
+
             mPreviewSize = CameraUtils.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                     width, height, mVideoSize);
             Log.d(TAG, "Video size " + mVideoSize.toString() + " preview size " + mPreviewSize.toString());
@@ -307,10 +312,15 @@ public class Camera2Proxy {
                     Integer afMode = result.get(CaptureResult.CONTROL_AF_MODE);
 
                     Rect rect = result.get(CaptureResult.SCALER_CROP_REGION);
-
+                    mFocalLengthHelper.setmFocalLength(fl);
+                    mFocalLengthHelper.setmFocusDistance(fd);
+                    mFocalLengthHelper.setmCropRegion(rect);
+                    SizeF sz_focal_length = mFocalLengthHelper.getFocalLengthPixel();
                     String delimiter = ",";
                     StringBuilder sb = new StringBuilder();
                     sb.append(timestamp);
+                    sb.append(delimiter + sz_focal_length.getWidth());
+                    sb.append(delimiter + sz_focal_length.getHeight());
                     sb.append(delimiter + number);
                     sb.append(delimiter + exposureTimeNs);
                     sb.append(delimiter + frmDurationNs);
