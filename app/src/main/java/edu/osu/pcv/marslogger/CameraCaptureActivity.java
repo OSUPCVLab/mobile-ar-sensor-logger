@@ -18,6 +18,7 @@ package edu.osu.pcv.marslogger;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraMetadata;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -147,6 +148,7 @@ public class CameraCaptureActivity extends Activity
 
     private GLSurfaceView mGLView;
     private CameraSurfaceRenderer mRenderer;
+    private TextView mCaptureResultText;
 
     private Camera2Proxy mCamera2Proxy = null;
     private CameraHandler mCameraHandler;
@@ -210,6 +212,7 @@ public class CameraCaptureActivity extends Activity
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mImuManager = new IMUManager(this);
+        mCaptureResultText = (TextView) findViewById(R.id.captureResult_text);
         Log.d(TAG, "onCreate complete: " + this);
     }
 
@@ -365,6 +368,35 @@ public class CameraCaptureActivity extends Activity
 //        CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
 //        TextureRender.sWorkAroundContextProblem = cb.isChecked();
 //    }
+
+
+    public void updateCaptureResultPanel(
+            final Float fl,
+            final Long exposureTimeNs, final Integer afMode) {
+        final String sfl = String.format(Locale.getDefault(), "%.3f", fl);
+        final String sexpotime =
+                exposureTimeNs == null ?
+                        "null ms" :
+                        String.format(Locale.getDefault(), "%.2f ms",
+                                exposureTimeNs / 1000000.0);
+        String safMode;
+        switch (afMode) {
+            case CameraMetadata.CONTROL_AF_MODE_OFF:
+                safMode = "AF locked";
+                break;
+            default:
+                safMode = "AF unlocked";
+                break;
+        }
+        final String saf = safMode;
+        runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                mCaptureResultText.setText(sfl + " " + sexpotime + " " + saf);
+            }
+        });
+    }
 
     /**
      * Updates the on-screen controls to reflect the current state of the app.

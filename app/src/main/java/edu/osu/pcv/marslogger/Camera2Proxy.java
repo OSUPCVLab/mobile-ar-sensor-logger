@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Camera;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -36,6 +37,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 
 public class Camera2Proxy {
 
@@ -337,6 +339,8 @@ public class Camera2Proxy {
                             System.err.println("Error writing captureResult: " + err.getMessage());
                         }
                     }
+                    ((CameraCaptureActivity)mActivity).updateCaptureResultPanel(
+                            sz_focal_length.getWidth(), exposureTimeNs, afMode);
                 }
 
                 @Override
