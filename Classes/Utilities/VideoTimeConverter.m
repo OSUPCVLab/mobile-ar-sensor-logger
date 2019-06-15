@@ -50,7 +50,7 @@
 #import <CoreMotion/CoreMotion.h>
 
 CFStringRef const VIDEOSNAKE_REMAPPED_PTS = CFSTR("RemappedPTS");
-
+const int32_t kSecToNanos = 1000000000;
 
 @interface VideoTimeConverter () {
 
@@ -112,11 +112,22 @@ CMTime getAttachmentTime(CMSampleBufferRef mediaSample)
 {
     CFDictionaryRef mediaTimeDict = CMGetAttachment(mediaSample, VIDEOSNAKE_REMAPPED_PTS, NULL);
     CMTime mediaTime = (mediaTimeDict) ? CMTimeMakeFromDictionary(mediaTimeDict) : CMSampleBufferGetPresentationTimeStamp(mediaSample);
-//    Float64 floatTime = CMTimeGetSeconds(mediaTime);
-//    if (mediaTimeDict) {
-//        NSLog(@"%@ is used to get timestamp %.6f", VIDEOSNAKE_REMAPPED_PTS, floatTime);
-//    } else {
-//        NSLog(@"%@ is NOT used to get timestamp %.6f", VIDEOSNAKE_REMAPPED_PTS, floatTime);
-//    }
     return mediaTime;
+}
+
+int64_t CMTimeGetNanoseconds(CMTime time) {
+    CMTime timenano = CMTimeConvertScale(time, kSecToNanos, kCMTimeRoundingMethod_Default);
+    return timenano.value;
+}
+
+int64_t CMTimeGetMilliseconds(CMTime time) {
+    CMTime timenano = CMTimeConvertScale(time, 1000, kCMTimeRoundingMethod_Default);
+    return timenano.value;
+}
+
+NSString* secDoubleToNanoString(double time) {
+    double integral;
+    double fractional = modf(time, &integral);
+    fractional *= kSecToNanos;
+    return [NSString stringWithFormat:@"%.0f%.0f", integral, fractional];
 }

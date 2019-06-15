@@ -51,7 +51,9 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 }; // internal state machine
 
 NSString *const VIDEO_META_FILENAME = @"movie_metadata.csv";
-NSString *const IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
+NSString *const IMU_OUTPUT_FILENAME = @"gyro_accel.csv";
+const int64_t kDesiredExposureTimeMillisec = 5;
+
 
 @interface RosyWriterCapturePipeline () <AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, MovieRecorderDelegate>
 {
@@ -158,7 +160,7 @@ NSString *const IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
 
         _adjustExposureFinished = TRUE;
         adjustExpFinishTime = CMTimeMake(0, 1);
-        _exposureDuration = 0.0;
+        _exposureDuration = 0;
         
         _inertialRecorder = [[InertialRecorder alloc] init];
         NSURL * outputFolderURL = createOutputFolderURL();
@@ -607,13 +609,10 @@ NSString *const IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
         // Fallback on earlier versions
         self.fx = 0.f;
     }
-    _exposureDuration = CMTimeGetSeconds(_videoDevice.exposureDuration);
+    _exposureDuration = CMTimeGetNanoseconds(_videoDevice.exposureDuration);
 	[self calculateFramerateAtTimestamp:timestamp];
     
     // for debug only
-//    const Float64 frameTimestamp = CMTimeGetSeconds(timestamp);
-//    NSLog(@"Current frame timestamp:%.7f", frameTimestamp);
-//    NSLog(@"Camera exposure duration at %.3f, ISO %.3f, and exp mode %ld", _exposureDuration, _videoDevice.ISO, (long)_videoDevice.exposureMode);
     // source: https://stackoverflow.com/questions/34924476/avcapturedevice-comparing-samplebuffer-timestamps
 //    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
 //    CMClockRef originalClock = [port clock];
@@ -803,7 +802,7 @@ NSString *const IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
     // In older ios, _savedFrameIntrinsics can have 0 count
     NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoDataFilepath, savedAssetURL, (unsigned long)[savedFrameTimestamps count],
         (unsigned long)[savedFrameIntrinsics count], (unsigned long)[savedExposureDurations count]);
-    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[sec], fx[px], fy[px], cx[px], cy[px], exposure duration[sec]\n"];
+    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[nanosec], fx[px], fy[px], cx[px], cy[px], exposure duration[nanosec]\n"];
     bool hasIntrinsics = false;
     if ([savedFrameIntrinsics count] > 0) {
         hasIntrinsics = true;
@@ -813,11 +812,10 @@ NSString *const IMU_OUTPUT_FILENAME = @"raw_accel_gyro.csv";
         NSNumber * ed = [savedExposureDurations objectAtIndex:i];
         if (hasIntrinsics) {
             NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
-            [mainString appendFormat:@"%.7f, %@, %@, %@, %@, %.4f\n", [nn floatValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed doubleValue]];
+            [mainString appendFormat:@"%lld, %@, %@, %@, %@, %lld\n", [nn longLongValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed longLongValue]];
         } else {
-            [mainString appendFormat:@"%.7f, %.2f, %.2f, %.2f, %.2f, %.4f\n", [nn floatValue], 1.0, 1.0, 0.5, 0.5, [ed doubleValue]];
+            [mainString appendFormat:@"%lld, %.2f, %.2f, %.2f, %.2f, %lld\n", [nn longLongValue], 1.0, 1.0, 0.5, 0.5, [ed longLongValue]];
         }
-    
     }
     
     NSData* settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
@@ -1066,10 +1064,10 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     if (device.isExposurePointOfInterestSupported && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
         NSError* error;
         AVCaptureDeviceFormat * format = [device activeFormat];
-        // for iphone 6s these values are 1e-2 ms 333.3 ms 23 736
-//        NSLog(@"expo duration min %.5f ms max %.5f ms ISO min %.5f max %.5f", CMTimeGetSeconds(format.minExposureDuration)*1000, CMTimeGetSeconds(format.maxExposureDuration)*1000, format.minISO, format.maxISO);
+        // for iphone 6s format.minExposureDuration 1e-2 ms format.maxExposureDuration 333.3 ms format.minISO 23 format.maxISO 736
         float oldBias = device.exposureTargetBias;
-        CMTime desiredDuration = CMTimeMake(2, 1000);
+        
+        CMTime desiredDuration = CMTimeMake(kDesiredExposureTimeMillisec, 1000);
         CMTime oldDuration = device.exposureDuration;
         float ratio = (float)(CMTimeGetSeconds(oldDuration)/CMTimeGetSeconds(desiredDuration));
         
@@ -1086,7 +1084,7 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
 //            _adjustExposureFinished = FALSE;
 //            [device setExposureTargetBias:device.exposureTargetBias completionHandler:^(CMTime syncTime) {
 //                adjustExpFinishTime = syncTime;
-//                _exposureDuration = CMTimeGetSeconds(device.exposureDuration);
+//                _exposureDuration = CMTimeGetNanoseconds(device.exposureDuration);
 //                _adjustExposureFinished = TRUE;
 //            }];
             if (/* DISABLES CODE */ (1)) {
@@ -1095,7 +1093,7 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
                 _adjustExposureFinished = FALSE;
                 [device setExposureModeCustomWithDuration:desiredDuration ISO:expectedISO completionHandler:^(CMTime syncTime) {
                     adjustExpFinishTime = syncTime;
-                    _exposureDuration = CMTimeGetSeconds(device.exposureDuration);
+                    _exposureDuration = CMTimeGetNanoseconds(device.exposureDuration);
                     _adjustExposureFinished = TRUE;
                 }];
             } else {

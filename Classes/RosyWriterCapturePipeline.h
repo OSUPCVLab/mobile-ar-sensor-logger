@@ -43,7 +43,7 @@
 // Stats
 @property(atomic, readonly) float videoFrameRate;
 @property(atomic, readonly) float fx; // focal length in horizontal x axis in pixels
-@property(atomic, readonly) double exposureDuration;
+@property(atomic, readonly) int64_t exposureDuration; // nanoseconds
 @property(atomic, readonly) BOOL autoLocked; // are both auto focus and auto exposure locked?
 @property(atomic, readonly) CMVideoDimensions videoDimensions;
 @property(atomic, readonly) AVCaptureDeviceInput* videoDeviceInput;

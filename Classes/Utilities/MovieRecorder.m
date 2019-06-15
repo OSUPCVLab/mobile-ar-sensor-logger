@@ -16,6 +16,8 @@
 #import <AVFoundation/AVVideoSettings.h>
 #import <AVFoundation/AVAudioSettings.h>
 
+#import "VideoTimeConverter.h"
+
 #define LOG_STATUS_TRANSITIONS 0
 
 typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
@@ -190,7 +192,7 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 //    [self appendSampleBuffer:sampleBuffer ofMediaType:AVMediaTypeVideo];
 //}
 
-- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(double)exposureDuration
+- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(int64_t)exposureDuration
 {
 	CMSampleBufferRef sampleBuffer = NULL;
 	
@@ -295,10 +297,10 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 
 - (void)appendSampleBuffer:(CMSampleBufferRef)sampleBuffer ofMediaType:(NSString *)mediaType
 {
-    [self appendSampleBuffer:sampleBuffer ofMediaType:mediaType withIntrinsicMat:nil withExposureDuration:-1.0];
+    [self appendSampleBuffer:sampleBuffer ofMediaType:mediaType withIntrinsicMat:nil withExposureDuration:-1];
 }
 
-- (void)appendSampleBuffer:(CMSampleBufferRef)sampleBuffer ofMediaType:(NSString *)mediaType withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(double)exposureDuration
+- (void)appendSampleBuffer:(CMSampleBufferRef)sampleBuffer ofMediaType:(NSString *)mediaType withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(int64_t)exposureDuration
 {
 	if ( sampleBuffer == NULL ) {
 		@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"NULL sample buffer" userInfo:nil];
@@ -328,7 +330,7 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 				}
 			}
             CMTime sampleTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-            Float64 frameTimestamp = CMTimeGetSeconds(sampleTime);
+            int64_t frameTimestamp = CMTimeGetNanoseconds(sampleTime);
 			if ( ! _haveStartedSession ) {
 				[_assetWriter startSessionAtSourceTime:sampleTime];
 				_haveStartedSession = YES;
@@ -345,11 +347,11 @@ typedef NS_ENUM( NSInteger, MovieRecorderStatus ) {
 						[self transitionToStatus:MovieRecorderStatusFailed error:error];
 					}
 				} else {
-                    [self->_savedFrameTimestamps addObject:[NSNumber numberWithDouble:frameTimestamp]];
+                    [self->_savedFrameTimestamps addObject:[NSNumber numberWithLongLong:frameTimestamp]];
                     if (intrinsic3x3 != nil)
                         [self->_savedFrameIntrinsics addObject:intrinsic3x3];
-                    if (exposureDuration != -1.0)
-                        [self->_savedExposureDurations addObject:[NSNumber numberWithDouble:exposureDuration]];
+                    if (exposureDuration != -1)
+                        [self->_savedExposureDurations addObject:[NSNumber numberWithLongLong:exposureDuration]];
                 }
 			}
 			else
