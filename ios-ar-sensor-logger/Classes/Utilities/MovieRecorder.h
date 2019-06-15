@@ -32,7 +32,9 @@
 - (void)prepareToRecord;
 
 // - (void)appendVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
-- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(double)exposureDuration;
+
+- (void)appendVideoPixelBuffer:(CVPixelBufferRef)pixelBuffer withPresentationTime:(CMTime)presentationTime withIntrinsicMat:(NSArray *)intrinsic3x3 withExposureDuration:(int64_t)exposureDuration;
+
 - (void)appendAudioSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 
 // Asynchronous, might take several hundred milliseconds.

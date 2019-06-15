@@ -3,6 +3,8 @@
 
 #import <CoreMotion/CoreMotion.h>
 
+#import "VideoTimeConverter.h"
+
 const double GRAVITY = 9.80; // cf. https://developer.apple.com/documentation/coremotion/getting_raw_accelerometer_events
 const double RATE = 100; // fps for inertial data
 
@@ -76,10 +78,8 @@ const double RATE = 100; // fps for inertial data
     
     // interpolate
     NSMutableString * mainString = [[NSMutableString alloc]initWithString:@""];
-    
     int accelIndex = 0;
-    [mainString appendFormat:@"#Recording starts at %@\n", startTime];
-    [mainString appendFormat:@"Timestamp[sec], gx[rad/s], gy[rad/s], gz[rad/s], ax[m/s^2], ay[m/s^2], az[m/s^2]\n"];
+    [mainString appendFormat:@"Timestamp[nanosec], gx[rad/s], gy[rad/s], gz[rad/s], ax[m/s^2], ay[m/s^2], az[m/s^2]\n"];
     // though mutableGyroCopy and mutableAccelCopy are mutable, they remains constant.
     for (int gyroIndex = 0; gyroIndex < [mutableGyroCopy count]; ++gyroIndex) {
         NodeWrapper * nwg = [mutableGyroCopy objectAtIndex:gyroIndex];
@@ -87,7 +87,7 @@ const double RATE = 100; // fps for inertial data
         if (nwg.time < nwa.time) {
             continue;
         } else if (nwg.time == nwa.time) {
-            [mainString appendFormat:@"%.7f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f\n", nwg.time, nwg.x, nwg.y, nwg.z, nwa.x, nwa.y, nwa.z];
+            [mainString appendFormat:@"%@, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f\n", secDoubleToNanoString(nwg.time), nwg.x, nwg.y, nwg.z, nwa.x, nwa.y, nwa.z];
         } else {
             int lowerIndex = accelIndex;
             int upperIndex = accelIndex + 1;
@@ -110,7 +110,7 @@ const double RATE = 100; // fps for inertial data
             
             if (upperIndex == lowerIndex) {
                 NodeWrapper * nwa1 = [mutableAccelCopy objectAtIndex:upperIndex];
-                [mainString appendFormat:@"%.7f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f\n", nwg.time, nwg.x, nwg.y, nwg.z, nwa1.x, nwa1.y, nwa1.z];
+                [mainString appendFormat:@"%@, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f\n", secDoubleToNanoString(nwg.time), nwg.x, nwg.y, nwg.z, nwa1.x, nwa1.y, nwa1.z];
             } else if (upperIndex == lowerIndex + 1) {
                 NodeWrapper * nwa = [mutableAccelCopy objectAtIndex:lowerIndex];
                 NodeWrapper * nwa1 = [mutableAccelCopy objectAtIndex:upperIndex];
@@ -118,8 +118,7 @@ const double RATE = 100; // fps for inertial data
                 double interpax = nwa.x + (nwa1.x - nwa.x) * ratio;
                 double interpay = nwa.y + (nwa1.y - nwa.y) * ratio;
                 double interpaz = nwa.z + (nwa1.z - nwa.z) * ratio;
-                
-                [mainString appendFormat:@"%.7f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f\n", nwg.time, nwg.x, nwg.y, nwg.z, interpax, interpay, interpaz];
+                [mainString appendFormat:@"%@, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f\n", secDoubleToNanoString(nwg.time), nwg.x, nwg.y, nwg.z, interpax, interpay, interpaz];
             } else {
                 NSLog(@"Impossible lower and upper bound %d %d for gyro timestamp %.5f", lowerIndex, upperIndex, nwg.time);
             }
@@ -141,8 +140,7 @@ const double RATE = 100; // fps for inertial data
         
         NSMutableString * mainString = [[NSMutableString alloc]initWithString:@""];
         if (!_interpolateAccel) { // No interpolation
-            [mainString appendFormat:@"#Recording starts at %@\n", _timeStartImu];
-            [mainString appendFormat:@"Timestamp[sec], x, y, z[(a:m/s^2)/(g:rad/s)], isGyro?\n"];
+            [mainString appendFormat:@"Timestamp[nanosec], x, y, z[(a:m/s^2)/(g:rad/s)], isGyro?\n"];
             for(int i=0;i<[_rawAccelGyroData count];i++ ) {
                 NodeWrapper * nw =[_rawAccelGyroData objectAtIndex:i];
                 [mainString appendFormat:@"%.7f, %.5f, %.5f, %.5f, %d\n", nw.time, nw.x, nw.y, nw.z, nw.isGyro];
@@ -178,7 +176,8 @@ const double RATE = 100; // fps for inertial data
         _timeStartImu = [dateFormatter stringFromDate:[NSDate date]];
         
         if (_motionManager.gyroAvailable && _motionManager.accelerometerAvailable) {
-            _queue = [NSOperationQueue currentQueue];
+//            _queue = [NSOperationQueue currentQueue]; // mainQueue, run on main UI thread
+            _queue = [[NSOperationQueue alloc] init]; // background thread
             [_motionManager startGyroUpdatesToQueue:_queue withHandler: ^ (CMGyroData *gyroData, NSError *error) {
                 CMRotationRate rotate = gyroData.rotationRate;
                 
@@ -228,7 +227,7 @@ NSURL *getFileURL(NSString *filename) {
 NSURL *createOutputFolderURL(void) {
     NSDate *now = [NSDate date];
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss"];
+    [dateFormatter setDateFormat:@"yyyy_MM_dd_HH_mm_ss"];
     NSString *dateTimeString = [dateFormatter stringFromDate:now];
     
     NSArray *paths = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];

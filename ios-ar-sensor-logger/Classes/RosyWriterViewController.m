@@ -334,25 +334,29 @@
         return;
     }
     
-   
     if ([MFMailComposeViewController canSendMail])
     {
         MFMailComposeViewController *mailVC = [[MFMailComposeViewController alloc] init];
         mailVC.mailComposeDelegate = self;
         [mailVC setSubject:@"The metadata of camera frames and inertial data captured with the MARS logger!"];
-        [mailVC setMessageBody:@"The attached metadata of camera frames and inertial data "
-                                "were captured by the MARS logger!\n"
-                                "The associated video was the most recent one found with "
-                                "the Photos App at the time of sending this email." isHTML:NO];
-        
+        NSURL *outputURL = [videoMetadataFile URLByDeletingLastPathComponent];
+        NSString *outputBasename = [outputURL lastPathComponent];
+        NSString *message = [NSString stringWithFormat:
+                             @"The attached metadata of camera frames and inertial data "
+                             "were captured by the MARS logger starting from %@!\n"
+                             "The associated video was the most recent one found with "
+                             "the Photos App at the time of sending this email.", outputBasename];
+        [mailVC setMessageBody:message isHTML:NO];
         [mailVC setToRecipients:@[@"jianzhuhuai0108@gmail.com"]]; // Set a test email recipient here if you want.
         NSData *metaData = [NSData dataWithContentsOfURL:videoMetadataFile];
-        NSString *videoAttachName = [videoMetadataFile lastPathComponent];
-        [mailVC addAttachmentData: metaData mimeType:@"text/csv" fileName:videoAttachName];
+       
+        NSString *videoBasename = [videoMetadataFile lastPathComponent];
+        [mailVC addAttachmentData: metaData mimeType:@"text/csv" fileName:videoBasename];
         
         NSData *inertialData = [NSData dataWithContentsOfURL:inertialDataFile];
-        NSString *inertialAttachName = [inertialDataFile lastPathComponent];
-        [mailVC addAttachmentData: inertialData mimeType:@"text/csv" fileName:inertialAttachName];
+        NSString *inertialBasename = [inertialDataFile lastPathComponent];
+
+        [mailVC addAttachmentData: inertialData mimeType:@"text/csv" fileName:inertialBasename];
         [self presentViewController:mailVC animated:YES completion:NULL];
     }
     else
@@ -408,7 +412,7 @@
 	NSString *dimensionsString = [NSString stringWithFormat:@"%d x %d", _capturePipeline.videoDimensions.width, _capturePipeline.videoDimensions.height];
 	self.dimensionsLabel.text = dimensionsString;
     
-    NSString *exposureDurationString = [NSString stringWithFormat:@"%.2f ms", _capturePipeline.exposureDuration * 1000];
+    NSString *exposureDurationString = [NSString stringWithFormat:@"%.2f ms", _capturePipeline.exposureDuration / 1000000.0];
     self.exposureDurationLabel.text = exposureDurationString;
 }
 

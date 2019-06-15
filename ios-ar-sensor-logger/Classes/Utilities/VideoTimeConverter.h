@@ -60,3 +60,9 @@
 @end
 
 CMTime getAttachmentTime(CMSampleBufferRef mediaSample);
+
+int64_t CMTimeGetNanoseconds(CMTime time);
+
+int64_t CMTimeGetMilliseconds(CMTime time);
+
+NSString* secDoubleToNanoString(double time);
