@@ -130,8 +130,9 @@ public class VideoEncoderCore {
         }
         if (mFrameMetadataWriter != null) {
             try {
+                mFrameMetadataWriter.write("Frame timestamp[nanosec]\n");
                 for (Long value : mTimeArray) {
-                    mFrameMetadataWriter.write(value.toString() + "\n");
+                    mFrameMetadataWriter.write(value.toString() + "000\n");
                 }
                 mFrameMetadataWriter.flush();
                 mFrameMetadataWriter.close();

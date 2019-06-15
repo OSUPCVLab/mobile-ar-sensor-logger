@@ -95,9 +95,9 @@ public class Camera2Proxy {
         try {
             mFrameMetadataWriter = new BufferedWriter(
                     new FileWriter(captureResultFile, false));
-            String header = "Timestamp[ns],frame No.,exposureTime[ns]," +
-                    "sensorFrameDuration[ns],frameReadoutTime[ns]," +
-                    "ISO,focal length,focus dist,AF mode";
+            String header = "Timestamp[nanosec],Frame No.,Exposure time[nanosec]," +
+                    "Sensor frame duration[nanosec],Frame readout time[nanosec]," +
+                    "ISO,Focal length,Focus distance,AF mode";
 
             mFrameMetadataWriter.write(header + "\n");
             mRecordingMetadata = true;
