@@ -235,6 +235,8 @@ public class CameraCaptureActivity extends Activity
     protected void onResume() {
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
+        Log.d(TAG, "Keeping screen on for previewing recording.");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         updateControls();
 
         if (PermissionHelper.hasCameraPermission(this)) {
