@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2014 Google Inc. All rights reserved.
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2014 Google Inc. All rights reserved.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -22,7 +21,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".CameraCaptureActivity" >
+    tools:context=".CameraCaptureActivity">
 
     <edu.osu.pcv.marslogger.AspectFrameLayout
         android:id="@+id/cameraPreview_afl"
@@ -32,9 +31,9 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/toggleRecording_button"
-        android:layout_centerInParent="true" >
+        android:layout_centerInParent="true">
 
-        <android.opengl.GLSurfaceView
+        <edu.osu.pcv.marslogger.SampleGLView
             android:id="@+id/cameraPreview_surfaceView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -46,8 +45,8 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/toggleRecordingOn"
-        android:onClick="clickToggleRecording" />
+        android:onClick="clickToggleRecording"
+        android:text="@string/toggleRecordingOn" />
 
     <Spinner
         android:id="@+id/cameraFilter_spinner"
@@ -69,8 +68,8 @@
         android:id="@+id/captureResult_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/cameraParams_text"
         android:layout_alignLeft="@id/cameraParams_text"
+        android:layout_below="@id/cameraParams_text"
         android:text="focal length : exposure time" />
 
     <TextView

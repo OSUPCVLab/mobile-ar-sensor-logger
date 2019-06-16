@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Camera;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -37,7 +36,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Locale;
 
 public class Camera2Proxy {
 
@@ -54,6 +52,8 @@ public class Camera2Proxy {
     private CameraDevice mCameraDevice; // 相机对象
     private CameraCaptureSession mCaptureSession;
     private CaptureRequest.Builder mPreviewRequestBuilder; // 相机预览请求的构造器
+    private Rect sensorArraySize;
+
     private CaptureRequest mPreviewRequest;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
@@ -140,6 +140,9 @@ public class Camera2Proxy {
         try {
             mCameraIdStr = CameraUtils.getRearCameraId(mCameraManager);
             mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraIdStr);
+            sensorArraySize = mCameraCharacteristics.get(
+                    CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+
             StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics
                     .SCALER_STREAM_CONFIGURATION_MAP);
             mVideoSize = CameraUtils.chooseVideoSize(
@@ -250,14 +253,13 @@ public class Camera2Proxy {
             // fix focal length
             mPreviewRequestBuilder.set(
                     CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
-            float[] focal_lengths = mCameraCharacteristics.get(
-                    CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-            float focal_length = 5.0f;
-            if (focal_lengths.length > 0) {
-                focal_length = focal_lengths[0];
-            }
-            mPreviewRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, focal_length);
-            Log.d(TAG, "Focal length set to " + String.valueOf(focal_length));
+            Float minFocusDistance = mCameraCharacteristics.get(
+                    CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+            if (minFocusDistance == null)
+                minFocusDistance = 5.0f;
+            mPreviewRequestBuilder.set(
+                    CaptureRequest.LENS_FOCUS_DISTANCE, minFocusDistance);
+            Log.d(TAG, "Focus distance set to its min value:" + minFocusDistance);
 
             if (mPreviewSurfaceTexture != null && mPreviewSurface == null) { // use texture view
                 mPreviewSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
@@ -339,7 +341,7 @@ public class Camera2Proxy {
                             System.err.println("Error writing captureResult: " + err.getMessage());
                         }
                     }
-                    ((CameraCaptureActivity)mActivity).updateCaptureResultPanel(
+                    ((CameraCaptureActivity) mActivity).updateCaptureResultPanel(
                             sz_focal_length.getWidth(), exposureTimeNs, afMode);
                 }
 
@@ -604,6 +606,44 @@ public class Camera2Proxy {
         }
     }
 
+    /**
+     * change focus
+     */
+    void changeManualFocusPoint(float eventX, float eventY, int viewWidth, int viewHeight) {
+        final int y = (int) ((eventX / (float) viewWidth) * (float) sensorArraySize.height());
+        final int x = (int) ((eventY / (float) viewHeight) * (float) sensorArraySize.width());
+        final int halfTouchWidth = 400;
+        final int halfTouchHeight = 400;
+        MeteringRectangle focusAreaTouch = new MeteringRectangle(Math.max(x - halfTouchWidth, 0),
+                Math.max(y - halfTouchHeight, 0),
+                halfTouchWidth * 2,
+                halfTouchHeight * 2,
+                MeteringRectangle.METERING_WEIGHT_MAX - 1);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS,
+                new MeteringRectangle[]{focusAreaTouch});
+        try {
+            mCaptureSession.setRepeatingRequest(
+                    mPreviewRequestBuilder.build(), null, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE,
+                CameraMetadata.CONTROL_MODE_AUTO);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                CaptureRequest.CONTROL_AF_MODE_AUTO);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                CameraMetadata.CONTROL_AF_TRIGGER_START);
+
+        try {
+            mCaptureSession.setRepeatingRequest(
+                    mPreviewRequestBuilder.build(),
+                    mSessionCaptureCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
     private final CameraCaptureSession.CaptureCallback mAfCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 
         private void process(CaptureResult result) {
@@ -650,8 +690,8 @@ public class Camera2Proxy {
 
     private void stopBackgroundThread() {
         Log.v(TAG, "stopBackgroundThread");
-        mBackgroundThread.quitSafely();
         try {
+            mBackgroundThread.quitSafely();
             mBackgroundThread.join();
             mBackgroundThread = null;
             mBackgroundHandler = null;
