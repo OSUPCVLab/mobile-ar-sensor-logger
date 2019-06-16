@@ -338,9 +338,9 @@
     {
         MFMailComposeViewController *mailVC = [[MFMailComposeViewController alloc] init];
         mailVC.mailComposeDelegate = self;
-        [mailVC setSubject:@"The metadata of camera frames and inertial data captured with the MARS logger!"];
         NSURL *outputURL = [videoMetadataFile URLByDeletingLastPathComponent];
         NSString *outputBasename = [outputURL lastPathComponent];
+        [mailVC setSubject:outputBasename];
         NSString *message = [NSString stringWithFormat:
                              @"The attached metadata of camera frames and inertial data "
                              "were captured by the MARS logger starting from %@!\n"
