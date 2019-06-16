@@ -129,5 +129,5 @@ NSString* secDoubleToNanoString(double time) {
     double integral;
     double fractional = modf(time, &integral);
     fractional *= kSecToNanos;
-    return [NSString stringWithFormat:@"%.0f%.0f", integral, fractional];
+    return [NSString stringWithFormat:@"%.0f%09.0f", integral, fractional];
 }
