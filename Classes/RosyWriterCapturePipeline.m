@@ -163,10 +163,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
         _exposureDuration = 0;
         
         _inertialRecorder = [[InertialRecorder alloc] init];
-        NSURL * outputFolderURL = createOutputFolderURL();
-        NSURL * inertialFileURL = [outputFolderURL URLByAppendingPathComponent:IMU_OUTPUT_FILENAME isDirectory:NO];
-        [_inertialRecorder setFileURL:inertialFileURL];
-        _metadataFileURL = [outputFolderURL URLByAppendingPathComponent:VIDEO_META_FILENAME isDirectory:NO];
+        
         _videoTimeConverter = [[VideoTimeConverter alloc] init];
 	}
 	return self;
@@ -694,6 +691,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 
 - (void)startRecording
 {
+    [self resetOutputFolder];
 	@synchronized( self )
 	{
 		if ( _recordingStatus != RosyWriterRecordingStatusIdle ) {
@@ -1146,5 +1144,11 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     return _inertialRecorder.fileURL;
 }
 
+- (void)resetOutputFolder {
+    NSURL * outputFolderURL = createOutputFolderURL();
+    NSURL * inertialFileURL = [outputFolderURL URLByAppendingPathComponent:IMU_OUTPUT_FILENAME isDirectory:NO];
+    [_inertialRecorder setFileURL:inertialFileURL];
+    _metadataFileURL = [outputFolderURL URLByAppendingPathComponent:VIDEO_META_FILENAME isDirectory:NO];
+}
 
 @end

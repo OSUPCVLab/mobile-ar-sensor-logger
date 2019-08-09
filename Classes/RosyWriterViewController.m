@@ -333,7 +333,10 @@
         NSLog(@"Video metadata file is %@ and inertial data file %@, so no export will be done!", videoMetadataFile, inertialDataFile);
         return;
     }
-    
+    if ( _recording == YES) {
+        NSLog(@"In recording state no export will be done!");
+        return;
+    }
     if ([MFMailComposeViewController canSendMail])
     {
         MFMailComposeViewController *mailVC = [[MFMailComposeViewController alloc] init];
