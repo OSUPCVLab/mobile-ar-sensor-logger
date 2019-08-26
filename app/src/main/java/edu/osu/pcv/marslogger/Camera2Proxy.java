@@ -34,6 +34,7 @@ import android.view.SurfaceHolder;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -213,6 +214,62 @@ public class Camera2Proxy {
         mPreviewSurfaceTexture = surfaceTexture;
     }
 
+
+    private class NumExpoIso {
+        public Long mNumber;
+        public Long mExposureNanos;
+        public Integer mIso;
+        public NumExpoIso(Long number, Long expoNanos, Integer iso) {
+            mNumber = number;
+            mExposureNanos = expoNanos;
+            mIso = iso;
+        }
+    }
+    private final int kMaxExpoSamples = 10;
+    private ArrayList<NumExpoIso> expoStats = new ArrayList<>(kMaxExpoSamples);
+
+    private void setExposureAndIso() {
+        // compute exposure time and ISO
+        Long exposureNanos = CameraCaptureActivity.mDesiredExposureTime;
+        Long desiredIsoL = 30L * 30000000L / exposureNanos;
+        Integer desiredIso = desiredIsoL.intValue();
+        if (!expoStats.isEmpty()) {
+            int index = expoStats.size()/2;
+            Long actualExpo = expoStats.get(index).mExposureNanos;
+            Integer actualIso = expoStats.get(index).mIso;
+            if (actualExpo <= exposureNanos) {
+                exposureNanos = actualExpo;
+                desiredIso = actualIso;
+            } else {
+                desiredIsoL = actualIso * actualExpo / exposureNanos;
+                desiredIso = desiredIsoL.intValue();
+            }
+        }
+
+        // fix exposure
+        mPreviewRequestBuilder.set(
+                CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+        Range<Long> exposureTimeRange = mCameraCharacteristics.get(
+                CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+        if (exposureTimeRange != null) {
+            Log.d(TAG, "exposure time range " + exposureTimeRange.toString());
+        }
+
+        mPreviewRequestBuilder.set(
+                CaptureRequest.SENSOR_EXPOSURE_TIME, exposureNanos);
+        Log.d(TAG, "Exposure time set to " + exposureNanos);
+
+        // fix ISO
+        Range<Integer> isoRange = mCameraCharacteristics.get(
+                CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+        if (isoRange != null) {
+            Log.d(TAG, "ISO range " + isoRange.toString());
+        }
+
+        mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, desiredIso);
+        Log.d(TAG, "ISO set to " + desiredIso);
+    }
+
     private void initPreviewRequest() {
         try {
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
@@ -222,33 +279,6 @@ public class Camera2Proxy {
                     CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             mPreviewRequestBuilder.set(
                     CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
-
-            // fix exposure
-            mPreviewRequestBuilder.set(
-                    CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
-            Range<Long> exposureTimeRange = mCameraCharacteristics.get(
-                    CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
-            if (exposureTimeRange != null) {
-                Log.d(TAG, "exposure time range " + exposureTimeRange.toString());
-            }
-            mPreviewRequestBuilder.set(
-                    CaptureRequest.SENSOR_EXPOSURE_TIME,
-                    CameraCaptureActivity.mDesiredExposureTime);
-            Log.d(TAG, "Exposure time set to " +
-                    CameraCaptureActivity.mDesiredExposureTime);
-
-            // fix ISO
-            Range<Integer> isoRange = mCameraCharacteristics.get(
-                    CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
-            if (isoRange != null) {
-                Log.d(TAG, "ISO range " + isoRange.toString());
-            }
-            // TODO(jhuai): determine ISO more elegantly using current captureResult
-            Long desiredIsoL = 300 * 30000000L /
-                    CameraCaptureActivity.mDesiredExposureTime;
-            final Integer desiredIso = desiredIsoL.intValue();
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, desiredIso);
-            Log.d(TAG, "ISO set to " + desiredIso);
 
             // fix focal length
             mPreviewRequestBuilder.set(
@@ -308,6 +338,10 @@ public class Camera2Proxy {
                     Long frmDurationNs = result.get(CaptureResult.SENSOR_FRAME_DURATION);
                     Long frmReadoutNs = result.get(CaptureResult.SENSOR_ROLLING_SHUTTER_SKEW);
                     Integer iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
+                    if (expoStats.size() > kMaxExpoSamples) {
+                        expoStats.subList(0, kMaxExpoSamples/2).clear();
+                    }
+                    expoStats.add(new NumExpoIso(number, exposureTimeNs, iso));
 
                     Float fl = result.get(CaptureResult.LENS_FOCAL_LENGTH);
 
@@ -628,6 +662,8 @@ public class Camera2Proxy {
             e.printStackTrace();
         }
 
+        setExposureAndIso();
+
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE,
                 CameraMetadata.CONTROL_MODE_AUTO);
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
@@ -691,8 +727,10 @@ public class Camera2Proxy {
     private void stopBackgroundThread() {
         Log.v(TAG, "stopBackgroundThread");
         try {
-            mBackgroundThread.quitSafely();
-            mBackgroundThread.join();
+            if (mBackgroundThread != null) {
+                mBackgroundThread.quitSafely();
+                mBackgroundThread.join();
+            }
             mBackgroundThread = null;
             mBackgroundHandler = null;
         } catch (InterruptedException e) {
