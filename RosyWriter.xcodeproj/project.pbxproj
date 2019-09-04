@@ -133,11 +133,11 @@
 /* Begin PBXFileReference section */
 		171999D919C7695800A719B5 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		1756C9D319BE5E080080DD55 /* RosyWriterCIFilterRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RosyWriterCIFilterRenderer.m; sourceTree = "<group>"; };
-		1756C9F919BE5E1F0080DD55 /* RosyWriterCIFilter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RosyWriterCIFilter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1756C9F919BE5E1F0080DD55 /* MarsLoggerCIFilter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarsLoggerCIFilter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1756C9FB19BE5ECE0080DD55 /* RosyWriterCIFilterRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RosyWriterCIFilterRenderer.h; sourceTree = "<group>"; };
 		1FCCE62F19B92B1B009D7A6B /* RosyWriterOpenCVRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RosyWriterOpenCVRenderer.h; sourceTree = "<group>"; };
 		1FCCE63019B92B1B009D7A6B /* RosyWriterOpenCVRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RosyWriterOpenCVRenderer.mm; sourceTree = "<group>"; };
-		1FCCE66D19BA80A5009D7A6B /* RosyWriterCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RosyWriterCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FCCE66D19BA80A5009D7A6B /* MarsLoggerCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarsLoggerCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		262F9EB519A7CA8D001BB393 /* myFilter.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = myFilter.fsh; path = Resources/Shaders/myFilter.fsh; sourceTree = SOURCE_ROOT; };
 		262F9EB619A7CA8D001BB393 /* myFilter.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = myFilter.vsh; path = Resources/Shaders/myFilter.vsh; sourceTree = SOURCE_ROOT; };
 		269351C0156CB42100512474 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
@@ -147,9 +147,9 @@
 		5DC09BED19B7F1A70025A16E /* RosyWriterRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = RosyWriterRenderer.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		5DC09BEE19B7F5100025A16E /* RosyWriterCPURenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RosyWriterCPURenderer.h; sourceTree = "<group>"; };
 		5DC09BEF19B7F5100025A16E /* RosyWriterCPURenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RosyWriterCPURenderer.m; sourceTree = "<group>"; };
-		696D282919CA539900A23D81 /* RosyWriterOpenCV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RosyWriterOpenCV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		696D282919CA539900A23D81 /* MarsLoggerOpenCV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarsLoggerOpenCV.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F096BF9157ED5110075E328 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
-		6F90DDD51395CAAA00125BDA /* RosyWriterOpenGL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RosyWriterOpenGL.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F90DDD51395CAAA00125BDA /* MarsLoggerOpenGL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarsLoggerOpenGL.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F90DDD91395CAAA00125BDA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		6F90DDDB1395CAAA00125BDA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6F90DDDD1395CAAA00125BDA /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -316,10 +316,10 @@
 		6F90DDD61395CAAA00125BDA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6F90DDD51395CAAA00125BDA /* RosyWriterOpenGL.app */,
-				1FCCE66D19BA80A5009D7A6B /* RosyWriterCPU.app */,
-				1756C9F919BE5E1F0080DD55 /* RosyWriterCIFilter.app */,
-				696D282919CA539900A23D81 /* RosyWriterOpenCV.app */,
+				6F90DDD51395CAAA00125BDA /* MarsLoggerOpenGL.app */,
+				1FCCE66D19BA80A5009D7A6B /* MarsLoggerCPU.app */,
+				1756C9F919BE5E1F0080DD55 /* MarsLoggerCIFilter.app */,
+				696D282919CA539900A23D81 /* MarsLoggerOpenCV.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -432,7 +432,7 @@
 			);
 			name = RosyWriterCIFilter;
 			productName = RosyWriter;
-			productReference = 1756C9F919BE5E1F0080DD55 /* RosyWriterCIFilter.app */;
+			productReference = 1756C9F919BE5E1F0080DD55 /* MarsLoggerCIFilter.app */;
 			productType = "com.apple.product-type.application";
 		};
 		1FCCE64619BA80A5009D7A6B /* RosyWriterCPU */ = {
@@ -449,7 +449,7 @@
 			);
 			name = RosyWriterCPU;
 			productName = RosyWriter;
-			productReference = 1FCCE66D19BA80A5009D7A6B /* RosyWriterCPU.app */;
+			productReference = 1FCCE66D19BA80A5009D7A6B /* MarsLoggerCPU.app */;
 			productType = "com.apple.product-type.application";
 		};
 		696D280919CA539900A23D81 /* RosyWriterOpenCV */ = {
@@ -466,7 +466,7 @@
 			);
 			name = RosyWriterOpenCV;
 			productName = RosyWriter;
-			productReference = 696D282919CA539900A23D81 /* RosyWriterOpenCV.app */;
+			productReference = 696D282919CA539900A23D81 /* MarsLoggerOpenCV.app */;
 			productType = "com.apple.product-type.application";
 		};
 		6F90DDD41395CAAA00125BDA /* RosyWriterOpenGL */ = {
@@ -483,7 +483,7 @@
 			);
 			name = RosyWriterOpenGL;
 			productName = RosyWriter;
-			productReference = 6F90DDD51395CAAA00125BDA /* RosyWriterOpenGL.app */;
+			productReference = 6F90DDD51395CAAA00125BDA /* MarsLoggerOpenGL.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -709,7 +709,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CIFILTER_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterCIFilter;
+				PRODUCT_NAME = MarsLoggerCIFilter;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -731,7 +731,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CIFILTER_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterCIFilter;
+				PRODUCT_NAME = MarsLoggerCIFilter;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -753,7 +753,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CPU_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterCPU;
+				PRODUCT_NAME = MarsLoggerCPU;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -775,7 +775,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_CPU_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterCPU;
+				PRODUCT_NAME = MarsLoggerCPU;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -802,7 +802,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_OPENCV_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterOpenCV;
+				PRODUCT_NAME = MarsLoggerOpenCV;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -829,7 +829,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = "-DUSE_OPENCV_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterOpenCV;
+				PRODUCT_NAME = MarsLoggerOpenCV;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -952,7 +952,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CFLAGS = "-DUSE_OPENGL_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterOpenGL;
+				PRODUCT_NAME = MarsLoggerOpenGL;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -973,7 +973,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CFLAGS = "-DUSE_OPENGL_RENDERER=1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = RosyWriterOpenGL;
+				PRODUCT_NAME = MarsLoggerOpenGL;
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
