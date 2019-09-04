@@ -345,7 +345,8 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 	_videoCompressionSettings = [[videoOut recommendedVideoSettingsForAssetWriterWithOutputFileType:AVFileTypeQuickTimeMovie] copy];
 	
 	_videoBufferOrientation = _videoConnection.videoOrientation;
-	
+    CGFloat cropFactor = _videoConnection.videoScaleAndCropFactor;
+    NSLog(@"Video scale and crop factor %f", cropFactor);
 	return;
 }
 
@@ -470,6 +471,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
     [self.videoTimeConverter checkStatus];
     
 	self.videoDimensions = CMVideoFormatDescriptionGetDimensions( inputFormatDescription );
+    self.fx = [self reportLensFocalLenParams];
 	[_renderer prepareForInputWithFormatDescription:inputFormatDescription outputRetainedBufferCountHint:RETAINED_BUFFER_COUNT];
 	
 	if ( ! _renderer.operatesInPlace && [_renderer respondsToSelector:@selector(outputFormatDescription)] ) {
@@ -592,8 +594,8 @@ const int64_t kDesiredExposureTimeMillisec = 5;
         CFDataRef intrinsicMatEncoded = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, NULL);
         NSData* pns = (__bridge NSData*) intrinsicMatEncoded;
         float intrinsicParam;
-        array = [[NSMutableArray alloc] initWithCapacity:0];
-        for ( NSUInteger offset = 0; offset < pns.length; offset += sizeof(float)) {
+        array = [[NSMutableArray alloc] initWithCapacity:pns.length];
+        for (NSUInteger offset = 0; offset < pns.length; offset += sizeof(float)) {
             [pns getBytes:&intrinsicParam range:NSMakeRange(offset, sizeof(float))];
             [array addObject:[NSNumber numberWithFloat:intrinsicParam]];
         }
@@ -602,10 +604,21 @@ const int64_t kDesiredExposureTimeMillisec = 5;
         // cx, cy, 0, 1
         // NSLog(@"fx:%@, fy:%@, cx:%@, cy:%@", array[0], array[5], array[8], array[9]);
         self.fx = [array[0] floatValue];
-    } else {
-        // Fallback on earlier versions
-        self.fx = 0.f;
+    } else {// else use the computed value for the first frame
+        const int arrayLen = 12;
+        array = [[NSMutableArray alloc] initWithCapacity:arrayLen];
+        for (int index = 0; index < arrayLen; ++index) {
+            [array addObject:[NSNumber numberWithFloat:0.0f]];
+        }
+        [array setObject:[NSNumber numberWithFloat:_fx] atIndexedSubscript:0];
+        [array setObject:[NSNumber numberWithFloat:_fx] atIndexedSubscript:5];
+        [array setObject:[NSNumber numberWithFloat:_videoDimensions.width/2 - 0.5f]
+                atIndexedSubscript:8];
+        [array setObject:[NSNumber numberWithFloat:_videoDimensions.height/2 - 0.5f]
+                atIndexedSubscript:9];
+        [array setObject:[NSNumber numberWithFloat:1.0f] atIndexedSubscript:11];
     }
+    
     _exposureDuration = CMTimeGetNanoseconds(_videoDevice.exposureDuration);
 	[self calculateFramerateAtTimestamp:timestamp];
     
@@ -1040,6 +1053,22 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
 		const float newRate = (float)( [_previousSecondTimestamps count] - 1 ) / duration;
 		self.videoFrameRate = newRate;
 	}
+}
+
+- (float)reportLensFocalLenParams
+{
+    AVCaptureDevice *device = _videoDevice;
+    float lensPos = [device lensPosition];
+    CGFloat videoZoom = [device videoZoomFactor];
+    float videoHFov = device.activeFormat.videoFieldOfView;
+    videoHFov *= M_PI/180.0;
+    int w = self.videoDimensions.width;
+    // On devices > iOS 11 the computed focal length in pixels is greater than the value from the intrinsic matrix.
+    // For instance when w=1280, focalLen=1139.7, focalIntrinsic=1090
+    float focalLen = (w/2) / tan(videoHFov/2);
+    NSLog(@"lensPos %.4f videoZoom %f HFOV %.4f w %d focalLen %.4f",
+          lensPos, videoZoom, videoHFov, w, focalLen);
+    return focalLen;
 }
 
 - (void)focusAtPoint:(CGPoint)point

@@ -25,6 +25,8 @@
 - (void)startRecording;
 - (void)stopRecording;
 
+- (float)reportLensFocalLenParams;
+
 // lock focus and exposure at the point of interest
 - (void)focusAtPoint:(CGPoint)point;
 
