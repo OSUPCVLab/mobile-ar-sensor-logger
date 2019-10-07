@@ -263,3 +263,5 @@ obj/
 .externalNativeBuild
 
 Thirdparty/opencv2\.framework/
+
+launcher_icons/

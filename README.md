@@ -1,21 +1,36 @@
-# MARS Logger: Mobile-AR-Sensor-Logger
+# Mobile AR Sensor (MARS) Logger
 
-Android and iOS apps for logging visual and inertial data with mobile phones
+log data of the camera and the IMU on iOS and Android mobile devices
 
 The "AR" in the repo name refers to that visual inertial data are essential to augmented reality on smartphones.
 
-**Authors**: Jianzhu Huai, Yujia Zhang
-*Ideally, RosyWriter records camera frames, their timestamps, and intrinsic parameters, and the raw accelerometer and gyroscope readings. Except for the camera frames which are saved into a video, other pieces of data are saved into csv files. To control the quality of the images, you may long press the screen before a recording session to lock auto focus and auto exposure, and/or tap to unlock auto focus and auto exposure if appropriate. *
-
 # Related paper
 
-If you use MARS logger for your research, please consider citing the above paper.
+If you use MARS logger for your research, please consider citing the paper.
+```
+@INPROCEEDINGS{huai2019mars, 
+author={Jianzhu {Huai} and Yujia {Zhang} and Alper {Yilmaz}}, 
+booktitle={2019 IEEE SENSORS}, 
+title={The Mobile AR Sensor Logger for Android and iOS Devices}, 
+year={2019}, 
+volume={}, 
+number={}, 
+pages={},
+ISSN={}, 
+month={Oct},}
+```
+
 
 # Acknowledgments
 
 The iOS app is developed based off the [rosywriter](https://developer.apple.com/library/archive/samplecode/RosyWriter/Introduction/Intro.html) in objective C released by Apple.
 It makes use of the following components.
 * Inertial data recorded on a background NSOperationQueue.
+
+The MARS logger for iOS records camera frames, their timestamps, and intrinsic parameters, and the raw accelerometer and gyroscope readings. 
+Except for the camera frames which are saved into a video, other pieces of data are saved into csv files.
+To control the quality of the images, you may long press the screen before a recording session to lock auto focus and auto exposure, 
+and/or tap to unlock auto focus and auto exposure if appropriate. 
 
 
 The Android app is developed based off the [CameraCaptureActivity](https://github.com/google/grafika/blob/master/app/src/main/java/com/android/grafika/CameraCaptureActivity.java) of the grafika project.
