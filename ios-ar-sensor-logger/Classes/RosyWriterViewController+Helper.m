@@ -1,10 +1,3 @@
-//
-//  LLSimpleCamera+Helper.m
-//  LLSimpleCameraExample
-//
-//  Created by Ömer Faruk Gül on 20/02/16.
-//  Copyright © 2016 Ömer Faruk Gül. All rights reserved.
-//
 
 #import "RosyWriterViewController+Helper.h"
 

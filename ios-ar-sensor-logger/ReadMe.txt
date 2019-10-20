@@ -39,7 +39,15 @@ OpenGLPixelBufferView
 GL
 -- Utilities used by the GL processing pipeline.
 
-This program has been found to be able to record as long as 12 minutes of 1920 x 1080 resolution video at 30Hz in conjuction with the inertial data on an iPhone 6S.
+This program has been found to be able to record 12 minutes of 1920 x 1080 video at 30Hz and inertial data at 100Hz on an iPhone 6S.
+
+TODOs
+1. Customize the video dimension with the user input.
+Currently the video frame size is preset with
+captionSession.sessionPreset = AVCaptureSessionPreset1280x720
+2. Warning “All interface orientations must be supported unless the app requires full screen”
+for a universal app
+To resolve this warning, refer to [here](https://stackoverflow.com/questions/37168888/ios-9-warning-all-interface-orientations-must-be-supported-unless-the-app-req).
 
 ===============================================================
 Copyright © 2016 Apple Inc. All rights reserved.

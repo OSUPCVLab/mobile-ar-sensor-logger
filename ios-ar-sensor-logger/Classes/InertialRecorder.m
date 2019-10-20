@@ -5,20 +5,20 @@
 
 #import "VideoTimeConverter.h"
 
-const double GRAVITY = 9.80; // cf. https://developer.apple.com/documentation/coremotion/getting_raw_accelerometer_events
+const double GRAVITY = 9.80; // see https://developer.apple.com/documentation/coremotion/getting_raw_accelerometer_events
 const double RATE = 100; // fps for inertial data
 
 @interface InertialRecorder ()
 {
     
 }
-@property CMMotionManager* motionManager;
-@property NSOperationQueue* queue;
-@property NSTimer* timer;
+@property CMMotionManager *motionManager;
+@property NSOperationQueue *queue;
+@property NSTimer *timer;
 
-@property NSMutableArray* rawAccelGyroData;
+@property NSMutableArray *rawAccelGyroData;
 
-@property BOOL interpolateAccel; // interpolate accelerometer data for gyro timestamps
+@property BOOL interpolateAccel; // interpolate accelerometer data at gyro timestamps?
 @property NSString *timeStartImu;
 
 @end
@@ -41,7 +41,7 @@ const double RATE = 100; // fps for inertial data
 }
 
 - (NSMutableArray *) removeDuplicates:(NSArray *)array {
-    // cf. https://stackoverflow.com/questions/1025674/the-best-way-to-remove-duplicate-values-from-nsmutablearray-in-objective-c
+    // see https://stackoverflow.com/questions/1025674/the-best-way-to-remove-duplicate-values-from-nsmutablearray-in-objective-c
     NSMutableArray *mutableArray = [array mutableCopy];
     NSInteger index = [array count] - 1;
     for (id object in [array reverseObjectEnumerator]) {
@@ -59,7 +59,7 @@ const double RATE = 100; // fps for inertial data
     NSMutableArray *accelArray = [[NSMutableArray alloc] init];
     
     for (int i=0;i<[accelGyroData count];i++) {
-        NodeWrapper * nw =[accelGyroData objectAtIndex:i];
+        NodeWrapper *nw =[accelGyroData objectAtIndex:i];
         if (nw.time <= 0)
             continue;
         if (nw.isGyro)
@@ -68,22 +68,19 @@ const double RATE = 100; // fps for inertial data
             [accelArray addObject:nw];
     }
     
-    // sort
     NSArray *sortedArrayGyro = [gyroArray sortedArrayUsingSelector:@selector(compare:)];
     NSArray *sortedArrayAccel = [accelArray sortedArrayUsingSelector:@selector(compare:)];
     
-    // remove duplicates
     NSMutableArray *mutableGyroCopy = [self removeDuplicates:sortedArrayGyro];
     NSMutableArray *mutableAccelCopy = [self removeDuplicates:sortedArrayAccel];
     
     // interpolate
-    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@""];
+    NSMutableString *mainString = [[NSMutableString alloc]initWithString:@""];
     int accelIndex = 0;
     [mainString appendFormat:@"Timestamp[nanosec], gx[rad/s], gy[rad/s], gz[rad/s], ax[m/s^2], ay[m/s^2], az[m/s^2]\n"];
-    // though mutableGyroCopy and mutableAccelCopy are mutable, they remains constant.
     for (int gyroIndex = 0; gyroIndex < [mutableGyroCopy count]; ++gyroIndex) {
-        NodeWrapper * nwg = [mutableGyroCopy objectAtIndex:gyroIndex];
-        NodeWrapper * nwa = [mutableAccelCopy objectAtIndex:accelIndex];
+        NodeWrapper *nwg = [mutableGyroCopy objectAtIndex:gyroIndex];
+        NodeWrapper *nwa = [mutableAccelCopy objectAtIndex:accelIndex];
         if (nwg.time < nwa.time) {
             continue;
         } else if (nwg.time == nwa.time) {
@@ -92,7 +89,7 @@ const double RATE = 100; // fps for inertial data
             int lowerIndex = accelIndex;
             int upperIndex = accelIndex + 1;
             for (int iterIndex = accelIndex + 1; iterIndex < [mutableAccelCopy count]; ++iterIndex) {
-                NodeWrapper * nwa1 = [mutableAccelCopy objectAtIndex:iterIndex];
+                NodeWrapper *nwa1 = [mutableAccelCopy objectAtIndex:iterIndex];
                 if (nwa1.time < nwg.time) {
                     lowerIndex = iterIndex;
                 } else if (nwa1.time > nwg.time) {
@@ -109,11 +106,11 @@ const double RATE = 100; // fps for inertial data
                 break;
             
             if (upperIndex == lowerIndex) {
-                NodeWrapper * nwa1 = [mutableAccelCopy objectAtIndex:upperIndex];
+                NodeWrapper *nwa1 = [mutableAccelCopy objectAtIndex:upperIndex];
                 [mainString appendFormat:@"%@, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f\n", secDoubleToNanoString(nwg.time), nwg.x, nwg.y, nwg.z, nwa1.x, nwa1.y, nwa1.z];
             } else if (upperIndex == lowerIndex + 1) {
-                NodeWrapper * nwa = [mutableAccelCopy objectAtIndex:lowerIndex];
-                NodeWrapper * nwa1 = [mutableAccelCopy objectAtIndex:upperIndex];
+                NodeWrapper *nwa = [mutableAccelCopy objectAtIndex:lowerIndex];
+                NodeWrapper *nwa1 = [mutableAccelCopy objectAtIndex:upperIndex];
                 double ratio = (nwg.time - nwa.time) / (nwa1.time - nwa.time);
                 double interpax = nwa.x + (nwa1.x - nwa.x) * ratio;
                 double interpay = nwa.y + (nwa1.y - nwa.y) * ratio;
@@ -138,20 +135,23 @@ const double RATE = 100; // fps for inertial data
         [_motionManager stopGyroUpdates];
         [_motionManager stopAccelerometerUpdates];
         
-        NSMutableString * mainString = [[NSMutableString alloc]initWithString:@""];
-        if (!_interpolateAccel) { // No interpolation
+        NSMutableString *mainString = [[NSMutableString alloc]initWithString:@""];
+        if (!_interpolateAccel) {
             [mainString appendFormat:@"Timestamp[nanosec], x, y, z[(a:m/s^2)/(g:rad/s)], isGyro?\n"];
             for(int i=0;i<[_rawAccelGyroData count];i++ ) {
-                NodeWrapper * nw =[_rawAccelGyroData objectAtIndex:i];
+                NodeWrapper *nw =[_rawAccelGyroData objectAtIndex:i];
                 [mainString appendFormat:@"%.7f, %.5f, %.5f, %.5f, %d\n", nw.time, nw.x, nw.y, nw.z, nw.isGyro];
             }
-        } else { // linearly interpolate acceleration offline, for online interpolation cf. vins mobile
+        } else { // linearly interpolate acceleration offline
+            // TODO(jhuai): Though offline interpolation is enough for practical needs,
+            // eg., 20 min recording, online interpolation may be still desirable.
+            // It can be implemented referring to Vins Mobile and MarsLogger Android.
             mainString = [self interpolate:_rawAccelGyroData startTime:_timeStartImu];
         }
         if ([_rawAccelGyroData count])
             [_rawAccelGyroData removeAllObjects];
 
-        NSData* settingsData;
+        NSData *settingsData;
         settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
         
         if ([settingsData writeToURL:_fileURL atomically:YES]) {
@@ -166,8 +166,6 @@ const double RATE = 100; // fps for inertial data
         _isRecording = true;
         NSLog(@"Start recording inertial data!");
         _rawAccelGyroData = [[NSMutableArray alloc] init];
-        // reference: Basic sensors in ios Objective c
-        // reference: https://stackoverflow.com/questions/37908854/motion-manager-not-working swift
         _motionManager.gyroUpdateInterval = 1.0/RATE;
         _motionManager.accelerometerUpdateInterval = 1.0/RATE;
         
@@ -181,7 +179,7 @@ const double RATE = 100; // fps for inertial data
             [_motionManager startGyroUpdatesToQueue:_queue withHandler: ^ (CMGyroData *gyroData, NSError *error) {
                 CMRotationRate rotate = gyroData.rotationRate;
                 
-                NodeWrapper* nw = [[NodeWrapper alloc] init];
+                NodeWrapper *nw = [[NodeWrapper alloc] init];
                 nw.isGyro = true;
                 nw.time = gyroData.timestamp;
                 nw.x = rotate.x;
@@ -192,9 +190,9 @@ const double RATE = 100; // fps for inertial data
             [_motionManager startAccelerometerUpdatesToQueue:_queue withHandler: ^ (CMAccelerometerData *accelData, NSError *error) {
                 CMAcceleration accel = accelData.acceleration;
                 
-                NodeWrapper* nw = [[NodeWrapper alloc] init];
+                NodeWrapper *nw = [[NodeWrapper alloc] init];
                 nw.isGyro = false;
-                //The time stamp is the amount of time in seconds since the device booted.
+                // The time stamp is the amount of time in seconds since the device booted.
                 nw.time = accelData.timestamp;
                 nw.x = - accel.x * GRAVITY;
                 nw.y = - accel.y * GRAVITY;
@@ -234,7 +232,7 @@ NSURL *createOutputFolderURL(void) {
     NSURL *documentsURL = [paths lastObject];
     NSURL *outputFolderURL = [documentsURL URLByAppendingPathComponent:dateTimeString isDirectory:YES];
 
-    NSError * error = nil;
+    NSError *error = nil;
     [[NSFileManager defaultManager] createDirectoryAtURL:outputFolderURL
                               withIntermediateDirectories:NO
                                                attributes:nil

@@ -25,6 +25,8 @@
 - (void)startRecording;
 - (void)stopRecording;
 
+- (float)reportLensFocalLenParams;
+
 // lock focus and exposure at the point of interest
 - (void)focusAtPoint:(CGPoint)point;
 
@@ -46,8 +48,8 @@
 @property(atomic, readonly) int64_t exposureDuration; // nanoseconds
 @property(atomic, readonly) BOOL autoLocked; // are both auto focus and auto exposure locked?
 @property(atomic, readonly) CMVideoDimensions videoDimensions;
-@property(atomic, readonly) AVCaptureDeviceInput* videoDeviceInput;
-@property(atomic, readonly) NSURL * metadataFileURL;
+@property(atomic, readonly) AVCaptureDeviceInput *videoDeviceInput;
+@property(atomic, readonly) NSURL *metadataFileURL;
 @end
 
 @protocol RosyWriterCapturePipelineDelegate <NSObject>
@@ -72,6 +74,4 @@ union intToFloat
     uint32_t i;
     float fp;
 };
-
-// (float)floatAtOffset:(NSUInteger)offset inData:(NSData*)data;
 

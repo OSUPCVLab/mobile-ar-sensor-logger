@@ -17,9 +17,9 @@
 
 @interface MovieRecorder : NSObject
 
-@property(nonatomic, readonly) NSMutableArray* savedFrameTimestamps;
-@property(nonatomic, readonly) NSMutableArray* savedFrameIntrinsics;
-@property(nonatomic, readonly) NSMutableArray* savedExposureDurations;
+@property(nonatomic, readonly) NSMutableArray *savedFrameTimestamps;
+@property(nonatomic, readonly) NSMutableArray *savedFrameIntrinsics;
+@property(nonatomic, readonly) NSMutableArray *savedExposureDurations;
 
 - (instancetype)initWithURL:(NSURL *)URL delegate:(id<MovieRecorderDelegate>)delegate callbackQueue:(dispatch_queue_t)queue; // delegate is weak referenced
 

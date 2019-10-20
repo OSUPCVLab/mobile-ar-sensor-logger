@@ -17,6 +17,7 @@
 #import "MovieRecorder.h"
 #import "VideoTimeConverter.h"
 #import "InertialRecorder.h"
+#import "CameraControlFunctions.h"
 
 #import <CoreMedia/CMBufferQueue.h>
 #import <CoreMedia/CMAudioClock.h>
@@ -52,8 +53,6 @@ typedef NS_ENUM( NSInteger, RosyWriterRecordingStatus )
 
 NSString *const VIDEO_META_FILENAME = @"movie_metadata.csv";
 NSString *const IMU_OUTPUT_FILENAME = @"gyro_accel.csv";
-const int64_t kDesiredExposureTimeMillisec = 5;
-
 
 @interface RosyWriterCapturePipeline () <AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, MovieRecorderDelegate>
 {
@@ -104,19 +103,6 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 
 @end
 
-/*(float)floatAtOffset:(NSUInteger)offset inData:(NSData*)data;
-{
-    assert([data length] >= offset + sizeof(float));
-    union intToFloat convert;
- 
-    const uint32_t* bytes = [data bytes] + offset;
-    convert.i = CFSwapInt32BigToHost(*bytes);
- 
-    const float value = convert.fp;
- 
-    return value;
-}*/
-
 @implementation RosyWriterCapturePipeline
 
 - (instancetype)initWithDelegate:(id<RosyWriterCapturePipelineDelegate>)delegate callbackQueue:(dispatch_queue_t)queue // delegate is weak referenced
@@ -163,10 +149,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
         _exposureDuration = 0;
         
         _inertialRecorder = [[InertialRecorder alloc] init];
-        NSURL * outputFolderURL = createOutputFolderURL();
-        NSURL * inertialFileURL = [outputFolderURL URLByAppendingPathComponent:IMU_OUTPUT_FILENAME isDirectory:NO];
-        [_inertialRecorder setFileURL:inertialFileURL];
-        _metadataFileURL = [outputFolderURL URLByAppendingPathComponent:VIDEO_META_FILENAME isDirectory:NO];
+        
         _videoTimeConverter = [[VideoTimeConverter alloc] init];
 	}
 	return self;
@@ -268,9 +251,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 		[_captureSession addInput:videoIn];
         _videoDevice = videoDevice;
         _videoDeviceInput = videoIn;
-        
-	}
-	else {
+	} else {
 		[self handleNonRecoverableCaptureSessionRuntimeError:videoDeviceError];
 		return;
 	}
@@ -317,12 +298,12 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 	}
 	else
 	{
-#if ! USE_OPENGL_RENDERER
+//#if ! USE_OPENGL_RENDERER // cap the maximum size whether opengl is used or not
 		// When using the CPU renderers or the CoreImage renderer we lower the resolution to 720p so that all devices can maintain real-time performance (this is primarily for A5 based devices like iPhone 4s and iPod Touch 5th Generation).
 		if ( [_captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720] ) {
 			sessionPreset = AVCaptureSessionPreset1280x720;
 		}
-#endif // ! USE_OPENGL_RENDERER
+//#endif // ! USE_OPENGL_RENDERER
 
 		frameRate = 30;
 	}
@@ -348,7 +329,8 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 	_videoCompressionSettings = [[videoOut recommendedVideoSettingsForAssetWriterWithOutputFileType:AVFileTypeQuickTimeMovie] copy];
 	
 	_videoBufferOrientation = _videoConnection.videoOrientation;
-	
+    CGFloat cropFactor = _videoConnection.videoScaleAndCropFactor;
+    NSLog(@"Video scale and crop factor %f", cropFactor);
 	return;
 }
 
@@ -473,6 +455,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
     [self.videoTimeConverter checkStatus];
     
 	self.videoDimensions = CMVideoFormatDescriptionGetDimensions( inputFormatDescription );
+    self.fx = [self reportLensFocalLenParams];
 	[_renderer prepareForInputWithFormatDescription:inputFormatDescription outputRetainedBufferCountHint:RETAINED_BUFFER_COUNT];
 	
 	if ( ! _renderer.operatesInPlace && [_renderer respondsToSelector:@selector(outputFormatDescription)] ) {
@@ -588,15 +571,16 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 	CVPixelBufferRef renderedPixelBuffer = NULL;
     [_videoTimeConverter convertSampleBufferTimeToMotionClock:sampleBuffer];
     CMTime timestamp = getAttachmentTime(sampleBuffer); // synced timestamp to inertial sensor clock
- // It was purported that the live camera frame is rectified by the look-up-table of lens distortion. see https://forums.developer.apple.com/thread/79806
+    // It is purported that the live camera frame is rectified by the look-up-table
+    // of lens distortion. see https://forums.developer.apple.com/thread/79806
     
     NSMutableArray *array = nil;
     if (@available(iOS 11.0, *)) {
         CFDataRef intrinsicMatEncoded = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, NULL);
-        NSData* pns = (__bridge NSData*) intrinsicMatEncoded;
+        NSData *pns = (__bridge NSData *) intrinsicMatEncoded;
         float intrinsicParam;
-        array = [[NSMutableArray alloc] initWithCapacity:0];
-        for ( NSUInteger offset = 0; offset < pns.length; offset += sizeof(float)) {
+        array = [[NSMutableArray alloc] initWithCapacity:pns.length];
+        for (NSUInteger offset = 0; offset < pns.length; offset += sizeof(float)) {
             [pns getBytes:&intrinsicParam range:NSMakeRange(offset, sizeof(float))];
             [array addObject:[NSNumber numberWithFloat:intrinsicParam]];
         }
@@ -605,15 +589,26 @@ const int64_t kDesiredExposureTimeMillisec = 5;
         // cx, cy, 0, 1
         // NSLog(@"fx:%@, fy:%@, cx:%@, cy:%@", array[0], array[5], array[8], array[9]);
         self.fx = [array[0] floatValue];
-    } else {
-        // Fallback on earlier versions
-        self.fx = 0.f;
+    } else { // use the computed value for the first frame
+        const int arrayLen = 12;
+        array = [[NSMutableArray alloc] initWithCapacity:arrayLen];
+        for (int index = 0; index < arrayLen; ++index) {
+            [array addObject:[NSNumber numberWithFloat:0.0f]];
+        }
+        [array setObject:[NSNumber numberWithFloat:_fx] atIndexedSubscript:0];
+        [array setObject:[NSNumber numberWithFloat:_fx] atIndexedSubscript:5];
+        [array setObject:[NSNumber numberWithFloat:_videoDimensions.width/2 - 0.5f]
+                atIndexedSubscript:8];
+        [array setObject:[NSNumber numberWithFloat:_videoDimensions.height/2 - 0.5f]
+                atIndexedSubscript:9];
+        [array setObject:[NSNumber numberWithFloat:1.0f] atIndexedSubscript:11];
     }
+    
     _exposureDuration = CMTimeGetNanoseconds(_videoDevice.exposureDuration);
 	[self calculateFramerateAtTimestamp:timestamp];
     
     // for debug only
-    // source: https://stackoverflow.com/questions/34924476/avcapturedevice-comparing-samplebuffer-timestamps
+    // see https://stackoverflow.com/questions/34924476/avcapturedevice-comparing-samplebuffer-timestamps
 //    AVCaptureInputPort *port = [[connection inputPorts] objectAtIndex:0];
 //    CMClockRef originalClock = [port clock];
 //    CMTime originalPTS = CMSyncConvertTime( timestamp, [_captureSession masterClock], originalClock );
@@ -623,8 +618,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 //        adjustExpFinishTime = CMTimeMake(0, 1);
 //    }
     
-    // More information about syncing CoreMotion inertial data and AVCaptureInput sampleBuffer can be found at the below references.
-    // VideoSnake Implementation References
+    // More info about syncing CoreMotion inertial data and AVCaptureInput sampleBuffer can be found at below links.
     // videosnake 1.0 obj c: https://github.com/alokc83/iOS-Example-Collections/blob/8774c5b24e14cb2cdf79a6e3b13ee38739ad0a45/WWDC_2012_SourceCode/OS%20X/520%20-%20What's%20New%20in%20Camera%20Capture/VideoSnake/Classes/MotionSynchronizer.m
     // videosnake 2.2 obj c: https://github.com/robovm/apple-ios-samples/blob/master/VideoSnake/Classes/Utilities/MotionSynchronizer.m
     // videosnake 2.2 swift: https://github.com/ooper-shlab/VideoSnake2.2-Swift
@@ -694,6 +688,7 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 
 - (void)startRecording
 {
+    [self resetOutputFolder];
 	@synchronized( self )
 	{
 		if ( _recordingStatus != RosyWriterRecordingStatusIdle ) {
@@ -774,10 +769,10 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 		// We will be stopped once we save to the assets library.
 	}
 	
-    NSMutableArray* savedFrameTimestamps = _recorder.savedFrameTimestamps;
-    NSMutableArray* savedFrameIntrinsics = _recorder.savedFrameIntrinsics;
-    NSMutableArray* savedExposureDurations = _recorder.savedExposureDurations;
-    __block NSURL * savedAssetURL;
+    NSMutableArray *savedFrameTimestamps = _recorder.savedFrameTimestamps;
+    NSMutableArray *savedFrameIntrinsics = _recorder.savedFrameIntrinsics;
+    NSMutableArray *savedExposureDurations = _recorder.savedExposureDurations;
+    __block NSURL *savedAssetURL;
 	_recorder = nil;
 	
 	ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
@@ -798,98 +793,35 @@ const int64_t kDesiredExposureTimeMillisec = 5;
 		}
 	}];
     
-    NSString * videoDataFilepath = savedAssetURL.absoluteString;
+    NSString *videoDataFilepath = savedAssetURL.absoluteString;
     // In older ios, _savedFrameIntrinsics can have 0 count
     NSLog(@"Video at %@ of URL %@ finished recording with %lu timestamps and %lu intrinsic mats and %lu exposure durations", videoDataFilepath, savedAssetURL, (unsigned long)[savedFrameTimestamps count],
         (unsigned long)[savedFrameIntrinsics count], (unsigned long)[savedExposureDurations count]);
-    NSMutableString * mainString = [[NSMutableString alloc]initWithString:@"Timestamp[nanosec], fx[px], fy[px], cx[px], cy[px], exposure duration[nanosec]\n"];
+    NSMutableString *mainString = [[NSMutableString alloc]initWithString:@"Timestamp[nanosec], fx[px], fy[px], cx[px], cy[px], exposure duration[nanosec]\n"];
     bool hasIntrinsics = false;
     if ([savedFrameIntrinsics count] > 0) {
         hasIntrinsics = true;
     }
     for(unsigned long i=0; i<(unsigned long)[savedFrameTimestamps count]; i++) {
-        NSNumber * nn = [savedFrameTimestamps objectAtIndex:i];
-        NSNumber * ed = [savedExposureDurations objectAtIndex:i];
+        NSNumber *nn = [savedFrameTimestamps objectAtIndex:i];
+        NSNumber *ed = [savedExposureDurations objectAtIndex:i];
         if (hasIntrinsics) {
-            NSArray * intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
+            NSArray *intrinsic3x3 = [savedFrameIntrinsics objectAtIndex:i];
             [mainString appendFormat:@"%lld, %@, %@, %@, %@, %lld\n", [nn longLongValue], [intrinsic3x3 objectAtIndex:0], [intrinsic3x3 objectAtIndex:5], [intrinsic3x3 objectAtIndex:8], [intrinsic3x3 objectAtIndex:9], [ed longLongValue]];
         } else {
             [mainString appendFormat:@"%lld, %.2f, %.2f, %.2f, %.2f, %lld\n", [nn longLongValue], 1.0, 1.0, 0.5, 0.5, [ed longLongValue]];
         }
     }
     
-    NSData* settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
-    // to show these documents in Files app, edit info.plist as suggested in https://www.bignerdranch.com/blog/working-with-the-files-app-in-ios-11/
+    NSData *settingsData = [mainString dataUsingEncoding: NSUTF8StringEncoding allowLossyConversion:false];
+    // to show these documents in Files app, edit info.plist as suggested in
+    // https://www.bignerdranch.com/blog/working-with-the-files-app-in-ios-11/
     if ([settingsData writeToURL:_metadataFileURL atomically:YES]) {
         NSLog(@"Written video metadata to %@", _metadataFileURL);
     }
     else {
         NSLog(@"Failed to record video metadata to %@", _metadataFileURL);
     }
-    
-    // The below obtains the resource name of the most recent video or image in the Photos gallery
-    // Unfortunately, the retrieved one is usually penultimate rather than the above saved one
-    // see also https://stackoverflow.com/questions/27854937/ios8-photos-framework-how-to-get-the-nameor-filename-of-a-phasset
-    // and https://stackoverflow.com/questions/41007271/make-requestavassetforvideo-synchronous
-#if 0
-    PHAssetMediaType mediaType = PHAssetMediaTypeVideo;
-    PHAsset *asset = nil;
-    PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-    fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
-    PHFetchResult *fetchResult = [PHAsset fetchAssetsWithMediaType:mediaType options:fetchOptions];
-    if (fetchResult != nil && fetchResult.count > 0) {
-        // get last video from Photos
-        asset = [fetchResult lastObject];
-    }
-    
-    if (asset) {
-        if (mediaType == PHAssetMediaTypeImage) {
-            // get image info from this asset
-            PHImageRequestOptions * imageRequestOptions = [[PHImageRequestOptions alloc] init];
-            imageRequestOptions.synchronous = YES;
-            [[PHImageManager defaultManager]
-             requestImageDataForAsset:asset
-             options:imageRequestOptions
-             resultHandler:^(NSData *imageData, NSString *dataUTI,
-                             UIImageOrientation orientation,
-                             NSDictionary *info)
-             {
-                 NSLog(@"info = %@", info);
-                 if ([info objectForKey:@"PHImageFileURLKey"]) {
-                     // path looks like this -
-                     // file:///var/mobile/Media/DCIM/###APPLE/IMG_####.JPG
-                     NSURL *path = [info objectForKey:@"PHImageFileURLKey"];
-                     NSLog(@"The path to the most recent image is %@", path);
-                 }
-             }];
-        } else if (mediaType == PHAssetMediaTypeVideo) {
-            // get video info for this asset
-            dispatch_semaphore_t    semaphore = dispatch_semaphore_create(0);
-            PHVideoRequestOptions *option = [PHVideoRequestOptions new];
-            __block AVAsset *resultAsset;
-            
-            [[PHImageManager defaultManager] requestAVAssetForVideo:asset
-                                                            options:option
-                                                      resultHandler:^(AVAsset * avasset, AVAudioMix * audioMix, NSDictionary * info)
-             {
-                 resultAsset = avasset;
-                 dispatch_semaphore_signal(semaphore);
-             }];
-            
-            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-            // We synchronously have the asset: do something with AVAsset
-            //        AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:resultAsset];
-            //        AVPlayer *videoPlayer = [AVPlayer playerWithPlayerItem:playerItem];
-            
-            if (![resultAsset isKindOfClass:AVURLAsset.class]) {
-                NSLog(@"AVAsset is not kind of AVURLAsset");
-            } else {
-                NSURL * resultURL = [(AVURLAsset *)resultAsset URL];
-                NSLog(@"The penultimate video of URL %@ has a path component %@", resultURL, resultURL.lastPathComponent);
-            }
-        }
-    }
-#endif
 }
 
 #pragma mark Recording State Machine
@@ -1044,6 +976,23 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
 	}
 }
 
+- (float)reportLensFocalLenParams
+{
+    AVCaptureDevice *device = _videoDevice;
+    float lensPos = [device lensPosition];
+    CGFloat videoZoom = [device videoZoomFactor];
+    float videoHFov = device.activeFormat.videoFieldOfView;
+    videoHFov *= M_PI/180.0;
+    int w = self.videoDimensions.width;
+    // On devices iOS 11+ the computed focal length in pixels is greater than
+    // the value from the intrinsic matrix. Eg.,
+    // when w=1280, focalLen=1139.7, focalIntrinsic=1090
+    float focalLen = (w/2) / tan(videoHFov/2);
+    NSLog(@"lensPos %.4f videoZoom %f HFOV %.4f w %d focalLen %.4f",
+          lensPos, videoZoom, videoHFov, w, focalLen);
+    return focalLen;
+}
+
 - (void)focusAtPoint:(CGPoint)point
 {
     AVCaptureDevice *device = _videoDevice;
@@ -1063,38 +1012,22 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     
     if (device.isExposurePointOfInterestSupported && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
         NSError* error;
-        AVCaptureDeviceFormat * format = [device activeFormat];
-        // for iphone 6s format.minExposureDuration 1e-2 ms format.maxExposureDuration 333.3 ms format.minISO 23 format.maxISO 736
-        float oldBias = device.exposureTargetBias;
-        
-        CMTime desiredDuration = CMTimeMake(kDesiredExposureTimeMillisec, 1000);
+        AVCaptureDeviceFormat *format = [device activeFormat];
         CMTime oldDuration = device.exposureDuration;
-        float ratio = (float)(CMTimeGetSeconds(oldDuration)/CMTimeGetSeconds(desiredDuration));
-        
         float oldISO = device.ISO;
-//        NSLog(@"Present exposure duration %.5f ms and ISO %.5f", CMTimeGetSeconds(oldDuration)*1000, oldISO);
-        float expectedISO = oldISO * ratio;
-        if (expectedISO > format.maxISO)
-            expectedISO = format.maxISO;
-        else if (expectedISO < format.minISO)
-            expectedISO = format.minISO;
-
+        CMTime expectedDuration;
+        float expectedISO;
+        computeExpectedExposureTimeAndIso(format, &oldDuration, oldISO, &expectedDuration, &expectedISO);
+        
         if ([device lockForConfiguration:&error]) {
-            // set target bias does not help much empirically
-//            _adjustExposureFinished = FALSE;
-//            [device setExposureTargetBias:device.exposureTargetBias completionHandler:^(CMTime syncTime) {
-//                adjustExpFinishTime = syncTime;
-//                _exposureDuration = CMTimeGetNanoseconds(device.exposureDuration);
-//                _adjustExposureFinished = TRUE;
-//            }];
             if (/* DISABLES CODE */ (1)) {
                 // method 1: fix both exposureDuration and ISO at specified values
-                // refer to : https://stackoverflow.com/questions/40604334/correct-iso-value-for-avfoundation-camera
+                // see https://stackoverflow.com/questions/40604334/correct-iso-value-for-avfoundation-camera
                 _adjustExposureFinished = FALSE;
-                [device setExposureModeCustomWithDuration:desiredDuration ISO:expectedISO completionHandler:^(CMTime syncTime) {
-                    adjustExpFinishTime = syncTime;
-                    _exposureDuration = CMTimeGetNanoseconds(device.exposureDuration);
-                    _adjustExposureFinished = TRUE;
+                [device setExposureModeCustomWithDuration:expectedDuration ISO:expectedISO completionHandler:^(CMTime syncTime) {
+                    self->adjustExpFinishTime = syncTime;
+                    self->_exposureDuration = CMTimeGetNanoseconds(device.exposureDuration);
+                    self->_adjustExposureFinished = TRUE;
                 }];
             } else {
                 // method 2: fix both exposureDuration and ISO at a value adjusted by the auto exposure algorithm
@@ -1102,16 +1035,13 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
                 device.exposureMode = AVCaptureExposureModeAutoExpose;
             }
             [device unlockForConfiguration];
-            NSLog(@"Camera old exposure duration %.5f and ISO %.3f and target bias %.3f, desired exposure duration %.5f and ISO %.3f and ratio %.3f", CMTimeGetSeconds(oldDuration), oldISO, oldBias, CMTimeGetSeconds(desiredDuration), expectedISO, ratio);
             _autoLocked = autoFocusLocked;
-            
         } else {
             NSLog(@"Camera error in locking autoexposure: %@", error);
             _autoLocked = FALSE;
         }
     }
 }
-
 - (void)unlockFocusAndExposure {
     AVCaptureDevice *device = _videoDevice;
     BOOL autoFocusEnabled = FALSE;
@@ -1128,7 +1058,7 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     }
     
     if ([device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
-        NSError* error;
+        NSError *error;
         
         if ([device lockForConfiguration:&error]) {
             device.exposureMode = AVCaptureExposureModeContinuousAutoExposure;
@@ -1146,5 +1076,11 @@ static CGFloat angleOffsetFromPortraitOrientationToOrientation(AVCaptureVideoOri
     return _inertialRecorder.fileURL;
 }
 
+- (void)resetOutputFolder {
+    NSURL *outputFolderURL = createOutputFolderURL();
+    NSURL *inertialFileURL = [outputFolderURL URLByAppendingPathComponent:IMU_OUTPUT_FILENAME isDirectory:NO];
+    [_inertialRecorder setFileURL:inertialFileURL];
+    _metadataFileURL = [outputFolderURL URLByAppendingPathComponent:VIDEO_META_FILENAME isDirectory:NO];
+}
 
 @end
