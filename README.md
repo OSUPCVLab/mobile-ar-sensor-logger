@@ -40,22 +40,22 @@ For user guide, please visit the [wiki](https://github.com/OSUPCVLab/mobile-ar-s
 The installation, data format, recording and exporting data are explained in the following wiki pages.
 
 ## Android
-* [Installation](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Installation_Android)
+* [Installation](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Installation-Android)
 * [Record data](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Home)
-* [Data format](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Format_Description)
+* [Data format](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Format-description)
 * [Example data](https://drive.google.com/open?id=1AeAd4J9yW8lvAaeSxZAECQEeNQlLzoxx)
-* [Transfer data to Windows](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer_Android_Windows)
-* [Transfer data to Ubuntu](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer_Android_Ubuntu)
+* [Transfer data to Windows](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer-Android-Windows)
+* [Transfer data to Ubuntu](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer-Android-Ubuntu)
 * [Clear data](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Home)
 * [Bag data](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Home)
 
 ## iOS
-* [Installation](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Installation_iOS)
+* [Installation](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Installation-iOS)
 * [Record data](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Home)
-* [Data format](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Format_Description)
+* [Data format](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Format-description)
 * [Example data](https://drive.google.com/open?id=101K0bQcADHNNLu3OiMdoU1ukGvw_UwT7)
-* [Transfer data to Windows](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer_iOS_Windows)
-* [Transfer data to MacOS](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer_iOS_Mac)
+* [Transfer data to Windows](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer-iOS-Windows)
+* [Transfer data to MacOS](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Transfer-iOS-Mac)
 * [Clear data](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Home)
 * [Bag data](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/wiki/Home)
 
