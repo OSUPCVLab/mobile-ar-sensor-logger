@@ -86,8 +86,8 @@ public class AspectFrameLayout extends FrameLayout {
                     // limited by short height; restrict width
                     initialWidth = (int) (initialHeight * mTargetAspect);
                 }
-                Log.d(TAG, "new size=" + initialWidth + "x" + initialHeight + " + padding " +
-                        horizPadding + "x" + vertPadding);
+//                Log.d(TAG, "new size=" + initialWidth + "x" + initialHeight + " + padding " +
+//                        horizPadding + "x" + vertPadding);
                 initialWidth += horizPadding;
                 initialHeight += vertPadding;
                 widthMeasureSpec = MeasureSpec.makeMeasureSpec(initialWidth, MeasureSpec.EXACTLY);

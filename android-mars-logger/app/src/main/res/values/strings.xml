@@ -60,8 +60,8 @@
     <string name="canvasTextureViewCaption">Canvas rendered into a TextureView</string>
     <string name="toggleReleaseCallbackOff">Toggle release (now: ST callback)</string>
     <string name="toggleReleaseCallbackOn">Toggle release (now: renderer)</string>
-    <string name="toggleRecordingOn">Start recording</string>
-    <string name="toggleRecordingOff">Stop recording</string>
+    <string name="toggleRecordingOn">Record</string>
+    <string name="toggleRecordingOff">Stop</string>
     <string name="locked60fps_checkbox">Play at 60fps</string>
     <string name="loopPlayback_checkbox">Loop playback</string>
     <string name="rebindHack_checkbox">rebind</string>

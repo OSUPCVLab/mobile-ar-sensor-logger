@@ -146,7 +146,7 @@ public class CameraCaptureActivity extends Activity
     static final int mDesiredFrameHeight = 720;
     static final Long mDesiredExposureTime = 5000000L; // nanoseconds
 
-    private GLSurfaceView mGLView;
+    private SampleGLView mGLView;
     private CameraSurfaceRenderer mRenderer;
     private TextView mCaptureResultText;
 
@@ -159,6 +159,10 @@ public class CameraCaptureActivity extends Activity
     // this is static so it survives activity restarts
     private static TextureMovieEncoder sVideoEncoder = new TextureMovieEncoder();
     private static IMUManager mImuManager;
+
+    public Camera2Proxy getmCamera2Proxy() {
+        return mCamera2Proxy;
+    }
 
     private String renewOutputDir() {
         SimpleDateFormat dateFormat =
@@ -205,12 +209,19 @@ public class CameraCaptureActivity extends Activity
 
         // Configure the GLSurfaceView.  This will start the Renderer thread, with an
         // appropriate EGL context.
-        mGLView = (GLSurfaceView) findViewById(R.id.cameraPreview_surfaceView);
+        mGLView = (SampleGLView) findViewById(R.id.cameraPreview_surfaceView);
         mGLView.setEGLContextClientVersion(2);     // select GLES 2.0
         mRenderer = new CameraSurfaceRenderer(
                 mCameraHandler, sVideoEncoder);
         mGLView.setRenderer(mRenderer);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mGLView.setTouchListener((event, width, height) -> {
+            if (mCameraHandler != null) {
+                mCameraHandler.changeManualFocusPoint(
+                        event.getX(), event.getY(), width, height);
+            }
+        });
+
         mImuManager = new IMUManager(this);
         mCaptureResultText = (TextView) findViewById(R.id.captureResult_text);
         Log.d(TAG, "onCreate complete: " + this);
@@ -235,6 +246,8 @@ public class CameraCaptureActivity extends Activity
     protected void onResume() {
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
+        Log.d(TAG, "Keeping screen on for previewing recording.");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         updateControls();
 
         if (PermissionHelper.hasCameraPermission(this)) {
@@ -460,6 +473,12 @@ public class CameraCaptureActivity extends Activity
      */
     static class CameraHandler extends Handler {
         public static final int MSG_SET_SURFACE_TEXTURE = 0;
+        public static final int MSG_MANUAL_FOCUS = 1;
+
+        private int viewWidth = 0;
+        private int viewHeight = 0;
+        private float eventX = 0;
+        private float eventY = 0;
 
         // Weak reference to the Activity; only access this from the UI thread.
         private WeakReference<CameraCaptureActivity> mWeakActivity;
@@ -476,6 +495,15 @@ public class CameraCaptureActivity extends Activity
             mWeakActivity.clear();
         }
 
+        void changeManualFocusPoint(float eventX, float eventY, int viewWidth, int viewHeight) {
+            this.viewWidth = viewWidth;
+            this.viewHeight = viewHeight;
+            this.eventX = eventX;
+            this.eventY = eventY;
+            Log.d(TAG, "manual focus " + eventX + " " + eventY + " " + viewWidth + " " + viewHeight);
+            sendMessage(obtainMessage(MSG_MANUAL_FOCUS));
+        }
+
         @Override  // runs on UI thread
         public void handleMessage(Message inputMessage) {
             int what = inputMessage.what;
@@ -490,6 +518,15 @@ public class CameraCaptureActivity extends Activity
             switch (what) {
                 case MSG_SET_SURFACE_TEXTURE:
                     activity.handleSetSurfaceTexture((SurfaceTexture) inputMessage.obj);
+                    break;
+                case MSG_MANUAL_FOCUS:
+                    Camera2Proxy camera2proxy = activity.getmCamera2Proxy();
+                    if (camera2proxy != null) {
+                        // TODO(jhuai): analyze the mechanism behind lock AF upon touch,
+                        // make sure it won't cause sync issues with other Camera2Proxy methods
+                        camera2proxy.changeManualFocusPoint(
+                                eventX, eventY, viewWidth, viewHeight);
+                    }
                     break;
                 default:
                     throw new RuntimeException("unknown msg " + what);

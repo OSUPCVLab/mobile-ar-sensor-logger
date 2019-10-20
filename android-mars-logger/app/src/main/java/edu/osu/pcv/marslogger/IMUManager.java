@@ -51,7 +51,7 @@ public class IMUManager implements SensorEventListener {
     private Deque<SensorPacket> mGyroData = new ArrayDeque<>();
     private Deque<SensorPacket> mAccelData = new ArrayDeque<>();
 
-    IMUManager(Activity activity) {
+    public IMUManager(Activity activity) {
         mSensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
