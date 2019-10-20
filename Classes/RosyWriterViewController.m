@@ -114,7 +114,8 @@
     _captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     // [self.preview.layer addSublayer:_captureVideoPreviewLayer];
     
-    // regardless captureVideoPreviewLayer is addSublayer to preview.layer, it's observed that self.preview.frame.size == captureVideoPreviewLayer.frame.size
+    // whether preview.layer addSublayer captureVideoPreviewLayer or not,
+    // it's observed that self.preview.frame.size == captureVideoPreviewLayer.frame.size
     NSLog(@"previewlayer frame size %.3f %.3f super preview size %.3f %.3f", _captureVideoPreviewLayer.frame.size.width, _captureVideoPreviewLayer.frame.size.height,
           self.preview.frame.size.width, self.preview.frame.size.height);
     
@@ -125,7 +126,7 @@
         self.videoCaptureDevice = [self cameraWithPosition:devicePosition];
     }
     
-    // reference: https://stackoverflow.com/questions/11355671/how-do-i-implement-the-uitapgesturerecognizer-into-my-application
+    // see https://stackoverflow.com/questions/11355671/how-do-i-implement-the-uitapgesturerecognizer-into-my-application
     // tap to lock auto focus and auto exposure
     _tapToFocus = YES;
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapFrom:)];
@@ -158,10 +159,8 @@
 - (void)showFocusBox:(CGPoint)point
 {
     if(self.focusBoxLayer) {
-        // clear animations
         [self.focusBoxLayer removeAllAnimations];
         
-        // move layer to the touch point
         [CATransaction begin];
         [CATransaction setValue: (id) kCFBooleanTrue forKey: kCATransactionDisableActions];
         self.focusBoxLayer.position = point;
@@ -169,7 +168,6 @@
     }
     
     if(self.focusBoxAnimation) {
-        // run the animation
         [self.focusBoxLayer addAnimation:self.focusBoxAnimation forKey:@"animateOpacity"];
     }
 }
@@ -326,8 +324,8 @@
 
 - (IBAction)exportButtonPressed:(id)sender {
     
-    NSURL * videoMetadataFile = _capturePipeline.metadataFileURL;
-    NSURL * inertialDataFile = [_capturePipeline getInertialFileURL];
+    NSURL *videoMetadataFile = _capturePipeline.metadataFileURL;
+    NSURL *inertialDataFile = [_capturePipeline getInertialFileURL];
     
     if ( videoMetadataFile == nil || inertialDataFile == nil) {
         NSLog(@"Video metadata file is %@ and inertial data file %@, so no export will be done!", videoMetadataFile, inertialDataFile);
@@ -350,7 +348,7 @@
                              "The associated video was the most recent one found with "
                              "the Photos App at the time of sending this email.", outputBasename];
         [mailVC setMessageBody:message isHTML:NO];
-        [mailVC setToRecipients:@[@"jianzhuhuai0108@gmail.com"]]; // Set a test email recipient here if you want.
+//        [mailVC setToRecipients:@[@"recipient@gmail.com"]];
         NSData *metaData = [NSData dataWithContentsOfURL:videoMetadataFile];
        
         NSString *videoBasename = [videoMetadataFile lastPathComponent];
