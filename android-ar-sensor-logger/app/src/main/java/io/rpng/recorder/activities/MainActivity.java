@@ -28,6 +28,7 @@ import io.rpng.recorder.R;
 import io.rpng.recorder.managers.CameraManager;
 import io.rpng.recorder.managers.GPSManager;
 import io.rpng.recorder.managers.IMUManager;
+import io.rpng.recorder.managers.TimeBaseManager;
 import io.rpng.recorder.utils.FileHelper;
 import io.rpng.recorder.utils.ImageSaver;
 import io.rpng.recorder.views.AutoFitTextureView;
@@ -60,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private static String folder_name;
 
     private String mTimeBaseAbsPath;
+    private TimeBaseManager mTimeBaseManager;
 
-    private BufferedWriter mTimeBaseWriter;
     public static FileHelper mFileHelper;
 
     private Long mLastFrameTimeNs;
@@ -105,7 +106,8 @@ public class MainActivity extends AppCompatActivity {
         folder_name = "";
         is_recording = false;
 
-        mTimeBaseWriter = null;
+        mTimeBaseManager = new TimeBaseManager();
+
         mFrameRate = 15.0f;
         mLastFrameTimeNs = null;
         // Lets by default launch into the settings view
@@ -130,22 +132,10 @@ public class MainActivity extends AppCompatActivity {
                     Button button_record = (Button) findViewById(R.id.button_record);
                     button_record.setText(R.string.stop_record);
 
-
                     mFileHelper = new FileHelper(folder_name);
                     mTimeBaseAbsPath = mFileHelper.getTimeBaseAbsPath();
-                    mTimeBaseWriter = FileHelper.createBufferedWriter(mTimeBaseAbsPath);
 
-                    long sysElapsedNs = SystemClock.elapsedRealtimeNanos();
-                    long sysNs = System.nanoTime();
-                    try {
-                        // mTimeBaseHint is initialized in openCamera
-                        mTimeBaseWriter.write(mCameraManager.mTimeBaseHint + "\n");
-                        mTimeBaseWriter.write("#elapsedRealtimeNanos nanoTime\n");
-                        mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
-
-                    } catch (IOException ioe) {
-                        System.err.println("IOException: " + ioe.getMessage());
-                    }
+                    mTimeBaseManager.startRecording(mTimeBaseAbsPath, mCameraManager.mTimeSourceValue);
 
                     mCameraManager.prepareInfoWriter();
                     // Trigger the recording by changing the recording boolean
@@ -162,15 +152,7 @@ public class MainActivity extends AppCompatActivity {
                     // Start the result activity
                     //startActivityForResult(intentResults, RESULT_RESULT);
 
-                    long sysElapsedNs = SystemClock.elapsedRealtimeNanos();
-                    long sysNs = System.nanoTime();
-                    try {
-                        mTimeBaseWriter.write(sysElapsedNs + " " + sysNs + "\n");
-                    } catch (IOException ioe) {
-                        System.err.println("IOException: " + ioe.getMessage());
-                    }
-                    FileHelper.closeBufferedWriter(mTimeBaseWriter);
-                    mTimeBaseWriter = null;
+                    mTimeBaseManager.stopRecording();
                     mTimeBaseAbsPath = null;
 
                     mCameraManager.invalidateInfoWriter();

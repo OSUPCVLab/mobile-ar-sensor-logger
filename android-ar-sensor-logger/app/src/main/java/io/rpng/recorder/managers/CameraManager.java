@@ -75,7 +75,7 @@ public class CameraManager {
     private float[] distortion = new float[4];
     private FocalLengthHelper mFocalLengthHelper;
 
-    public volatile String mTimeBaseHint;
+    public volatile Integer mTimeSourceValue;
     private BufferedWriter mCameraInfoWriter;
     private String mCameraInfoAbsPath;
 
@@ -169,28 +169,6 @@ public class CameraManager {
                     " k6 " + distort[5]);
     }
 
-
-    private String getTimestampSource(CameraCharacteristics cc) {
-        Integer value = cc.get(CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE);
-        String warn_msg = "The camera timestamp source is unreliable to synchronize with motion sensors";
-        if (value != null) {
-            if (value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_UNKNOWN) {
-                String src_type = "unknown";
-                Log.d(TAG, warn_msg + src_type);
-                return src_type;
-            } else if (value.intValue() == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME) {
-                return "realtime";
-            } else {
-                String src_type = "unknown (" + value.intValue() + ")";
-                Log.d(TAG, warn_msg + src_type);
-                return src_type;
-            }
-        }
-        String src_type = "unknown";
-        Log.d(TAG, warn_msg + src_type);
-        return src_type;
-    }
-
     public void prepareInfoWriter() {
         mCameraInfoAbsPath = MainActivity.mFileHelper.getCameraInfoAbsPath();
         mCameraInfoWriter = FileHelper.createBufferedWriter(mCameraInfoAbsPath);
@@ -252,20 +230,7 @@ public class CameraManager {
 
             mFocalLengthHelper.setLensParams(characteristics);
 
-            String time_src = getTimestampSource(characteristics);
-            String hint = "#The CameraCharacteristics.SENSOR_INFO_" +
-                    "TIMESTAMP_SOURCE is " + time_src + "\n" +
-                    "#If SENSOR_INFO_TIMESTAMP_SOURCE is not realtime," +
-                    " the camera CaptureResult.SENSOR_TIMESTAMP is " +
-                    "assumed to be on the base of nanoTime() and " +
-                    "SensorEvent.timestamp on the" +
-                    " base of elapsedRealtimeNanos().\n" +
-                    "#For syncing the camera frame timestamps to " +
-                    "the inertial sensors, we record the timestamps" +
-                    " from the two time basis at the start and the end" +
-                    " of a recording session.";
-            mTimeBaseHint = hint;
-            Log.d(TAG, hint);
+            mTimeSourceValue = characteristics.get(CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE);
 
             int orientation = activity.getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
