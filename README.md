@@ -66,7 +66,7 @@ If you use the MARS logger for your research, please consider citing the paper.
 @INPROCEEDINGS{huai2019mars, 
 author={Jianzhu {Huai} and Yujia {Zhang} and Alper {Yilmaz}}, 
 booktitle={2019 IEEE SENSORS}, 
-title={The Mobile AR Sensor Logger for Android and iOS Devices}, 
+title={The mobile AR sensor logger for Android and iOS devices}, 
 year={2019}, 
 volume={}, 
 number={}, 
