@@ -31,6 +31,7 @@ import edu.osu.pcv.marslogger.gles.EglCore;
 import edu.osu.pcv.marslogger.gles.FullFrameRect;
 import edu.osu.pcv.marslogger.gles.Texture2dProgram;
 import edu.osu.pcv.marslogger.gles.WindowSurface;
+import timber.log.Timber;
 
 /**
  * Encode a movie from frames rendered from an external texture image.
@@ -130,10 +131,10 @@ public class TextureMovieEncoder implements Runnable {
      * encoder may not yet be fully configured.
      */
     public void startRecording(EncoderConfig config) {
-        Log.d(TAG, "Encoder: startRecording()");
+        Timber.d("Encoder: startRecording()");
         synchronized (mReadyFence) {
             if (mRunning) {
-                Log.w(TAG, "Encoder thread already running");
+                Timber.w("Encoder thread already running");
                 return;
             }
             mRunning = true;
@@ -210,7 +211,7 @@ public class TextureMovieEncoder implements Runnable {
             //
             // MPEG4Writer thinks this is cause to abort() in native code, so it's very
             // important that we just ignore the frame.
-            Log.w(TAG, "HEY: got SurfaceTexture with timestamp of zero");
+            Timber.w("HEY: got SurfaceTexture with timestamp of zero");
             return;
         }
 
@@ -250,7 +251,7 @@ public class TextureMovieEncoder implements Runnable {
         }
         Looper.loop();
 
-        Log.d(TAG, "Encoder thread exiting");
+        Timber.d("Encoder thread exiting");
         synchronized (mReadyFence) {
             mReady = mRunning = false;
             mHandler = null;
@@ -275,7 +276,7 @@ public class TextureMovieEncoder implements Runnable {
 
             TextureMovieEncoder encoder = mWeakEncoder.get();
             if (encoder == null) {
-                Log.w(TAG, "EncoderHandler.handleMessage: encoder is null");
+                Timber.w("EncoderHandler.handleMessage: encoder is null");
                 return;
             }
 
@@ -310,7 +311,7 @@ public class TextureMovieEncoder implements Runnable {
      * Starts recording.
      */
     private void handleStartRecording(EncoderConfig config) {
-        Log.d(TAG, "handleStartRecording " + config);
+        Timber.d("handleStartRecording %s", config.toString());
         mFrameNum = 0;
         prepareEncoder(config.mEglContext, config.mWidth, config.mHeight, config.mBitRate,
                 config.mOutputFile, config.mMetadataFile);
@@ -327,7 +328,7 @@ public class TextureMovieEncoder implements Runnable {
      * @param timestampNanos The frame's timestamp, from SurfaceTexture.
      */
     private void handleFrameAvailable(float[] transform, long timestampNanos) {
-        if (VERBOSE) Log.d(TAG, "handleFrameAvailable tr=" + transform);
+        if (VERBOSE) Timber.d("handleFrameAvailable tr=%f", transform);
         mVideoEncoder.drainEncoder(false);
         mFullScreen.drawFrame(mTextureId, transform);
 
@@ -348,7 +349,7 @@ public class TextureMovieEncoder implements Runnable {
      * Handles a request to stop encoding.
      */
     private void handleStopRecording() {
-        Log.d(TAG, "handleStopRecording");
+        Timber.d("handleStopRecording");
         mVideoEncoder.drainEncoder(true);
         releaseEncoder();
     }
@@ -357,7 +358,7 @@ public class TextureMovieEncoder implements Runnable {
      * Sets the texture name that SurfaceTexture will use when frames are received.
      */
     private void handleSetTexture(int id) {
-        //Log.d(TAG, "handleSetTexture " + id);
+        //Timber.d("handleSetTexture %d", id);
         mTextureId = id;
     }
 
@@ -369,7 +370,7 @@ public class TextureMovieEncoder implements Runnable {
      * that got torn down) and we need to hook up with the new one.
      */
     private void handleUpdateSharedContext(EGLContext newSharedContext) {
-        Log.d(TAG, "handleUpdatedSharedContext " + newSharedContext);
+        Timber.d("handleUpdatedSharedContext %s", newSharedContext.toString());
 
         // Release the EGLSurface and EGLContext.
         mInputWindowSurface.releaseEglSurface();

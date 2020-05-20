@@ -18,6 +18,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
 
+import timber.log.Timber;
+
 public class IMUManager implements SensorEventListener {
     private static final String TAG = "IMUManager";
     // if the accelerometer data has a timestamp within the
@@ -61,14 +63,21 @@ public class IMUManager implements SensorEventListener {
         try {
             mDataWriter = new BufferedWriter(
                     new FileWriter(captureResultFile, false));
-            String header = "Timestamp[nanosec], gx[rad/s], gy[rad/s], gz[rad/s]," +
-                    " ax[m/s^2], ay[m/s^2], az[m/s^2]\n";
-
-            mDataWriter.write(header);
+            if (mGyro == null || mAccel == null) {
+                String warning = "The device may not have a gyroscope or an accelerometer!\n" +
+                        "No IMU data will be logged.\n" +
+                        "Has Gyroscope? " + (mGyro == null ? "No":"Yes") + "\n"
+                        + "Has Accelerometer? " + (mAccel == null ? "No":"Yes") + "\n";
+                mDataWriter.write(warning);
+            } else {
+                String header = "Timestamp[nanosec], gx[rad/s], gy[rad/s], gz[rad/s]," +
+                        " ax[m/s^2], ay[m/s^2], az[m/s^2]\n";
+                mDataWriter.write(header);
+            }
             mRecordingInertialData = true;
         } catch (IOException err) {
-            System.err.println("IOException in opening inertial data writer at "
-                    + captureResultFile + ": " + err.getMessage());
+            Timber.e(err,"IOException in opening inertial data writer at %s",
+                    captureResultFile);
         }
     }
 
@@ -79,8 +88,7 @@ public class IMUManager implements SensorEventListener {
                 mDataWriter.flush();
                 mDataWriter.close();
             } catch (IOException err) {
-                System.err.println(
-                        "IOException in closing inertial data writer: " + err.getMessage());
+                Timber.e(err, "IOException in closing inertial data writer");
             }
             mDataWriter = null;
         }
@@ -104,10 +112,10 @@ public class IMUManager implements SensorEventListener {
             SensorPacket oldestAccel = mAccelData.peekFirst();
             SensorPacket latestAccel = mAccelData.peekLast();
             if (oldestGyro.timestamp < oldestAccel.timestamp) {
-                Log.w(TAG, "throwing one gyro data");
+                Timber.w("throwing one gyro data");
                 mGyroData.removeFirst();
             } else if (oldestGyro.timestamp > latestAccel.timestamp) {
-                Log.w(TAG, "throwing #accel data " + (mAccelData.size() - 1));
+                Timber.w("throwing #accel data %d", mAccelData.size() - 1);
                 mAccelData.clear();
                 mAccelData.add(latestAccel);
             } else { // linearly interpolate the accel data at the gyro timestamp
@@ -187,7 +195,7 @@ public class IMUManager implements SensorEventListener {
                 try {
                     mDataWriter.write(sb.toString() + "\n");
                 } catch (IOException ioe) {
-                    System.err.println("IOException: " + ioe.getMessage());
+                    Timber.e(ioe);
                 }
             }
         }

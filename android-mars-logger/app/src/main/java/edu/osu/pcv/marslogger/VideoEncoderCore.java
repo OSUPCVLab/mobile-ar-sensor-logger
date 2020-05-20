@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import timber.log.Timber;
+
 /**
  * This class wraps up the core components used for surface-input video encoding.
  * <p>
@@ -51,11 +53,13 @@ public class VideoEncoderCore {
     private Surface mInputSurface;
     private MediaMuxer mMuxer;
     private MediaCodec mEncoder;
+    private boolean mEncoderInExecutingState = false;
     private MediaCodec.BufferInfo mBufferInfo;
     private int mTrackIndex;
     private boolean mMuxerStarted;
     private BufferedWriter mFrameMetadataWriter = null;
     private ArrayList<Long> mTimeArray = null;
+    final int TIMEOUT_USEC = 10000;
 
     /**
      * Configures encoder and muxer state, and prepares the input Surface.
@@ -74,7 +78,7 @@ public class VideoEncoderCore {
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
         format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, IFRAME_INTERVAL);
-        if (VERBOSE) Log.d(TAG, "format: " + format);
+        if (VERBOSE) Timber.d("format: %s", format.toString());
 
         // Create a MediaCodec encoder, and configure it with our format.  Get a Surface
         // we can use for input and wrap it with a class that handles the EGL work.
@@ -82,6 +86,15 @@ public class VideoEncoderCore {
         mEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         mInputSurface = mEncoder.createInputSurface();
         mEncoder.start();
+
+        try {
+            mEncoder.dequeueOutputBuffer(mBufferInfo, TIMEOUT_USEC);
+            mEncoderInExecutingState = true;
+        } catch (IllegalStateException ise) {
+            // This exception occurs with certain devices e.g., Nexus 9 API 22.
+            Timber.e(ise);
+            mEncoderInExecutingState = false;
+        }
 
         // Create a MediaMuxer.  We can't add the video track and start() the muxer here,
         // because our MediaFormat doesn't have the Magic Goodies.  These can only be
@@ -99,7 +112,7 @@ public class VideoEncoderCore {
             mFrameMetadataWriter = new BufferedWriter(
                     new FileWriter(metaFile, false));
         } catch (IOException err) {
-            System.err.println("IOException in opening frameMetadataWriter: " + err.getMessage());
+            Timber.e(err, "IOException in opening frameMetadataWriter.");
         }
         mTimeArray = new ArrayList<>();
     }
@@ -115,7 +128,7 @@ public class VideoEncoderCore {
      * Releases encoder resources.
      */
     public void release() {
-        if (VERBOSE) Log.d(TAG, "releasing encoder objects");
+        if (VERBOSE) Timber.d("releasing encoder objects");
         if (mEncoder != null) {
             mEncoder.stop();
             mEncoder.release();
@@ -137,7 +150,7 @@ public class VideoEncoderCore {
                 mFrameMetadataWriter.flush();
                 mFrameMetadataWriter.close();
             } catch (IOException err) {
-                System.err.println("IOException in closing frameMetadataWriter: " + err.getMessage());
+                Timber.e(err, "IOException in closing frameMetadataWriter.");
             }
             mFrameMetadataWriter = null;
         }
@@ -154,45 +167,41 @@ public class VideoEncoderCore {
      * not recording audio.
      */
     public void drainEncoder(boolean endOfStream) {
-        final int TIMEOUT_USEC = 10000;
-        if (VERBOSE) Log.d(TAG, "drainEncoder(" + endOfStream + ")");
+        if (VERBOSE) Timber.d("drainEncoder(%b)", endOfStream);
 
         if (endOfStream) {
-            if (VERBOSE) Log.d(TAG, "sending EOS to encoder");
+            if (VERBOSE) Timber.d("sending EOS to encoder");
             mEncoder.signalEndOfInputStream();
         }
 
-        ByteBuffer[] encoderOutputBuffers = mEncoder.getOutputBuffers();
-        while (true) {
+        while (mEncoderInExecutingState) {
             int encoderStatus = mEncoder.dequeueOutputBuffer(mBufferInfo, TIMEOUT_USEC);
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 // no output available yet
                 if (!endOfStream) {
                     break;      // out of while
                 } else {
-                    if (VERBOSE) Log.d(TAG, "no output available, spinning to await EOS");
+                    if (VERBOSE) Timber.d("no output available, spinning to await EOS");
                 }
-            } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
-                // not expected for an encoder
-                encoderOutputBuffers = mEncoder.getOutputBuffers();
             } else if (encoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 // should happen before receiving buffers, and should only happen once
                 if (mMuxerStarted) {
                     throw new RuntimeException("format changed twice");
                 }
                 MediaFormat newFormat = mEncoder.getOutputFormat();
-                Log.d(TAG, "encoder output format changed: " + newFormat);
+                Timber.d("encoder output format changed: %s", newFormat.toString());
 
                 // now that we have the Magic Goodies, start the muxer
                 mTrackIndex = mMuxer.addTrack(newFormat);
                 mMuxer.start();
                 mMuxerStarted = true;
             } else if (encoderStatus < 0) {
-                Log.w(TAG, "unexpected result from encoder.dequeueOutputBuffer: " +
-                        encoderStatus);
+                Timber.w("unexpected result from encoder.dequeueOutputBuffer: %d", encoderStatus);
                 // let's ignore it
             } else {
-                ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
+                ByteBuffer encodedData = mEncoder.getOutputBuffer(encoderStatus);
+//                MediaFormat bufferFormat = mEncoder.getOutputFormat(encoderStatus);
+                // bufferFormat is identical to newFormat
                 if (encodedData == null) {
                     throw new RuntimeException("encoderOutputBuffer " + encoderStatus +
                             " was null");
@@ -201,7 +210,7 @@ public class VideoEncoderCore {
                 if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
                     // The codec config data was pulled out and fed to the muxer when we got
                     // the INFO_OUTPUT_FORMAT_CHANGED status.  Ignore it.
-                    if (VERBOSE) Log.d(TAG, "ignoring BUFFER_FLAG_CODEC_CONFIG");
+                    if (VERBOSE) Timber.d("ignoring BUFFER_FLAG_CODEC_CONFIG");
                     mBufferInfo.size = 0;
                 }
 
@@ -216,8 +225,8 @@ public class VideoEncoderCore {
                     mTimeArray.add(mBufferInfo.presentationTimeUs);
                     mMuxer.writeSampleData(mTrackIndex, encodedData, mBufferInfo);
                     if (VERBOSE) {
-                        Log.d(TAG, "sent " + mBufferInfo.size + " bytes to muxer, ts=" +
-                                mBufferInfo.presentationTimeUs);
+                        Timber.d("sent %d bytes to muxer, ts=%d",
+                                mBufferInfo.size, mBufferInfo.presentationTimeUs);
                     }
                 }
 
@@ -225,9 +234,9 @@ public class VideoEncoderCore {
 
                 if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                     if (!endOfStream) {
-                        Log.w(TAG, "reached end of stream unexpectedly");
+                        Timber.w("reached end of stream unexpectedly");
                     } else {
-                        if (VERBOSE) Log.d(TAG, "end of stream reached");
+                        if (VERBOSE) Timber.d("end of stream reached");
                     }
                     break;      // out of while
                 }

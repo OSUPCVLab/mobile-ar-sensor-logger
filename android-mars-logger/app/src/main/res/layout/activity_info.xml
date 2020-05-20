@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    tools:context=".InfoActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:scrollbars="vertical"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:isScrollContainer="true"
+            android:orientation="vertical"
+            android:padding="15dp"
+            android:scrollbars="vertical" >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="MarsLogger is developed by Jianzhu Huai for efficiently
+recording synced camera and IMU data on a mobile device."
+                android:id="@+id/forewordTextView"
+                android:layout_gravity="center_horizontal"
+                android:textIsSelectable="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/linkTextView"
+                android:layout_gravity="center_horizontal"
+                android:textIsSelectable="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/link_foreword"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/epilogueTextView"
+                android:layout_gravity="center_horizontal"
+                android:textIsSelectable="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="
+All data sessions are saved in '/Android/data/edu.osu.pcv.marslogger/files/data/'
+on the SD card.
+Each data session in a folder named after the local time at the start of recording has five files.\n
+1. movie.mp4: Camera frames of size 720x1280 at ~30Hz.\n
+2. frame_timestamps.txt: timestamp for each frame.\n
+3. movie_metadata.csv: metadata including focal distance, focal length in pixels, etc.\n
+4. gyro_accel.csv: IMU data.\n
+5. edge_epochs.txt: timestamps at the start and end of recording.\n
+\n\n"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Do you find this application useful?\nSupport its development by sending a donation to the developer!"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <ViewStub
+                android:id="@+id/donations__paypal_stub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inflatedId="@+id/donations__paypal"
+                android:layout="@layout/donations__fragment_paypal" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/LinearLayout02"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+        <Button
+            android:id="@+id/button_done"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginBottom="-5dp"
+            android:layout_marginLeft="-4dp"
+            android:layout_marginRight="-4dp"
+            android:text="Done">
+        </Button>
+    </LinearLayout>
+</LinearLayout>

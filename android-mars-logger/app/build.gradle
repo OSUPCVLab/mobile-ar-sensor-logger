@@ -1,10 +1,27 @@
 apply plugin: 'com.android.application'
+// Display Xlint warnings. More info is at
+// https://stackoverflow.com/questions/27274526/how-to-add-java-compiler-options-when-compiling-with-android-gradle-plugin/27274527
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+}
 
 android {
+    signingConfigs {
+        release {
+            Properties properties = new Properties()
+            properties.load(project.rootProject.file('local.properties').newDataInputStream())
+            storeFile file(properties.getProperty('storeFile'))
+            keyAlias properties.getProperty('keyAlias')
+            storePassword properties.getProperty('storePassword')
+            keyPassword properties.getProperty('keyPassword')
+        }
+    }
     compileSdkVersion 28
     defaultConfig {
         applicationId "edu.osu.pcv.marslogger"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -14,16 +31,34 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    flavorDimensions("freedom")
+    productFlavors {
+        google {
+            dimension "freedom"
+            buildConfigField "boolean", "DONATIONS_GOOGLE", "true"
+        }
+        fdroid {
+            dimension "freedom"
+            buildConfigField "boolean", "DONATIONS_GOOGLE", "false"
+        }
+    }
 }
 
 dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

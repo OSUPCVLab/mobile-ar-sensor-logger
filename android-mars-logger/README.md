@@ -12,3 +12,4 @@ calling "./gradlew check" from the project dir
 * Add [git hooks](https://github.com/harliedharma/android-git-hooks) for the Android project. 
 * Test the Android app on a physical Android device with API 21, 
 to make sure the program runs OK even if the advanced features in API 23 are not available.
+* Long press to unlock focal length and exposure duration.

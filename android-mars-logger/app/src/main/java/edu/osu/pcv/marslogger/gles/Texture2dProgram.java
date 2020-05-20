@@ -22,6 +22,8 @@ import android.util.Log;
 
 import java.nio.FloatBuffer;
 
+import timber.log.Timber;
+
 /**
  * GL program and supporting functions for textured 2D shapes.
  */
@@ -161,7 +163,7 @@ public class Texture2dProgram {
         if (mProgramHandle == 0) {
             throw new RuntimeException("Unable to create program");
         }
-        Log.d(TAG, "Created program " + mProgramHandle + " (" + programType + ")");
+        Timber.d("Created program %d (%s)", mProgramHandle, programType.toString());
 
         // get locations of attributes and uniforms
 
@@ -199,7 +201,7 @@ public class Texture2dProgram {
      * the program).
      */
     public void release() {
-        Log.d(TAG, "deleting program " + mProgramHandle);
+        Timber.d("deleting program %d", mProgramHandle);
         GLES20.glDeleteProgram(mProgramHandle);
         mProgramHandle = -1;
     }
@@ -250,7 +252,7 @@ public class Texture2dProgram {
         }
         System.arraycopy(values, 0, mKernel, 0, KERNEL_SIZE);
         mColorAdjust = colorAdj;
-        //Log.d(TAG, "filt kernel: " + Arrays.toString(mKernel) + ", adj=" + colorAdj);
+        // Timber.d("filt kernel: %s, adj=%f", Arrays.toString(mKernel), colorAdj);
     }
 
     /**
@@ -266,7 +268,7 @@ public class Texture2dProgram {
             -rw, 0f,    0f, 0f,     rw, 0f,
             -rw, rh,    0f, rh,     rw, rh
         };
-        //Log.d(TAG, "filt size: " + width + "x" + height + ": " + Arrays.toString(mTexOffset));
+        // Timber.d("filt size: %dx%d: %s", width, height, Arrays.toString(mTexOffset));
     }
 
     /**

@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import timber.log.Timber;
+
 /**
  * Common base class for EGL surfaces.
  * <p>
@@ -135,7 +137,7 @@ public class EglSurfaceBase {
     public boolean swapBuffers() {
         boolean result = mEglCore.swapBuffers(mEGLSurface);
         if (!result) {
-            Log.d(TAG, "WARNING: swapBuffers() failed");
+            Timber.d("WARNING: swapBuffers() failed");
         }
         return result;
     }
@@ -192,6 +194,6 @@ public class EglSurfaceBase {
         } finally {
             if (bos != null) bos.close();
         }
-        Log.d(TAG, "Saved " + width + "x" + height + " frame as '" + filename + "'");
+        Timber.d("Saved %dx%d frame as '%s'", width, height, filename);
     }
 }
