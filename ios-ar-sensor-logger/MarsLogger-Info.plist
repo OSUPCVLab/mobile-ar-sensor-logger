@@ -2,6 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>video-camera</string>
+		<string>accelerometer</string>
+		<string>gyroscope</string>
+	</array>
+	<key>UIRequiresFullScreen</key>
+	<true/>
+	<key>UIRequiresFullScreen~ipad</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -17,30 +27,30 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.2</string>
+	<string>1.0.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>2.2</string>
+	<string>1.0.0</string>
 	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string></string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Save Video to the Photos Album</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string></string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save Video to the Photos Album</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string></string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIStatusBarHidden</key>
-	<true/>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>

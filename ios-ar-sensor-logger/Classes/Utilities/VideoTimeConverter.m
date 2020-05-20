@@ -59,6 +59,13 @@ const int32_t kSecToNanos = 1000000000;
     CFRelease(remappedPTSDict);
 }
 
+- (CMTime)movieTimeForLocationTime:(NSDate *)date
+{
+    CMTime locationTime = CMTimeForNSDate(date);
+    CMTime locationMovieTime = CMSyncConvertTime(locationTime, CMClockGetHostTimeClock(), self.sampleBufferClock);
+    return locationMovieTime;
+}
+
 @end
 
 CMTime getAttachmentTime(CMSampleBufferRef mediaSample)
@@ -83,4 +90,19 @@ NSString *secDoubleToNanoString(double time) {
     double fractional = modf(time, &integral);
     fractional *= kSecToNanos;
     return [NSString stringWithFormat:@"%.0f%09.0f", integral, fractional];
+}
+
+CMTime CMTimeForNSDate(NSDate *date) {
+    CMTime now = CMClockGetTime(CMClockGetHostTimeClock());
+    NSTimeInterval elapsed = -(date.timeIntervalSinceNow); // this will be a negative number if date was in the past (it should be).
+    CMTime eventTime = CMTimeSubtract(now, CMTimeMake(elapsed * now.timescale, now.timescale));
+    return eventTime;
+}
+
+NSString *NSDateToString(NSDate *date) {
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy_MM_dd_HH_mm_ss.SSS"];
+    //Optionally for time zone conversions
+//    [formatter setTimeZone:[NSTimeZone timeZoneWithName:@"..."]];
+    return [dateFormatter stringFromDate:date];
 }
