@@ -2,6 +2,11 @@
 
 record camera frames at ~30Hz and inertial measurement unit (IMU) measurements at ~100Hz synced to one clock source on Android (API 21+) and iOS (SDK 8.0+) mobile devices.
 
+**New feature**
+An Android app to capture data with the fisheye camera and the IMU on tango devices, 
+e.g., Lenovo Phab2 Pro, Asus ZenFone AR, has been released at 
+[here](https://github.com/JzHuai0108/tango-examples-c/releases/).
+
 # Description
 
 ## Android
@@ -61,7 +66,7 @@ The installation, data format, recording and exporting data are explained in the
 
 # Citing
 
-If you use the MARS logger for your research, please consider citing the paper.
+If you use the logger for your research, please consider citing the paper.
 ```
 @INPROCEEDINGS{huai2019mars, 
 author={Jianzhu {Huai} and Yujia {Zhang} and Alper {Yilmaz}}, 
