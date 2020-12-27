@@ -2,9 +2,17 @@
 
 record camera frames at ~30Hz and inertial measurement unit (IMU) measurements at ~100Hz synced to one clock source on Android (API 21+) and iOS (SDK 8.0+) mobile devices.
 
-**New feature**
+**New features**
+
+The Android app of MARS logger is upgraded in the user interface.
+Now the user can specify the exposure time, ISO, camera frame size, camera ID.
+By navigating between tabs, the user can capture videos + IMU data, 
+or capture images of a constant focus distance.
+Also the tap to focus function is straightened with the state pattern.
+The app is released at [here](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/releases)
+
 An Android app to capture data with the fisheye camera and the IMU on tango devices, 
-e.g., Lenovo Phab2 Pro, Asus ZenFone AR, has been released at 
+e.g., Lenovo Phab2 Pro, Asus ZenFone AR, has been released with source code at 
 [here](https://github.com/JzHuai0108/tango-examples-c/releases/).
 
 # Description
