@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="Camera Settings" >
+<!--        https://v4all123.blogspot.com/2017/10/simple-switchpreference-example-in.html-->
+        <SwitchPreference
+            android:key="switchManualControl"
+            android:summaryOff="Off"
+            android:summaryOn="On"
+            android:title="Manually Control ISO and Exposure" />
+
+<!--        <ListPreference-->
+<!--            android:key="prefFocusDistance"-->
+<!--            android:title="Adjust Focus Distances"-->
+<!--            android:summary="Lock the focus distance (mm) before tap to focus" />-->
+
+        <EditTextPreference
+            android:key="prefISO"
+            android:title="Adjust ISO"
+            android:summary="Lock ISO to a custom value"
+            android:dialogTitle="Adjust ISO" />
+
+        <EditTextPreference
+            android:key="prefExposureTime"
+            android:title="Adjust Exposure Time"
+            android:summary="Lock exposure time to a custom value"
+            android:dialogTitle="Adjust exposure time" />
+
+        <ListPreference
+            android:key="prefCamera"
+            android:title="Live Camera"
+            android:summary="Choose what camera to use" />
+
+        <ListPreference
+            android:key="prefSizeRaw"
+            android:title="Frame Size"
+            android:summary="Set the incoming image size" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="IMU Settings" >
+
+        <ListPreference
+            android:key="prefImuFreq"
+            android:title="IMU Frequency"
+            android:summary="Frequency the IMU is sampled at"
+            android:entries="@array/imuFreq"
+            android:entryValues="@array/imuFreqValues"
+            android:defaultValue="1" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

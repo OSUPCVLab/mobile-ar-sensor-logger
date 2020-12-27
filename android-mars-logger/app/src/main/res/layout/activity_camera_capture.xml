@@ -41,71 +41,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:layout_marginStart="@dimen/activity_horizontal_margin"/>
-
-        <ImageButton
-            android:id="@+id/info_button"
-            android:layout_width="@dimen/button_height"
-            android:layout_height="@dimen/button_height"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/activity_horizontal_margin"
-            android:layout_marginEnd="@dimen/activity_horizontal_margin"
-            android:background="@drawable/icons8_info_256"
-            android:onClick="clickInfo"/>
     </LinearLayout>
 
-    <edu.osu.pcv.marslogger.AspectFrameLayout
-        android:id="@+id/cameraPreview_afl"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="4dp"
-        android:layout_below="@id/LinearLayoutHeader"
-        android:layout_centerInParent="true">
-
-        <edu.osu.pcv.marslogger.SampleGLView
-            android:id="@+id/cameraPreview_surfaceView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center" />
-    </edu.osu.pcv.marslogger.AspectFrameLayout>
-
-    <!-- these overlap with the SurfaceView; by default, it's underneath the UI layer -->
-
-    <TextView
-        android:id="@+id/cameraParams_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/LinearLayoutHeader"
-        android:layout_alignStart="@id/cameraPreview_afl"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:text="[?]"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/captureResult_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@id/cameraParams_text"
-        android:layout_below="@id/cameraParams_text"
-        android:text="focal length : exposure time" />
-
-    <TextView
-        android:id="@+id/cameraOutputDirLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@id/cameraParams_text"
-        android:layout_below="@id/captureResult_text"
-        android:text="@string/cameraOutputDirLabel_text" />
-
-    <TextView
-        android:id="@+id/cameraOutputDir_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/cameraOutputDirLabel"
-        android:layout_alignBottom="@id/cameraOutputDirLabel"
-        android:layout_toEndOf="@id/cameraOutputDirLabel"
-        android:paddingStart="4dp"
-        android:text="@string/cameraOutputDir_text" />
+    <include layout="@layout/content_preview"/>
 
 </RelativeLayout>

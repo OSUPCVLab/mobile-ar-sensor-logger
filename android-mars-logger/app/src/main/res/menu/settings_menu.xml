@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/settings_option"
+        android:icon="@drawable/ic_settings_24px"
+        android:title="Settings"
+        android:showAsAction="ifRoom"/>
+<!--    <item android:id="@+id/help_option"-->
+<!--        android:icon="@drawable/ic_help_outline_24px"-->
+<!--        android:title="Help" />-->
+</menu>

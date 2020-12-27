@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2014 Google Inc. All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <edu.osu.pcv.marslogger.AspectFrameLayout
+        android:id="@+id/cameraPreview_afl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="4dp"
+        android:layout_below="@id/LinearLayoutHeader"
+        android:layout_centerInParent="true">
+
+        <edu.osu.pcv.marslogger.SampleGLView
+            android:id="@+id/cameraPreview_surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+    </edu.osu.pcv.marslogger.AspectFrameLayout>
+
+    <!-- these overlap with the SurfaceView; by default, it's underneath the UI layer -->
+
+    <TextView
+        android:id="@+id/cameraParams_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/LinearLayoutHeader"
+        android:layout_alignStart="@id/cameraPreview_afl"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:text="[?]"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/captureResult_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/cameraParams_text"
+        android:layout_below="@id/cameraParams_text"
+        android:text="focal length : exposure time" />
+
+    <TextView
+        android:id="@+id/cameraOutputDirLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/cameraParams_text"
+        android:layout_below="@id/captureResult_text"
+        android:text="@string/cameraOutputDirLabel_text" />
+
+    <TextView
+        android:id="@+id/cameraOutputDir_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/cameraOutputDirLabel"
+        android:layout_alignBottom="@id/cameraOutputDirLabel"
+        android:layout_toEndOf="@id/cameraOutputDirLabel"
+        android:paddingStart="4dp"
+        android:text="@string/cameraOutputDir_text" />
+
+    <TextView
+        android:id="@+id/numSnapshotLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/cameraParams_text"
+        android:layout_below="@id/cameraOutputDirLabel"
+        android:text="@string/numSnapshotLabel" />
+
+    <TextView
+        android:id="@+id/numSnapshot_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/numSnapshotLabel"
+        android:layout_alignBottom="@id/numSnapshotLabel"
+        android:layout_toEndOf="@id/numSnapshotLabel"
+        android:paddingStart="4dp"
+        android:text="@string/numSnapshotText" />
+
+</merge>

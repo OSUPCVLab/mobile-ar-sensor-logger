@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="imageResize">
+        <item>None</item>
+    </string-array>
+    <string-array name="imageResizeValues">
+        <item>0x0</item>
+    </string-array>
+
+    <string-array name="imuFreq">
+        <item>Delay Fastest</item>
+        <item>Delay Game</item>
+        <item>Delay UI</item>
+        <item>Delay Normal</item>
+    </string-array>
+    <string-array name="imuFreqValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array name="gpsFreq">
+        <item>Delay 1.0 Sec</item>
+        <item>Delay 3.0  Sec</item>
+        <item>Delay 5.0 Sec</item>
+        <item>Delay 10.0 Sec</item>
+    </string-array>
+    <string-array name="gpsFreqValues">
+        <item>1.0</item>
+        <item>3.0</item>
+        <item>5.0</item>
+        <item>10.0</item>
+    </string-array>
+
+</resources>

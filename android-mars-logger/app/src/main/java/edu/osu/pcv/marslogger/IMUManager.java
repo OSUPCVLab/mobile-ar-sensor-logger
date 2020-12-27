@@ -2,6 +2,7 @@ package edu.osu.pcv.marslogger;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,6 +10,7 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -26,7 +28,7 @@ public class IMUManager implements SensorEventListener {
     // [t-x, t+x] of the gyro data at t, then the original acceleration data
     // is used instead of linear interpolation
     private final long mInterpolationTimeResolution = 500; // nanoseconds
-    private final int mSensorRate = SensorManager.SENSOR_DELAY_GAME;
+    private int mSensorRate = SensorManager.SENSOR_DELAY_FASTEST;
 
     private class SensorPacket {
         long timestamp;
@@ -42,7 +44,7 @@ public class IMUManager implements SensorEventListener {
     private SensorManager mSensorManager;
     private Sensor mAccel;
     private Sensor mGyro;
-
+    private static SharedPreferences mSharedPreferences;
     private int linear_acc; // accuracy
     private int angular_acc;
 
@@ -57,6 +59,7 @@ public class IMUManager implements SensorEventListener {
         mSensorManager = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity);
     }
 
     public void startRecording(String captureResultFile) {
@@ -209,6 +212,8 @@ public class IMUManager implements SensorEventListener {
         mSensorThread = new HandlerThread("Sensor thread",
                 Process.THREAD_PRIORITY_MORE_FAVORABLE);
         mSensorThread.start();
+        String imuFreq = mSharedPreferences.getString("prefImuFreq", "1");
+        mSensorRate = Integer.parseInt(imuFreq);
         // Blocks until looper is prepared, which is fairly quick
         Handler sensorHandler = new Handler(mSensorThread.getLooper());
         mSensorManager.registerListener(

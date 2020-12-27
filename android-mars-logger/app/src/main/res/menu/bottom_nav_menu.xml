@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_imuviewer"
+        android:icon="@drawable/ic_3d_rotation_24px"
+        android:title="@string/title_imuviewer" />
+
+    <item
+        android:id="@+id/navigation_video"
+        android:icon="@drawable/ic_videocam_24px"
+        android:title="@string/title_video" />
+
+    <item
+        android:id="@+id/navigation_photo"
+        android:icon="@drawable/ic_add_a_photo_24px"
+        android:title="@string/title_photo" />
+
+
+    <item
+        android:id="@+id/navigation_about"
+        android:icon="@drawable/ic_info_24px"
+        android:title="@string/title_about" />
+
+</menu>

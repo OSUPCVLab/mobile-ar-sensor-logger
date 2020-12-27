@@ -17,8 +17,6 @@ import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.TextView;
 
-// TODO(jhuai): use a toolbar(import android.support.v7.widget.Toolbar) to navigate the activities
-// see ch8 p313 of head first Android development a brain friendly guide
 public class InfoActivity extends Activity {
     private static final String TAG = InfoActivity.class.getName();;
     protected boolean mGoogleEnabled = false;

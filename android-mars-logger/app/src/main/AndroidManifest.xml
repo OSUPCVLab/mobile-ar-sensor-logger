@@ -2,15 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="edu.osu.pcv.marslogger"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="23"
+    <uses-sdk
+        android:minSdkVersion="23"
         android:targetSdkVersion="28" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -19,20 +22,31 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
+        <activity
+            android:name=".PhotoCaptureActivity"
+            android:label="@string/title_activity_photo_capture"
+            android:theme="@style/AppTheme.NoActionBar.NoActionBar">
+        </activity>
+        <activity
+            android:name=".NavActivity"
+            android:label="@string/title_activity_nav"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat"></activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CameraCaptureActivity"
-            android:screenOrientation="portrait"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
-        <activity android:name=".InfoActivity"
-            android:screenOrientation="portrait"
+        <activity
+            android:name=".CameraCaptureActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".InfoActivity"
             android:label="About"
-            android:theme="@style/AppTheme"/>
-
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme" />
     </application>
 
 </manifest>

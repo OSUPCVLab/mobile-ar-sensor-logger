@@ -82,7 +82,7 @@ public class MainActivity extends Activity implements Eula.OnEulaAgreedTo {
                     }
                 }
                 // all permissions were granted
-                Intent intent = new Intent(this, CameraCaptureActivity.class);
+                Intent intent = new Intent(this, NavActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 break;

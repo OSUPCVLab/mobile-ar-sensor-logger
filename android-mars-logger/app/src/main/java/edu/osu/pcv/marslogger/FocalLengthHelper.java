@@ -1,7 +1,6 @@
 package edu.osu.pcv.marslogger;
 
 // estimate focal length, i.e., imaging distance in pixels, using all sorts of info
-// TODO(jhuai): set default imaging distance using empirical data, see colmap
 
 import android.annotation.TargetApi;
 import android.graphics.Rect;
@@ -54,13 +53,25 @@ public class FocalLengthHelper {
         this.mImageSize = mImageSize;
     }
 
-    // compute the distance between the lens and the imaging sensor, i
-    // in pixels. Recall 1/focal_length = focus_distance + 1/i
-    // because focal_length is very small,
-    // focus_distance is often comparatively small,
-    // i is often very close to the physical focal length
-    // ref: https://source.android.com/devices/camera/camera3_crop_reprocess.html
-    // https://stackoverflow.com/questions/39965408/what-is-the-android-camera2-api-equivalent-of-camera-parameters-gethorizontalvie
+    /**
+     * compute the focal length in pixels.
+     * First it tries to use values read from LENS_INTRINSIC_CALIBRATION, if not available,
+     * it will compute focal length based on an empirical model.
+     *
+     * focus distance is the inverse of the distance between the lens and the subject,
+     * assuming LENS_INFO_FOCUS_DISTANCE_CALIBRATION is APPROXIMATE or CALIBRATED.
+     * see https://stackoverflow.com/questions/60394282/unit-of-camera2-lens-focus-distance
+     * i is the distance between the imaging sensor and the lens.
+     * Recall 1/focal_length = focus_distance + 1/i.
+     * Because focal_length is very small say 3 mm,
+     * focus_distance is often comparatively small, say 5 1/meter,
+     * i is often very close to the physical focal length, say 3 mm.
+     *
+     * see: https://source.android.com/devices/camera/camera3_crop_reprocess.html
+     * https://stackoverflow.com/questions/39965408/what-is-the-android-camera2-api-equivalent-of-camera-parameters-gethorizontalvie
+     *
+     * @return (focal length along x, focal length along y) in pixels
+     */
     public SizeF getFocalLengthPixel() {
         if (mIntrinsic != null && mIntrinsic[0] > 1.0) {
             Timber.d("Focal length set as (%f, %f)",mIntrinsic[0], mIntrinsic[1]);

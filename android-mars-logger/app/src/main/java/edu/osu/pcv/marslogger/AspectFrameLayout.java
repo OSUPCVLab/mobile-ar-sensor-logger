@@ -78,8 +78,8 @@ public class AspectFrameLayout extends FrameLayout {
                 // We're very close already.  We don't want to risk switching from e.g. non-scaled
                 // 1280x720 to scaled 1280x719 because of some floating-point round-off error,
                 // so if we're really close just leave it alone.
-                Timber.d("aspect ratio is good (target=%f, view=%dx%d)",
-                        mTargetAspect, initialWidth, initialHeight);
+//                Timber.d("aspect ratio is good (target=%f, view=%dx%d)",
+//                        mTargetAspect, initialWidth, initialHeight);
             } else {
                 if (aspectDiff > 0) {
                     // limited by narrow width; restrict height
