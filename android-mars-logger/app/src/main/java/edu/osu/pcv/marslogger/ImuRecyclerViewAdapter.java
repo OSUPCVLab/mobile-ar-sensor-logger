@@ -39,7 +39,7 @@ public class ImuRecyclerViewAdapter extends RecyclerView.Adapter<ImuRecyclerView
         holder.mItem = mValues.get(position);
         holder.mIdView.setText(holder.mItem.id);
         holder.mContentView.setText(holder.mItem.content);
-        holder.mUnitView.setText(Html.fromHtml(holder.mItem.unit, Html.FROM_HTML_MODE_LEGACY));
+        holder.mUnitView.setText(FileHelper.fromHtml(holder.mItem.unit));
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
