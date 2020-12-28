@@ -8,7 +8,7 @@ The Android app of MARS logger is upgraded in the user interface.
 Now the user can specify the exposure time, ISO, camera frame size, camera ID.
 By navigating between tabs, the user can capture videos + IMU data, 
 or capture images of a constant focus distance.
-Also the tap to focus function is straightened with the state pattern.
+Also the tap to focus function is corrected.
 The app is released at [here](https://github.com/OSUPCVLab/mobile-ar-sensor-logger/releases)
 
 An Android app to capture data with the fisheye camera and the IMU on tango devices, 
