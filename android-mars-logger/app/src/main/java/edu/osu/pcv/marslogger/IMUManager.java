@@ -30,13 +30,30 @@ public class IMUManager implements SensorEventListener {
     private final long mInterpolationTimeResolution = 500; // nanoseconds
     private int mSensorRate = SensorManager.SENSOR_DELAY_FASTEST;
 
+    public static String ImuHeader = "Timestamp[nanosec],gx[rad/s],gy[rad/s],gz[rad/s]," +
+            "ax[m/s^2],ay[m/s^2],az[m/s^2],Unix time[nanosec]\n";
+
     private class SensorPacket {
-        long timestamp;
+        long timestamp; // nanoseconds
+        long unixTime; // milliseconds
         float[] values;
 
-        SensorPacket(long time, float[] vals) {
+        SensorPacket(long time, long unixTimeMillis, float[] vals) {
             timestamp = time;
+            unixTime = unixTimeMillis;
             values = vals;
+        }
+
+        @Override
+        public String toString() {
+            String delimiter = ",";
+            StringBuilder sb = new StringBuilder();
+            sb.append(timestamp);
+            for (int index = 0; index < values.length; ++index) {
+                sb.append(delimiter + values[index]);
+            }
+            sb.append(delimiter + unixTime + "000000");
+            return sb.toString();
         }
     }
 
@@ -73,9 +90,7 @@ public class IMUManager implements SensorEventListener {
                         + "Has Accelerometer? " + (mAccel == null ? "No":"Yes") + "\n";
                 mDataWriter.write(warning);
             } else {
-                String header = "Timestamp[nanosec], gx[rad/s], gy[rad/s], gz[rad/s]," +
-                        " ax[m/s^2], ay[m/s^2], az[m/s^2]\n";
-                mDataWriter.write(header);
+                mDataWriter.write(ImuHeader);
             }
             mRecordingInertialData = true;
         } catch (IOException err) {
@@ -123,7 +138,7 @@ public class IMUManager implements SensorEventListener {
                 mAccelData.add(latestAccel);
             } else { // linearly interpolate the accel data at the gyro timestamp
                 float[] gyro_accel = new float[6];
-                SensorPacket sp = new SensorPacket(oldestGyro.timestamp, gyro_accel);
+                SensorPacket sp = new SensorPacket(oldestGyro.timestamp, oldestGyro.unixTime, gyro_accel);
                 gyro_accel[0] = oldestGyro.values[0];
                 gyro_accel[1] = oldestGyro.values[1];
                 gyro_accel[2] = oldestGyro.values[2];
@@ -181,22 +196,17 @@ public class IMUManager implements SensorEventListener {
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
+        long unixTime = System.currentTimeMillis();
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            SensorPacket sp = new SensorPacket(event.timestamp, event.values);
+            SensorPacket sp = new SensorPacket(event.timestamp, unixTime, event.values);
             mAccelData.add(sp);
         } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            SensorPacket sp = new SensorPacket(event.timestamp, event.values);
+            SensorPacket sp = new SensorPacket(event.timestamp, unixTime, event.values);
             mGyroData.add(sp);
             SensorPacket syncedData = syncInertialData();
             if (syncedData != null && mRecordingInertialData) {
-                String delimiter = ",";
-                StringBuilder sb = new StringBuilder();
-                sb.append(syncedData.timestamp);
-                for (int index = 0; index < 6; ++index) {
-                    sb.append(delimiter + syncedData.values[index]);
-                }
                 try {
-                    mDataWriter.write(sb.toString() + "\n");
+                    mDataWriter.write(syncedData.toString() + "\n");
                 } catch (IOException ioe) {
                     Timber.e(ioe);
                 }

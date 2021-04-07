@@ -58,7 +58,25 @@ public class VideoEncoderCore {
     private int mTrackIndex;
     private boolean mMuxerStarted;
     private BufferedWriter mFrameMetadataWriter = null;
-    private ArrayList<Long> mTimeArray = null;
+
+    private static String FrameTimeHeader = "Frame timestamp[nanosec],Unix time[nanosec]\n";
+    class TimePair {
+        public Long sensorTimeMicros;
+        public long unixTimeMillis;
+        public TimePair(Long sensorTime, long unixTime) {
+            sensorTimeMicros = sensorTime;
+            unixTimeMillis = unixTime;
+        }
+        public String toString() {
+            String delimiter = ",";
+            StringBuilder sb = new StringBuilder();
+            sb.append(sensorTimeMicros + "000");
+            sb.append(delimiter + unixTimeMillis + "000000");
+            return sb.toString();
+        }
+    }
+
+    private ArrayList<TimePair> mTimeArray = null;
     final int TIMEOUT_USEC = 10000;
 
     /**
@@ -143,9 +161,9 @@ public class VideoEncoderCore {
         }
         if (mFrameMetadataWriter != null) {
             try {
-                mFrameMetadataWriter.write("Frame timestamp[nanosec]\n");
-                for (Long value : mTimeArray) {
-                    mFrameMetadataWriter.write(value.toString() + "000\n");
+                mFrameMetadataWriter.write(FrameTimeHeader);
+                for (TimePair value : mTimeArray) {
+                    mFrameMetadataWriter.write(value.toString() + "\n");
                 }
                 mFrameMetadataWriter.flush();
                 mFrameMetadataWriter.close();
@@ -222,7 +240,8 @@ public class VideoEncoderCore {
                     // adjust the ByteBuffer values to match BufferInfo (not needed?)
                     encodedData.position(mBufferInfo.offset);
                     encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
-                    mTimeArray.add(mBufferInfo.presentationTimeUs);
+                    mTimeArray.add(new TimePair(mBufferInfo.presentationTimeUs,
+                            System.currentTimeMillis()));
                     mMuxer.writeSampleData(mTrackIndex, encodedData, mBufferInfo);
                     if (VERBOSE) {
                         Timber.d("sent %d bytes to muxer, ts=%d",

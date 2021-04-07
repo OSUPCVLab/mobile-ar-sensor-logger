@@ -159,7 +159,7 @@ public class Camera2Proxy {
             String header = "Timestamp[nanosec],fx[px],fy[px],Frame No.," +
                     "Exposure time[nanosec],Sensor frame duration[nanosec]," +
                     "Frame readout time[nanosec]," +
-                    "ISO,Focal length,Focus distance,AF mode";
+                    "ISO,Focal length,Focus distance,AF mode,Unix time[nanosec]";
 
             mFrameMetadataWriter.write(header + "\n");
             mRecordingMetadata = true;
@@ -521,6 +521,7 @@ public class Camera2Proxy {
         public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                        @NonNull CaptureRequest request,
                                        @NonNull TotalCaptureResult result) {
+            long unixTime = System.currentTimeMillis();
             process(result);
 
             Long timestamp = result.get(CaptureResult.SENSOR_TIMESTAMP);
@@ -559,6 +560,7 @@ public class Camera2Proxy {
             sb.append(delimiter + fl);
             sb.append(delimiter + fd);
             sb.append(delimiter + afMode);
+            sb.append(delimiter + unixTime + "000000");
             String frame_info = sb.toString();
             if (mRecordingMetadata) {
                 try {
