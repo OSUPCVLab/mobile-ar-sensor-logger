@@ -167,8 +167,11 @@ public class IMUManager implements SensorEventListener {
                     gyro_accel[4] = rightAccel.values[1];
                     gyro_accel[5] = rightAccel.values[2];
                 } else {
-                    float ratio = (oldestGyro.timestamp - leftAccel.timestamp) /
-                            (rightAccel.timestamp - leftAccel.timestamp);
+                    float tmp1 = oldestGyro.timestamp - leftAccel.timestamp;
+                    float tmp2 = rightAccel.timestamp - leftAccel.timestamp;
+                    float ratio = tmp1/tmp2;
+//                     float ratio = (oldestGyro.timestamp - leftAccel.timestamp) /
+//                             (rightAccel.timestamp - leftAccel.timestamp);
                     gyro_accel[3] = leftAccel.values[0] +
                             (rightAccel.values[0] - leftAccel.values[0]) * ratio;
                     gyro_accel[4] = leftAccel.values[1] +
