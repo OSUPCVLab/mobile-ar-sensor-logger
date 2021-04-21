@@ -86,15 +86,15 @@ public class IMUManager implements SensorEventListener {
             if (mGyro == null || mAccel == null) {
                 String warning = "The device may not have a gyroscope or an accelerometer!\n" +
                         "No IMU data will be logged.\n" +
-                        "Has Gyroscope? " + (mGyro == null ? "No":"Yes") + "\n"
-                        + "Has Accelerometer? " + (mAccel == null ? "No":"Yes") + "\n";
+                        "Has Gyroscope? " + (mGyro == null ? "No" : "Yes") + "\n"
+                        + "Has Accelerometer? " + (mAccel == null ? "No" : "Yes") + "\n";
                 mDataWriter.write(warning);
             } else {
                 mDataWriter.write(ImuHeader);
             }
             mRecordingInertialData = true;
         } catch (IOException err) {
-            Timber.e(err,"IOException in opening inertial data writer at %s",
+            Timber.e(err, "IOException in opening inertial data writer at %s",
                     captureResultFile);
         }
     }
@@ -169,9 +169,7 @@ public class IMUManager implements SensorEventListener {
                 } else {
                     float tmp1 = oldestGyro.timestamp - leftAccel.timestamp;
                     float tmp2 = rightAccel.timestamp - leftAccel.timestamp;
-                    float ratio = tmp1/tmp2;
-//                     float ratio = (oldestGyro.timestamp - leftAccel.timestamp) /
-//                             (rightAccel.timestamp - leftAccel.timestamp);
+                    float ratio = tmp1 / tmp2;
                     gyro_accel[3] = leftAccel.values[0] +
                             (rightAccel.values[0] - leftAccel.values[0]) * ratio;
                     gyro_accel[4] = leftAccel.values[1] +
