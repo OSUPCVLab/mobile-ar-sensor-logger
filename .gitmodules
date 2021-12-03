@@ -1,0 +1,3 @@
+[submodule "marslogger_android"]
+	path = marslogger_android
+	url = https://github.com/OSUPCVLab/marslogger_android.git
