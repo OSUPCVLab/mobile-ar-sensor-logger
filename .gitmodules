@@ -3,4 +3,4 @@
 	url = https://github.com/OSUPCVLab/marslogger_android.git
 [submodule "marslogger_ios"]
 	path = marslogger_ios
-	url = git@github.com:OSUPCVLab/marslogger_ios.git
+	url = https://github.com/OSUPCVLab/marslogger_ios.git
