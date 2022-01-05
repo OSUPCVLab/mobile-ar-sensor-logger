@@ -88,3 +88,23 @@ ISSN={},
 month={Oct},}
 ```
 
+# Contributions
+We always look forward to enhancing the capability and portability of MarsLogger 
+so that it may better serve the community.
+Consequently, we also look forward to community contributions.
+If you are willing to extend help, one way is to raise an issue and discuss with the authors about how to carry out the task.
+J. Huai will be happy to write up the pseudocode as assistance.
+Even better, another way is to code up the functionality and make a pull request (in the Android or iOS submodule).
+
+The following enhancements are on the roadmap of MarsLogger.
+1. For the Android app, record data of a variety of other sensors or modules, 
+magnetometer, GNSS, WiFi, Bluetooth, among others.
+Refer to the GetSensorData app source code at [here](https://github.com/lopsi/GetSensorData_Android).
+
+2. For the iOS app, record data of a variety of other sensors or modules,
+magnetometer, GNSS, WiFi, Bluetooth, ArKit, among others.
+Refer to the [ios_logger](https://github.com/Varvrar/ios_logger).
+
+3. For the Android app, support recording with multiple cameras.
+4. For the iOS app, support recording with multiple cameras.
+5. For the iOS app, migrate it to swift, refer to the [swift version of rosywriter](https://github.com/ooper-shlab/RosyWriter2.1-Swift).
